@@ -168,6 +168,140 @@ def test_cubicintrootsgiven():
         assert roots1 == roots2s, (a,g,h,r)
         for x in roots2s: assert a*x**3 + b*x**2 + c*x + d == 0, (a,g,h,r)
 
+def test_cubicintroots():
+    # Three distinct real roots, all integers
+    for _ in range(1000):
+        a, b, c, d = 0, 0, 0, 0
+        while not (a < b < c):
+            a = randrange(-100, 100)
+            b = randrange(-100, 100)
+            c = randrange(-100, 100)
+        while d == 0:
+            d = randrange(-10, 10)
+        # d * (x - a) * (x - b) * (x - c)
+        # d * (x^3 - (a+b+c)x^2 + (ab+bc+ca)x - abc)
+        assert [a,b,c] == sorted(cubicintroots(d, -d*(a+b+c), d*(a*b+b*c+c*a), -d*a*b*c))
+    # Three distinct real roots, two integers
+    for _ in range(1000):
+        a, b, d = 0, 0, 0
+        # For this test, we need c to be a non-integer root, but for the coefficients to still be integers.
+        # This demands that c be in Q \ Z.
+        while a >= b:
+            a = randrange(-100, 100)
+            b = randrange(-100, 100)
+        f = Fraction(1)
+        while f.denominator == 1: f = Fraction(randrange(100), randrange(1, 100))
+        f %= 1
+        for c in (a - f - 10, a - f, a + f, b - f, (a + b) // 2 + f, b + f, b + f + 10):
+            # This loop ensures that the non-integer root will be in several places relative to the others.
+            f, g = c.numerator, c.denominator
+            while d == 0:
+                d = randrange(-10, 10)
+            # d * (x - a) * (x - b) * (g*x - f)
+            # d * (gx^3 - (f + ag + bg)x^2 + (abg + af + bf)x - abf)
+            assert [a,b] == sorted(cubicintroots(d*g, -d*(f+a*g+b*g), d*(a*b*g+a*f+b*f), -d*a*b*f))
+    # Three distinct real roots, one integer
+    for _ in range(1000):
+        a, b, c, d = 0, Fraction(1), Fraction(1), 0
+        while b.denominator == 1 or c.denominator == 1:
+            a = randrange(-10, 10)
+            b = Fraction(randrange(-100, 100), randrange(1, 100))
+            c = Fraction(randrange(-100, 100), randrange(1, 100))
+        f, g, p, q = b.numerator, b.denominator, c.numerator, c.denominator
+        while d == 0:
+            d = randrange(-10, 10)
+        # d * (x - a) * (gx - f) * (qx - p)
+        # d * (gqx^3 + (-fq - gp - agq)x^2 + (fp + afq + agp)x - afp)
+        assert (a,) == cubicintroots(d*g*q, -d * (f*q + g*p + a*g*q), d * (f*p + a*f*q + a*g*p), -d*a*f*p)
+    # Three distinct real roots, no integers
+    for _ in range(1000):
+        a, b, c, d = Fraction(1), Fraction(1), Fraction(1), 0
+        while a.denominator == 1 or b.denominator == 1 or c.denominator == 1:
+            a = Fraction(randrange(-100, 100), randrange(1, 100))
+            b = Fraction(randrange(-100, 100), randrange(1, 100))
+            c = Fraction(randrange(-100, 100), randrange(1, 100))
+        while d == 0:
+            d = randrange(-10, 10)
+        f = a.denominator * b.denominator * c.denominator
+        d, c, b, a = d*f, -d*f * (a + b + c), d*f * (a*b + b*c + c*a), -d*f*a*b*c
+        assert () == cubicintroots(int(d), int(c), int(b), int(a))
+    # Two distinct real roots, all integers
+    for _ in range(1000):
+        a, b, d = 0, 0, 0
+        while a == b:
+            a = randrange(-100, 100)
+            b = randrange(-100, 100)
+        c = b
+        while d == 0:
+            d = randrange(-10, 10)
+        # d * (x - a) * (x - b) * (x - c)
+        assert [min(a,b), max(a,b)] == sorted(cubicintroots(d, -d*(a+b+c), d*(a*b+b*c+c*a), -d*a*b*c))
+    # Two distinct real roots, repeated is integer, other is not
+    for _ in range(1000):
+        a, b, d = 0, Fraction(1), 0
+        a = randrange(-100, 100)
+        while b.denominator == 1:
+            b = Fraction(randrange(-100, 100), randrange(1, 100))
+        while d == 0:
+            d = randrange(-10, 10)
+        f, g = b.numerator, b.denominator
+        # d * (x - a) * (x - a) * (g*x - f)
+        # d * (gx^3 - (f + ag + ag)x^2 + (aag + af + af)x - aaf)
+        assert (a,) == cubicintroots(d*g, -d*(f+a*g+a*g), d*(a*a*g+a*f+a*f), -d*a*a*f)
+    # Two distinct real roots, repeated is not integer, other is
+    for _ in range(1000):
+        a, b, d = 0, Fraction(1), 0
+        a = randrange(-10, 10)
+        while b.denominator == 1:
+            b = Fraction(randrange(-100, 100), randrange(1, 100))
+        f, g = b.numerator, b.denominator
+        while d == 0:
+            d = randrange(-10, 10)
+        # d * (x - a) * (gx - f) * (gx - f)
+        # d * (ggx^3 + (-fg - gf - agg)x^2 + (ff + afg + agf)x - aff)
+        assert (a,) == cubicintroots(d*g*g, -d * (f*g + g*f + a*g*g), d * (f*f + a*f*g + a*g*f), -d*a*f*f)
+    # Two distinct real roots, no integers
+    for _ in range(1000):
+        a, b, d = Fraction(1), Fraction(1), 0
+        while a.denominator == 1 or b.denominator == 1:
+            a = Fraction(randrange(-100, 100), randrange(1, 100))
+            b = Fraction(randrange(-100, 100), randrange(1, 100))
+        while d == 0:
+            d = randrange(-10, 10)
+        f = a.denominator * b.denominator * b.denominator
+        d, c, b, a = d*f, -d*f * (a + b + b), d*f * (a*b + b*c + b*a), -d*f*a*b*b
+        assert () == cubicintroots(int(d), int(c), int(b), int(a))
+    # One real root, integer, triple
+    for _ in range(1000):
+        a, d = randrange(-100, 100), 0
+        while d == 0: d = randrange(-10, 10)
+        assert (a,) == cubicintroots(d, -3*a*d, 3*a*a*d, -a*a*a*d)
+    # One real root, integer, single
+    for _ in range(1000):
+        a = randrange(-100, 100)
+        while True:
+            b = randrange(-100, 100)
+            c = randrange(-100, 100)
+            d = randrange(-100, 100)
+            if c*c - 4*b*d < 0: break
+        # (x - a) * (bx^2 + cx + d)
+        # bx^3 + (c - ab)x^2 + (d - ac)x - ad
+        assert (a,) == cubicintroots(b, c - a*b, d - a*c, -a*d)
+    # One real root, not integer
+    for _ in range(1000):
+        a = Fraction(1)
+        while a.denominator == 1:
+            a = Fraction(randrange(-100, 100), randrange(1, 100))
+        while True:
+            b = randrange(-100, 100)
+            c = randrange(-100, 100)
+            d = randrange(-100, 100)
+            if c*c - 4*b*d < 0: break
+        f, g = a.numerator, a.denominator
+        # (gx - f) * (bx^2 + cx + d)
+        # bgx^3 + (cg - bf)x^2 + (dg - cf)x - df
+        assert () == cubicintroots(b*g, c*g - b*f, d*g - c*f, -d*f)
+
 def test_sqfrgen():
     assert sorted(sqfrgen(())) == [1]
     assert sorted(sqfrgen((2,))) == [1, 2]
@@ -743,8 +877,6 @@ def test_pell():
     assert pell(76, 36)[1:] == ([(6, 0), (44, 5), (70, 8), (1020, 117), (14890, 1708), (23756, 2725)], (57799, 6630))
     assert list(islice(pell(76, 36)[0], 7)) == [(6, 0), (44, 5), (70, 8), (1020, 117), (14890, 1708), (23756, 2725), (346794, 39780)]
 
-
-
 def test_dirichletcharacter():
     assert dirichletcharacter(2, 1, 1) == 0
     assert dirichletcharacter(40487, 100, 11) == Fraction(15653, 20243)
@@ -1055,140 +1187,6 @@ def test_pythags_by_perimeter():
     for t in pythags(10000): data[sum(t)] = data.get(sum(t), []) + [t]
     for n in range(1, 10000): assert sorted(data.get(n,[])) == sorted(pythags_by_perimeter(n)), n
 
-def test_cubicintroots():
-    # Three distinct real roots, all integers
-    for _ in range(1000):
-        a, b, c, d = 0, 0, 0, 0
-        while not (a < b < c):
-            a = randrange(-100, 100)
-            b = randrange(-100, 100)
-            c = randrange(-100, 100)
-        while d == 0:
-            d = randrange(-10, 10)
-        # d * (x - a) * (x - b) * (x - c)
-        # d * (x^3 - (a+b+c)x^2 + (ab+bc+ca)x - abc)
-        assert [a,b,c] == sorted(cubicintroots(d, -d*(a+b+c), d*(a*b+b*c+c*a), -d*a*b*c))
-    # Three distinct real roots, two integers
-    for _ in range(1000):
-        a, b, d = 0, 0, 0
-        # For this test, we need c to be a non-integer root, but for the coefficients to still be integers.
-        # This demands that c be in Q \ Z.
-        while a >= b:
-            a = randrange(-100, 100)
-            b = randrange(-100, 100)
-        f = Fraction(1)
-        while f.denominator == 1: f = Fraction(randrange(100), randrange(1, 100))
-        f %= 1
-        for c in (a - f - 10, a - f, a + f, b - f, (a + b) // 2 + f, b + f, b + f + 10):
-            # This loop ensures that the non-integer root will be in several places relative to the others.
-            f, g = c.numerator, c.denominator
-            while d == 0:
-                d = randrange(-10, 10)
-            # d * (x - a) * (x - b) * (g*x - f)
-            # d * (gx^3 - (f + ag + bg)x^2 + (abg + af + bf)x - abf)
-            assert [a,b] == sorted(cubicintroots(d*g, -d*(f+a*g+b*g), d*(a*b*g+a*f+b*f), -d*a*b*f))
-    # Three distinct real roots, one integer
-    for _ in range(1000):
-        a, b, c, d = 0, Fraction(1), Fraction(1), 0
-        while b.denominator == 1 or c.denominator == 1:
-            a = randrange(-10, 10)
-            b = Fraction(randrange(-100, 100), randrange(1, 100))
-            c = Fraction(randrange(-100, 100), randrange(1, 100))
-        f, g, p, q = b.numerator, b.denominator, c.numerator, c.denominator
-        while d == 0:
-            d = randrange(-10, 10)
-        # d * (x - a) * (gx - f) * (qx - p)
-        # d * (gqx^3 + (-fq - gp - agq)x^2 + (fp + afq + agp)x - afp)
-        assert (a,) == cubicintroots(d*g*q, -d * (f*q + g*p + a*g*q), d * (f*p + a*f*q + a*g*p), -d*a*f*p)
-    # Three distinct real roots, no integers
-    for _ in range(1000):
-        a, b, c, d = Fraction(1), Fraction(1), Fraction(1), 0
-        while a.denominator == 1 or b.denominator == 1 or c.denominator == 1:
-            a = Fraction(randrange(-100, 100), randrange(1, 100))
-            b = Fraction(randrange(-100, 100), randrange(1, 100))
-            c = Fraction(randrange(-100, 100), randrange(1, 100))
-        while d == 0:
-            d = randrange(-10, 10)
-        f = a.denominator * b.denominator * c.denominator
-        d, c, b, a = d*f, -d*f * (a + b + c), d*f * (a*b + b*c + c*a), -d*f*a*b*c
-        assert () == cubicintroots(int(d), int(c), int(b), int(a))
-    # Two distinct real roots, all integers
-    for _ in range(1000):
-        a, b, d = 0, 0, 0
-        while a == b:
-            a = randrange(-100, 100)
-            b = randrange(-100, 100)
-        c = b
-        while d == 0:
-            d = randrange(-10, 10)
-        # d * (x - a) * (x - b) * (x - c)
-        assert [min(a,b), max(a,b)] == sorted(cubicintroots(d, -d*(a+b+c), d*(a*b+b*c+c*a), -d*a*b*c))
-    # Two distinct real roots, repeated is integer, other is not
-    for _ in range(1000):
-        a, b, d = 0, Fraction(1), 0
-        a = randrange(-100, 100)
-        while b.denominator == 1:
-            b = Fraction(randrange(-100, 100), randrange(1, 100))
-        while d == 0:
-            d = randrange(-10, 10)
-        f, g = b.numerator, b.denominator
-        # d * (x - a) * (x - a) * (g*x - f)
-        # d * (gx^3 - (f + ag + ag)x^2 + (aag + af + af)x - aaf)
-        assert (a,) == cubicintroots(d*g, -d*(f+a*g+a*g), d*(a*a*g+a*f+a*f), -d*a*a*f)
-    # Two distinct real roots, repeated is not integer, other is
-    for _ in range(1000):
-        a, b, d = 0, Fraction(1), 0
-        a = randrange(-10, 10)
-        while b.denominator == 1:
-            b = Fraction(randrange(-100, 100), randrange(1, 100))
-        f, g = b.numerator, b.denominator
-        while d == 0:
-            d = randrange(-10, 10)
-        # d * (x - a) * (gx - f) * (gx - f)
-        # d * (ggx^3 + (-fg - gf - agg)x^2 + (ff + afg + agf)x - aff)
-        assert (a,) == cubicintroots(d*g*g, -d * (f*g + g*f + a*g*g), d * (f*f + a*f*g + a*g*f), -d*a*f*f)
-    # Two distinct real roots, no integers
-    for _ in range(1000):
-        a, b, d = Fraction(1), Fraction(1), 0
-        while a.denominator == 1 or b.denominator == 1:
-            a = Fraction(randrange(-100, 100), randrange(1, 100))
-            b = Fraction(randrange(-100, 100), randrange(1, 100))
-        while d == 0:
-            d = randrange(-10, 10)
-        f = a.denominator * b.denominator * b.denominator
-        d, c, b, a = d*f, -d*f * (a + b + b), d*f * (a*b + b*c + b*a), -d*f*a*b*b
-        assert () == cubicintroots(int(d), int(c), int(b), int(a))
-    # One real root, integer, triple
-    for _ in range(1000):
-        a, d = randrange(-100, 100), 0
-        while d == 0: d = randrange(-10, 10)
-        assert (a,) == cubicintroots(d, -3*a*d, 3*a*a*d, -a*a*a*d)
-    # One real root, integer, single
-    for _ in range(1000):
-        a = randrange(-100, 100)
-        while True:
-            b = randrange(-100, 100)
-            c = randrange(-100, 100)
-            d = randrange(-100, 100)
-            if c*c - 4*b*d < 0: break
-        # (x - a) * (bx^2 + cx + d)
-        # bx^3 + (c - ab)x^2 + (d - ac)x - ad
-        assert (a,) == cubicintroots(b, c - a*b, d - a*c, -a*d)
-    # One real root, not integer
-    for _ in range(1000):
-        a = Fraction(1)
-        while a.denominator == 1:
-            a = Fraction(randrange(-100, 100), randrange(1, 100))
-        while True:
-            b = randrange(-100, 100)
-            c = randrange(-100, 100)
-            d = randrange(-100, 100)
-            if c*c - 4*b*d < 0: break
-        f, g = a.numerator, a.denominator
-        # (gx - f) * (bx^2 + cx + d)
-        # bgx^3 + (cg - bf)x^2 + (dg - cf)x - df
-        assert () == cubicintroots(b*g, c*g - b*f, d*g - c*f, -d*f)
-
 def test_pollard_pm1(): assert pollard_pm1((factorial(28) - 1) // 239) == 1224040923709997
 def test_williams_pp1(): assert williams_pp1(315951348188966255352482641444979927) == 12403590655726899403
 
@@ -1246,19 +1244,18 @@ def test_isprime_np1():
     assert isprime_np1(n - 1,         ) == True
     assert isprime_np1(n - 1, fac=nfac) == True
 
-def test_altseriesaccel(): assert False
-def test_ecadd(): assert False
-def test_ecdub(): assert False
-def test_ecmparams(): assert False
-def test_ecmul(): assert False
-def test_lucasmod(): assert False
-def test_mlucas(): assert False
-def test_multifactor(): assert False
-def test_nthprimeapprox(): assert False
-def test_partitions(): assert False
-def test_primepi_S1(): assert False
-def test_riemannR(): assert False
-def test_secm(): assert False
+def test_altseriesaccel(): assert False     # TODO
+def test_ecadd(): assert False              # TODO
+def test_ecdub(): assert False              # TODO
+def test_ecmparams(): assert False          # TODO
+def test_ecmul(): assert False              # TODO
+def test_lucasmod(): assert False           # TODO
+def test_mlucas(): assert False             # TODO
+def test_multifactor(): assert False        # TODO
+def test_nthprimeapprox(): assert False     # TODO
+def test_partitions(): assert False         # TODO
+def test_primepi_S1(): assert False         # TODO
+def test_riemannR(): assert False           # TODO
+def test_secm(): assert False               # TODO
 
 # TODO: For stuff like factorsieve and primegen, implement tests to check that the upper limits are handled correctly.
-
