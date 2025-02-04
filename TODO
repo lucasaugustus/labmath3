@@ -2,4 +2,5 @@
 * More examples in the docstrings
 * Ensure that the examples in the docstrings work
 * Migrate the old README.rst
+* Comprehensive grammar edits
 * Publish to PyPI
