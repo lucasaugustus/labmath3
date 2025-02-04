@@ -1,0 +1,148 @@
+Version 3.0.0:
+
+Minor alterations:
+    divcountsieve is now a generator.
+    ecadd is now _ecadd.
+    ecdub is now _ecdub.
+    ecmul is now _ecmul.
+    factorint now has the trialextra keyword argument.
+    factorsieve is now a generator, and it starts at 1 instead of 0.
+    gcd is now imported from math, rather than defined here.
+    isqrt is now imported from math, rather than defined here.
+    lcm is now imported from math, rather than defined here.
+    mlucas is now _mlucas.
+    mobiussieve is now a generator.
+    primefac now has the trialextra keyword argument.
+    primegen has been slightly optimized.
+    primephi no longer has a keyword argument, and its third argument is now a 1-based list.
+    primepi's now uses the Lagarias-Miller-Odlyzko algorithm.  Its keyword arguments have changed.
+    randprime returns None when asked to produce a prime with 1 digit in base 2, rather than entering an infinite loop.
+    totientsieve is now a generator, and it has an optional second argument to make it compute the Jordan totient function.
+
+New functions: dirichletcharacter, divsigmasieve, powerfulmap, pythags, rational_in_base, restrictedpartitions, sqfrcount
+
+Removals with replacement:
+    binomial has been removed; instead, we have "from math import comb".
+    iterprod has been removed; instead, we have "from math import prod".
+    modinv has been removed; use pow(x, -1, y) instead of modinv(x, y).
+
+Removals without replacement: arithmeticderivative, collatz, is_ngonal, isprime_mersenne, ngonal
+
+---
+
+Version 2.2.0:
+
+Changed RPN behavior for /
+
+---
+
+Version 2.1.3:
+
+Minor improvement to nearlyprimegen
+
+---
+
+Version 2.1.2:
+
+Tweaked the README file.
+
+---
+
+Version 2.1.1:
+
+Bugfix: almostprimegen in the case k == 1
+
+---
+
+Version 2.1.0:
+
+New function: quadratic_scf
+New function: semiprimegen
+New function: pspgen
+New function: almostprimegen
+New function: nearlyprimegen
+
+---
+
+Version 2.0.2:
+
+Improved README file.
+
+---
+
+Version 2.0.1:
+
+Improved docstrings and README file.
+
+---
+
+Version 2.0.0:
+
+Various improvements to various docstrings.
+
+Modified function: nextprime and prevprime now have an optional argument to specify the primality test.  Default == isprime.
+
+Modified function: if fed a finite parameter sequence, and if this fails to produce a factor, then ecm will return None.  This requires that nproc == 1.  The parameter sequence for the case where nprocs > 1 must still be infinite.
+
+Improved function: primegen has been sped up by as much as 15%.
+
+Deprecation: iterprod and binomial will be replaced with "from math import prod, comb" in some future version, and modinv will be removed since it can now be computed via pow(x, -1, y).
+
+Removed function: mpqs
+Removed function: fermat_prp
+
+New function: siqs, as a replacement for the buggy mpqs.
+
+---
+
+Version 1.2.0:
+
+Various improvements to various docstrings.
+
+New function: polyval
+New function: cbrtmod_prime
+New function: polyroots_prime
+New function: hensel
+New function: polyrootsmod
+New function: polyaddmodp
+New function: polysubmodp
+New function: polymulmodp
+New function: polydivmodmodp
+New function: gcmd
+New function: polypowmodpmodpoly
+New function: frobenius_prp
+
+Deleted function: hensel_lift
+Deleted function: hensel_lift_2
+Deleted function: sqrtmod_primepow
+This technically breaks backwards compatibility, suggesting that the new version number should be 2.0.0, but those were helper functions for sqrtmod and not intended to be called by the user, so I'm only incrementing the version to 1.2.0.
+
+Bugfix: Docstrings claim that sqrtmod's output would be sorted.  It wasn't always so.  It is now.
+
+---
+
+Version 1.1.0:
+
+New data: labmathversion
+
+New function: liouville
+New function: egypt_short
+New function: egypt_greedy
+New function: randomfactored
+New function: secm
+New function: ecmparams
+
+Altered behavior: randprime's output is now uniformly sampled among all primes of the indicated size, and the primality test used is user-selectable.  Full backwards compatibility is preserved.
+Altered behavior: ecm is now a shell function that calls secm repeatedly (which is where the factoring now happens) using parameters pulled from ecmparams.  Backwards compatibility is preserved in the positional arguments; backwards compatibility is broken for the keyword arguments.
+
+---
+
+Version 1.0.8:
+
+Improved credits and a few docstrings.
+Fixed a bug in which product was not imported from itertools.
+
+---
+
+Versions 1.0.0 through 1.0.7: fumbling around with PyPI.
+

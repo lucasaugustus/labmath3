@@ -1,0 +1,16 @@
+Some parts of this library were copied from elsewhere on the internet.  When I
+first started assembling this library, I had no ambitions of publication, and as
+such, I wasn't terribly concerned with attribution; consequently, some of the
+proper sourcing of the copied code is lost.  The sources I can recall are:
+
+The function isqrt is largely unmodified from primo's post at
+https://codegolf.stackexchange.com/a/9088.
+
+The function siqs is derived from Stephan Kollman's repository at
+https://github.com/skollmann/PyFactorise.
+
+The Hamming number generator is modified from a recipe by Raymond Hettinger at
+https://code.activestate.com/recipes/576961/.
+
+The S1 and S2 phases of the primepi code are translated from Kim Walish's primecount package.
+
