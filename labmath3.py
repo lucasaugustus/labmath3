@@ -44,8 +44,7 @@ def primegen(limit=inf):
         if lo >= limit: break
         pl.append(next(pg))
         hi = min(pl[-1]**2, limit)
-        sl = hi - lo
-        sieve = bytearray([True]) * sl
+        sieve = bytearray([True]) * (hi - lo)
         for p in pl: sieve[(-lo)%p::p] = bytearray([False]) * ((hi-1)//p - (lo-1)//p)
         yield from compress(range(lo,hi,2), sieve[::2])
 
@@ -63,7 +62,7 @@ def rpn(instr):
     
     Input: instr -- a string
     
-    Output: A number
+    Output: A list of numbers
     
     Examples:
     
@@ -216,7 +215,7 @@ def primephi(x, a, primes):
     
     >>> primephi(123456789, 5, [0] + list(primegen(20)))
     25653358
-    """                                                                             # TODO
+    """
     if a == 0: return x
     if a == 1: return (x + 1) // 2
     if a == 2: return 2 * (x // 6) + (0,1,1,1,1,2)[x%6]
@@ -470,6 +469,12 @@ def altseriesaccel(a, n):
     >>> zeta = lambda x: altseriesaccel((1/j**x for j in count(1)), 24+1) / (1-2**(1-x))
     >>> zeta(2)
     1.6449340668482264
+    
+    >>> altseriesaccel((1/j for j in count(1)), 24+1)       # ln(2)
+    0.69314718055994530942
+    
+    >>> altseriesaccel((1/j for j in count(1,2)), 24+1) * 4
+    3.1415926535897932384626
     """                             # TODO
     Vl, Vh = 2, 6
     for bit in bin(n)[2:]: Vl, Vh = (Vh * Vl - 6, Vh * Vh - 2) if bit == '1' else (Vl * Vl - 2, Vh * Vl - 6)
@@ -5759,4 +5764,3 @@ def dirichletcharacter(q, n, x, qfac=None):
 #if __name__ == "__main__": import doctest; doctest.testmod()
 
 # TODO: Edit docstrings to have a maximum column count of 76.
-
