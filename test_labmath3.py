@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 from labmath3 import *
+from math import isclose, pi
 
 def test_primegen():
     assert list(primegen(97)) == [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89]
@@ -975,6 +976,14 @@ def test_dirichletcharacter():
             testdata = list(map(str, (dirichletcharacter(q,i,x) for x in range(q) if gcd(x,q) == 1)))
             assert testdata == data[q][i], (i, testdata, data[q])
 
+def test_primephi():
+    assert primephi(123456789, 0, [0] + list(primegen(20))) == 123456789
+    assert primephi(123456789, 1, [0] + list(primegen(20))) == 61728395
+    assert primephi(123456789, 2, [0] + list(primegen(20))) == 41152263
+    assert primephi(123456789, 3, [0] + list(primegen(20))) == 32921810
+    assert primephi(123456789, 4, [0] + list(primegen(20))) == 28218694
+    assert primephi(123456789, 5, [0] + list(primegen(20))) == 25653358
+
 def test_primepi():
     for x in range(-10, 2500):
         print(x)
@@ -1194,16 +1203,12 @@ def test_ecm():
     assert ecm(factorial(24) - 1) in (625793187653, 991459181683)
     #assert ecm(factorial(38) + 1) in (14029308060317546154181, 37280713718589679646221)
 
-def test_primephi():
-    assert primephi(123456789, 0, [0] + list(primegen(20))) == 123456789
-    assert primephi(123456789, 1, [0] + list(primegen(20))) == 61728395
-    assert primephi(123456789, 2, [0] + list(primegen(20))) == 41152263
-    assert primephi(123456789, 3, [0] + list(primegen(20))) == 32921810
-    assert primephi(123456789, 4, [0] + list(primegen(20))) == 28218694
-    assert primephi(123456789, 5, [0] + list(primegen(20))) == 25653358
+def test_altseriesaccel():
+    assert isclose(altseriesaccel((1/j for j in count(1)), 24+1), log(2), rel_tol=1e-15)
+    assert isclose(altseriesaccel((1/j for j in count(1,2)), 24+1), pi/4, rel_tol=1e-15)
+    assert isclose(altseriesaccel((1/j**2 for j in count(1)), 24+1), pi**2 / 12, rel_tol=1e-15)
 
 def test_riemannzeta():
-    from math import isclose
     assert isclose(riemannzeta(  2), 1.64493406684822643647241516664602518921894990120679843773555822937000747040, rel_tol=1e-15)
     assert isclose(riemannzeta(  3), 1.20205690315959428539973816151144999076498629234049888179227155534183820578, rel_tol=1e-15)
     assert isclose(riemannzeta(  4), 1.08232323371113819151600369654116790277475095191872690768297621544412061618, rel_tol=1e-15)
@@ -1214,7 +1219,6 @@ def test_riemannzeta():
     assert isclose(riemannzeta(100), 1.00000000000000000000000000000078886090522101180735205378276604136878962534, rel_tol=1e-15)
 
 def test_zetam1():
-    from math import isclose
     assert isclose(zetam1(  2), 0.64493406684822643647241516664602518921894990120679843773555822937000747040, rel_tol=1e-15)
     assert isclose(zetam1(  3), 0.20205690315959428539973816151144999076498629234049888179227155534183820578, rel_tol=1e-15)
     assert isclose(zetam1(  4), 0.08232323371113819151600369654116790277475095191872690768297621544412061618, rel_tol=1e-15)
@@ -1244,7 +1248,6 @@ def test_isprime_np1():
     assert isprime_np1(n - 1,         ) == True
     assert isprime_np1(n - 1, fac=nfac) == True
 
-def test_altseriesaccel(): assert False     # TODO
 def test_ecadd(): assert False              # TODO
 def test_ecdub(): assert False              # TODO
 def test_ecmparams(): assert False          # TODO
