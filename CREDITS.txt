@@ -12,5 +12,9 @@ https://github.com/skollmann/PyFactorise.
 The Hamming number generator is modified from a recipe by Raymond Hettinger at
 https://code.activestate.com/recipes/576961/.
 
-The S1 and S2 phases of the primepi code are translated from Kim Walish's primecount package.
+The S1 and S2 phases of the primepi code are translated from Kim Walish's primecount package:
+https://github.com/kimwalisch/primecount.
 
+The primesum code is copied from Lucy_Hedgehog's post at https://projecteuler.net/thread=10;page=5.
+
+The totientsum code is derived from the Project Euler #351 overview.
