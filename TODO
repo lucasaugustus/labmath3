@@ -3,4 +3,5 @@
 * Ensure that the examples in the docstrings work
 * Migrate the old README.rst
 * Comprehensive grammar edits
+* Figure out where riemannzeta and zetam1 are accurate
 * Publish to PyPI
