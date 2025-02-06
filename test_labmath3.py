@@ -1248,6 +1248,38 @@ def test_isprime_np1():
     assert isprime_np1(n - 1,         ) == True
     assert isprime_np1(n - 1, fac=nfac) == True
 
+def test_riemannR():
+    assert isclose(riemannR(10** 2), 25.6616332669241825932267979403556981499733590116719758717562720917115, rel_tol=1e-15)
+    assert isclose(riemannR(10** 3), 168.359446281167348064913310986732910846599848149180538039907584278744, rel_tol=1e-15)
+    assert isclose(riemannR(10** 4), 1226.93121834343310855421625817211837033992387117883498583439259905007, rel_tol=1e-15)
+    assert isclose(riemannR(10** 5), 9587.43173884197341435161292390822943109805895679695117928210475718957, rel_tol=1e-15)
+    assert isclose(riemannR(10** 6), 78527.3994291277048588702921409592510348810074493914375131165100307221, rel_tol=1e-14)
+    assert isclose(riemannR(10** 7), 664667.447564747767985346699887438832684834696076339114820257753755976, rel_tol=1e-14)
+    assert isclose(riemannR(10** 8), 5761551.86732016956230886495973466773614974875373013269730515344971028, rel_tol=1e-14)
+    assert isclose(riemannR(10** 9), 50847455.4277214275139488757725604948958205816339405187584674402806275, rel_tol=1e-14)
+    assert isclose(riemannR(10**10), 455050683.306846924463153241581999138860798387522778357853612239472848, rel_tol=1e-14)
+    assert isclose(riemannR(10**11), 4118052494.63140044176104610770875738881038250485725135693237205770486, rel_tol=1e-14)
+    assert isclose(riemannR(10**12), 37607910542.2259102347456960174294614401284842888654006835862483512921, rel_tol=1e-14)
+    assert isclose(riemannR(10**13), 346065531065.826027197892925730189963110519235323883089539675399774575, rel_tol=1e-14)
+    assert isclose(riemannR(10**14), 3204941731601.68903475050075411628082696395647459203069844399995295548, rel_tol=1e-14)
+    assert isclose(riemannR(10**15), 29844570495886.9273782222867277920288106126094682933466452724446606362, rel_tol=1e-14)
+
+def test_nthprimeapprox():
+    assert nthprimeapprox(10**1) == 29
+    assert nthprimeapprox(10**2) == 502
+    assert nthprimeapprox(10**3) == 7830
+    assert nthprimeapprox(10**4) == 104767
+    assert nthprimeapprox(10**5) == 1299733
+    assert nthprimeapprox(10**6) == 15484039
+    assert nthprimeapprox(10**7) == 179431238
+    assert nthprimeapprox(10**8) == 2038076587
+    assert nthprimeapprox(10**9) == 22801797575
+    assert nthprimeapprox(10**10) == 252097715776
+    assert nthprimeapprox(10**11) == 2760727752352
+    assert nthprimeapprox(10**12) == 29996225393465
+    assert nthprimeapprox(10**13) == 323780512411510
+    assert nthprimeapprox(10**14) == 3475385760290724
+
 def test_ecadd(): assert False              # TODO
 def test_ecdub(): assert False              # TODO
 def test_ecmparams(): assert False          # TODO
@@ -1255,10 +1287,8 @@ def test_ecmul(): assert False              # TODO
 def test_lucasmod(): assert False           # TODO
 def test_mlucas(): assert False             # TODO
 def test_multifactor(): assert False        # TODO
-def test_nthprimeapprox(): assert False     # TODO
 def test_partitions(): assert False         # TODO
 def test_primepi_S1(): assert False         # TODO
-def test_riemannR(): assert False           # TODO
 def test_secm(): assert False               # TODO
 
 # TODO: For stuff like factorsieve and primegen, implement tests to check that the upper limits are handled correctly.
