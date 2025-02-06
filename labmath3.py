@@ -554,7 +554,7 @@ def riemannR(x, n=None, zc={}):
     
     Examples:
     """                             # TODO
-    if n is None: n = int((11 * log(x) + 153) / 6)
+    if n is None: n = (11 * log(x) + 153) // 6
     lnx = log(x)
     total, lnxp, kfac = 0, 1, 1
     for k in range(1, n+1):
