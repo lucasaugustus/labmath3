@@ -5417,50 +5417,6 @@ def rational_in_base(b, p, q):
     L = pos - occurs[p]    # Length of reptend
     return (ipart, s[:-L], s[-L:])
 
-def restrictedpartitions(n, parts):
-    """
-    Computes the number of partitions of 0, 1, 2, ..., n with the specified
-    parts.  The algorithm is based on the generating function: if we have
-    P(x) = (1 + x + x^2 + x^3 + ...) * (1 + x^2 + x^4 + x^6 + ...) * ...
-           ... * (1 + x^n + x^2n + x^3n + ...) * ...,
-    then the number of partitions of n is the coefficient of the x^n term.
-    To compute the number of partitions whose parts come from parts, we just
-    omit all factors (1 + x^k + x^2k + x^3k + ...) where k is not in parts.
-    
-    Input:
-        n -- integer
-        parts -- finite iterable
-    
-    Output: a list
-    
-    Examples:
-    
-    >>> restrictedpartitions(23, (1,))
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    
-    >>> restrictedpartitions(23, [2])
-    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
-    
-    >>> restrictedpartitions(21, (1,2))
-    [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11]
-    
-    >>> restrictedpartitions(17, range(1,10))
-    [1, 1, 2, 3, 5, 7, 11, 15, 22, 30, 41, 54, 73, 94, 123, 157, 201, 252]
-    
-    >>> restrictedpartitions(20, primegen(20))
-    [1, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 14, 17, 19, 23, 26]
-    """
-    plist = [1]
-    for i in set(parts):
-        if i > n: continue
-        ans = [0] * (n+1)
-        for (x, p) in enumerate(plist):
-            for y in range(x, n+1, i):
-                ans[y] += p
-        plist = ans
-    return plist
-    # TODO: add an argument to compute distinct parts.  This is done by having the factors be (1+x^n).
-
 def sqfrcount(N, mobs=[], merts=[]):                       # TODO: Segmentate.  See https://arxiv.org/pdf/1107.4890 section 4.4.
     """
     Counts the number of squarefree integers in the interval [1,N].
@@ -5791,5 +5747,56 @@ def dirichletcharacter(q, n, x, qfac=None):
         if a != 0 and b != 0: break
         gppow = (gp * gppow) % q
     return Fraction(a*b, qtot) % 1
+
+def partitions(n, parts=None, distinct=False):
+    """
+    Computes the number of partitions of 0, 1, 2, ..., n with the specified
+    parts.  The algorithm is based on the generating function: if we have
+    P(x) = (1 + x + x^2 + x^3 + ...) * (1 + x^2 + x^4 + x^6 + ...) * ...
+           ... * (1 + x^n + x^2n + x^3n + ...) * ...,
+    then the number of partitions of n is the coefficient of the x^n term.
+    To compute the number of partitions whose parts come from parts, we just
+    omit all factors (1 + x^k + x^2k + x^3k + ...) where k is not in parts.
+    
+    Optionally, we compute the number of partitions in which the parts are
+    required to be distinct.  This is done by having the factors of the
+    generating function be (1 + x^k).
+    
+    Input:
+        n -- integer
+        parts -- None (default), or a finite iterable.
+                 If None, then we use (1, 2, ..., n) as the available parts.
+        distinct -- True or False (default).  If True, we compute the number
+                    of partitions into distinct parts.
+    
+    Output: a list
+    
+    Examples:
+    
+    >>> partitions(23, parts=(1,))
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    
+    >>> partitions(23, parts=[2])
+    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
+    
+    >>> partitions(21, parts=(1,2))
+    [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11]
+    
+    >>> partitions(17, parts=range(1,10))
+    [1, 1, 2, 3, 5, 7, 11, 15, 22, 30, 41, 54, 73, 94, 123, 157, 201, 252]
+    
+    >>> partitions(20, parts=primegen(20))
+    [1, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 14, 17, 19, 23, 26]
+    """
+    if parts is None: parts = range(1, n+1)
+    plist = [1]
+    for i in set(parts):
+        if i > n: continue
+        ans = [0] * (n+1)
+        for (x, p) in enumerate(plist):
+            for y in range(x, min(n, (x+i) if distinct else inf) + 1, i):
+                ans[y] += p
+        plist = ans
+    return plist
 
 #if __name__ == "__main__": import doctest; doctest.testmod()
