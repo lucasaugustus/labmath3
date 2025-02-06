@@ -3,9 +3,6 @@ first started assembling this library, I had no ambitions of publication, and as
 such, I wasn't terribly concerned with attribution; consequently, some of the
 proper sourcing of the copied code is lost.  The sources I can recall are:
 
-The function isqrt is largely unmodified from primo's post at
-https://codegolf.stackexchange.com/a/9088.
-
 The function siqs is derived from Stephan Kollman's repository at
 https://github.com/skollmann/PyFactorise.
 
@@ -18,3 +15,5 @@ https://github.com/kimwalisch/primecount.
 The primesum code is copied from Lucy_Hedgehog's post at https://projecteuler.net/thread=10;page=5.
 
 The totientsum code is derived from the Project Euler #351 overview.
+
+Part of the function sqrtmod_prime appears to be derived from https://codegolf.stackexchange.com/a/9088.
