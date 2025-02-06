@@ -78,10 +78,9 @@ def test_powerset():
     assert len(list(powerset(range(10)))) == 1024
 
 def test_primesum():
-    for n in range(1,100): assert primesum(n) == sum(primegen(n+1))
+    for n in range(-10,100): assert primesum(n) == sum(primegen(n+1))
     assert primesum(1729) == 213538
     assert primesum(10**6) == 37550402023
-    # TODO: primesum(<1)
 
 def test_nthprime():
     assert nthprime(0) == None
@@ -1290,5 +1289,3 @@ def test_multifactor(): assert False        # TODO
 def test_partitions(): assert False         # TODO
 def test_primepi_S1(): assert False         # TODO
 def test_secm(): assert False               # TODO
-
-# TODO: For stuff like factorsieve and primegen, implement tests to check that the upper limits are handled correctly.
