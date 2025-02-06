@@ -1048,13 +1048,6 @@ def test_powerfulmap():
     assert sorted(x for (x,y) in powerfulmap(125)) == [1, 4, 8, 9, 16, 25, 27, 32, 36, 49, 64, 72, 81, 100, 108, 121, 125]
     assert sorted(powerfulmap(81, lambda y,z: 2**z)) == [(1,1),(4,4),(8,8),(9,4),(16,16),(25,4),(27,8),(32,32),(36,16),(49,4),(64,64),(72,32),(81,16)]
 
-def test_restrictedpartitions():
-    assert restrictedpartitions(23, (1,)) == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-    assert restrictedpartitions(23, [2]) == [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
-    assert restrictedpartitions(21, (1,2)) == [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11]
-    assert restrictedpartitions(17, range(1,10)) == [1, 1, 2, 3, 5, 7, 11, 15, 22, 30, 41, 54, 73, 94, 123, 157, 201, 252]
-    assert restrictedpartitions(20, primegen(20)) == [1, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 14, 17, 19, 23, 26]
-
 def test_rational_in_base():
     assert rational_in_base(10, 11, 6) == ([1], [8], [3])
     assert rational_in_base(10, 0, 6) == ([0], [], [])
@@ -1279,6 +1272,19 @@ def test_nthprimeapprox():
     assert nthprimeapprox(10**13) == 323780512411510
     assert nthprimeapprox(10**14) == 3475385760290724
 
+def test_partitions():
+    assert partitions(26) == [1,1,2,3,5,7,11,15,22,30,42,56,77,101,135,176,231,297,385,490,627,792,1002,1255,1575,1958,2436]
+    assert partitions(23, parts=(1,)) == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    assert partitions(23, parts=(1,), distinct=True) == [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    assert partitions(23, parts=[2]) == [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
+    assert partitions(23, parts=[2], distinct=True) == [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    assert partitions(21, parts=(1,2)) == [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11]
+    assert partitions(22, parts=(1,2), distinct=True) == [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    assert partitions(19, parts=range(1,10)) == [1, 1, 2, 3, 5, 7, 11, 15, 22, 30, 41, 54, 73, 94, 123, 157, 201, 252, 318, 393]
+    assert partitions(18, parts=range(1,10), distinct=True) == [1, 1, 1, 2, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 15, 17, 18, 19, 21]
+    assert partitions(20, parts=primegen(20)) == [1, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 9, 10, 12, 14, 17, 19, 23, 26]
+    assert partitions(20, parts=primegen(20), distinct=True) == [1, 0, 1, 1, 0, 2, 0, 2, 1, 1, 2, 1, 2, 2, 2, 2, 3, 2, 4, 3, 4]
+
 def test_ecadd(): assert False              # TODO
 def test_ecdub(): assert False              # TODO
 def test_ecmparams(): assert False          # TODO
@@ -1286,6 +1292,5 @@ def test_ecmul(): assert False              # TODO
 def test_lucasmod(): assert False           # TODO
 def test_mlucas(): assert False             # TODO
 def test_multifactor(): assert False        # TODO
-def test_partitions(): assert False         # TODO
 def test_primepi_S1(): assert False         # TODO
 def test_secm(): assert False               # TODO
