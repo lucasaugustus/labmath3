@@ -8,8 +8,6 @@ Before publishing to PyPI:
 * Make comprehensive grammar edits.
 * Figure out where riemannzeta and zetam1 are accurate.
 * Warn against expecting certain functions' output to remain stable from version to version, including _primepi_S1, ecmparams, and the lower-order bits of floating-point output.
-* Consider integrating restrictedpartitions into partitions with a keyword argument, or something like that.
-* In restrictedpartitions, add an argument to compute distinct parts.
 * For bounded generators like primegen and factorsieve, implement tests to ensure that the bounds are handled correctly.
 * Find false positives for test_sprp.
 
