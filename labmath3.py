@@ -1373,10 +1373,8 @@ def kronecker(a, n):
     if n ==  1: return 1
     if n ==  2: return 0 if a%2 == 0 else (1 if a%8 in [1, 7] else -1)
     if n  <  0: return kronecker(a, -1) * kronecker(a, -n)
-    f = 0
-    while n % 2 == 0:
-        n //= 2
-        f += 1
+    f = (n & (-n)).bit_length() - 1     # number of trailing zeros of n in binary
+    n >>= f                             # the odd part of n
     return kronecker(a, 2)**f * jacobi(a, n)
 
 def sprp(n, b):
@@ -1399,8 +1397,8 @@ def sprp(n, b):
     >>> sprp(factorial(38) + 1, 2)
     False
     """
-    t, s = (n - 1)//2, 1
-    while t % 2 == 0: t //= 2; s += 1
+    s = ((n - 1) & (1 - n)).bit_length() - 1    # number of trailing zeros of n-1 in binary
+    t = (n - 1) >> s                            # the odd part of n-1
     #assert 1 + 2**s * t == n
     x = pow(b, t, n)
     if x == 1 or x == n - 1: return True
@@ -1541,8 +1539,9 @@ def slprp(n, a, b):
         # So n divides 2 * a * b * (a**2 - 4 * b).
         if n == 2: return True
         raise Exception("bad parameters: slprp(%d, %d, %d)" % (n, a, b))                    # TODO further analysis of this case
-    s, t = 1, (n - jacobi(D, n)) // 2
-    while t % 2 == 0: s += 1; t //= 2
+    x = (n - jacobi(D, n))
+    s = (x & (-x)).bit_length() - 1     # number of trailing zeros of x in binary
+    t = x >> s                          # the odd part of x
     u, v = lucasmod(t, a, b, n)
     if u == 0 or v == 0: return True
     q = pow(b, t, n)
@@ -1583,9 +1582,9 @@ def xslprp(n, a):
         # So n divides 2 * (a-2) * a * (a+2).
         if n == 2: return True
         raise Exception("bad parameters: xslprp(%d, %d)" % (n, a))                     # TODO further analysis of this case
-    s, t = 1, (n - jacobi(D, n)) // 2
-    while t % 2 == 0: s += 1; t //= 2
-    u, v = lucasmod(t, a, 1, n)
+    x = (n - jacobi(D, n))
+    s = (x & (-x)).bit_length() - 1     # number of trailing zeros of x in binary
+    u, v = lucasmod(x>>s, a, 1, n)      # x>>s is the odd part of x
     if (u == 0 and (v == 2 or v == n - 2)) or v == 0: return True
     for _ in range(1, s):
         v = (v*v - 2) % n
@@ -1961,8 +1960,9 @@ def frobenius_prp(n, poly, strong=False):
     # F_(i,j) = gcmd(F_i(x), x^(2^(j-1)*s)+1).  Then if F_i(x) != $\prod_{j=0}^r F_{i,j}(x)$, if for some j the degree of
     # F_(i,j)(x) is not a multiple of i, or if one of the gcmds fails to exist, declare n to be composite and terminate.
     for i in range(1, d+1):
-        r, s = 0, n**i - 1
-        while s % 2 == 0: s //= 2; r += 1
+        s = n**i - 1
+        r = (s & (-s)).bit_length() - 1     # number of trailing zeros of s in binary
+        s >>= r                             # the odd part of s
         # Note that the source article (under the heading "Square Root Step") says that r should be odd.  This seems rather
         # weird, and is in fact wrong, as shown by experiment and the fact that Theorem 5.1 immediately above indicates that
         # it is s that should be odd.
@@ -2008,8 +2008,8 @@ def isprime(n, tb=(3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59)): # TODO optimi
         if n % p == 0: return n == p
     
     # 2.  If sprp(n,2) fails, return False.  If it succeeds, continue.
-    t, s = (n - 1) // 2, 1
-    while t % 2 == 0: t //= 2; s += 1
+    s = ((n - 1) & (1 - n)).bit_length() - 1    # number of trailing zeros of n-1 in binary
+    t = (n - 1) >> s                            # the odd part of n-1
     #assert 1 + 2**s * t == n
     x = pow(2, t, n)
     if x != 1 and x != n - 1:
@@ -2033,8 +2033,8 @@ def isprime(n, tb=(3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59)): # TODO optimi
     # Now run slprp(n, 1, (1 - D) // 4) and return the result.
     b = (1 - D) // 4
     if 1 < gcd(n, b) < n: return False
-    s, t = 1, (n + 1) // 2
-    while t % 2 == 0: s += 1; t //= 2
+    s = ((n+1) & (-n-1)).bit_length() - 1       # the number of trailing zeros of n+1 in binary
+    t = (n+1) >> s                              # the odd part of n+1
     v, w, q, Q = 2, 1, 1, 1
     for k in bin(t)[2:]:
         q = (q*Q) % n
@@ -3086,7 +3086,7 @@ def divcount(n):
     >>> [divcount(n) for n in (28, 42, 40320, {2:2, 3:1})]
     [6, 8, 96, 6]
     """
-    return prod(k+1 for _,k in (factorint(n) if isinstance(n, inttypes) else n).items())
+    return prod(k+1 for k in (factorint(n) if isinstance(n, inttypes) else n).values())
 
 def divsigma(n, x=1):
     """
@@ -3424,7 +3424,7 @@ def liouville(n):
     >>> list(liouville(n) for n in range(1, 22))
     [1, -1, -1, 1, -1, 1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, -1, -1, -1, -1, 1]
     """
-    return prod(-1 for _ in primefac(n)) if isinstance(n, inttypes) else prod((-1)**e for e in n.values())
+    return (-1)**(len(list(primefac(n))) if isinstance(n, inttypes) else sum(n.values()))
 
 def polyroots_prime(f, p, sqfr=False):
     """
