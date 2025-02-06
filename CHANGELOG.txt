@@ -1,6 +1,6 @@
 Version 3.0.0:
 
-Minor alterations:
+Minor alterations to behavior:
     divcountsieve is now a generator.
     ecadd is now _ecadd.
     ecdub is now _ecdub.
@@ -17,6 +17,7 @@ Minor alterations:
     primephi no longer has a keyword argument, and its third argument is now a 1-based list.
     primepi now uses the Lagarias-Miller-Odlyzko algorithm.  Its keyword arguments have changed.
     randprime returns None when asked to produce a prime with 1 digit in base 2, rather than entering an infinite loop.
+    riemannR's default value for n is now (11 * ln(x) + 153) // 6.
     totientsieve is now a generator, and it has an optional second argument to make it compute the Jordan totient function.
 
 New functions: dirichletcharacter, divsigmasieve, powerfulmap, pythags, rational_in_base, restrictedpartitions, sqfrcount
@@ -145,4 +146,3 @@ Fixed a bug in which product was not imported from itertools.
 ---
 
 Versions 1.0.0 through 1.0.7: fumbling around with PyPI.
-
