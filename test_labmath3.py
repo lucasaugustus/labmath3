@@ -878,6 +878,7 @@ def test_pell():
     assert list(islice(pell(76, 36)[0], 7)) == [(6, 0), (44, 5), (70, 8), (1020, 117), (14890, 1708), (23756, 2725), (346794, 39780)]
 
 def test_dirichletcharacter():
+    assert dirichletcharacter(2, 1, 0) == complex(0, inf)
     assert dirichletcharacter(2, 1, 1) == 0
     assert dirichletcharacter(40487, 100, 11) == Fraction(15653, 20243)
     
@@ -974,6 +975,7 @@ def test_dirichletcharacter():
             if gcd(i,q) != 1: continue
             testdata = list(map(str, (dirichletcharacter(q,i,x) for x in range(q) if gcd(x,q) == 1)))
             assert testdata == data[q][i], (i, testdata, data[q])
+            assert all(dirichletcharacter(q, i, x) == complex(0, inf) for x in range(q) if gcd(x,q) != 1)
 
 def test_primephi():
     assert primephi(123456789, 0, [0] + list(primegen(20))) == 123456789
