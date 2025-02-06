@@ -490,7 +490,7 @@ def altseriesaccel(a, n):
 
 def riemannzeta(n, k=24):   # TODO Use the functional equation for 0.5 < real(n) < 1.5.  This requires a complex gamma function.
     """
-    The Riemann zeta function, computed by using a convergence-acceleration
+    The Riemann zeta function, computed by applying a convergence-acceleration
     technique (implemented as altseriesaccel) to the Dirichlet eta function.
     Should be rather accurate throughout the complex plane except near n
     such that 1 == 2**(n-1).
@@ -542,7 +542,9 @@ def riemannR(x, n=None, zc={}):
     Input:
         x -- Integer. Evaluate the function at this point.
         n -- Integer.  Number of terms to use.  Default == None; in this
-             case, we set n = 6 * int(log(x, 10)+1).
+             case, we set n = (11 * ln(x) + 153) / 6.  This was chosen by experiment
+             to get an error of < 10^-14 relative to the true values for x in
+             [10**2, 10**3, ..., 10**15].  An OverflowError may occur if n is sufficiently large.
         zc -- Dict.  Default = {}.  Keys are integers; values are the
               Riemann zeta function at those integers.  Erroneous values are
               neither detected nor corrected.  Unprovided values are
@@ -552,7 +554,7 @@ def riemannR(x, n=None, zc={}):
     
     Examples:
     """                             # TODO
-    if n is None: n = 6 * int(log(x, 10)+1)    # TODO determine good default values for n
+    if n is None: n = int((11 * log(x) + 153) / 6)
     lnx = log(x)
     total, lnxp, kfac = 0, 1, 1
     for k in range(1, n+1):
@@ -561,8 +563,10 @@ def riemannR(x, n=None, zc={}):
         rz = zc.get(k+1, None)
         if rz is None: rz = zc[k+1] = riemannzeta(k+1)
         t = lnxp / (k * kfac * rz)
-        total += t
-    return 1+total
+        tt = total + t
+        if total - tt == 0: break   # This should protect from OverflowErrors.
+        total = tt
+    return 1 + total
 
 def nthprimeapprox(n):
     """
@@ -631,7 +635,7 @@ def xgcd(a, b):     # TODO: this is ugly.  Clean it up.
     """
     Extended Euclidean algorithm: returns a tuple (g,x,y) where
     g == gcd(a, b) and g == a*x + b*y.  Note that many such tuples
-    exist for a each (a,b); we make no guarantees about which
+    exist for each (a,b); we make no guarantees about which
     tuple will be returned.
     
     Input: a, b -- integers
@@ -1942,8 +1946,8 @@ def frobenius_prp(n, poly, strong=False):
         for (j,k) in enumerate(Fix): Fixn = polyaddmodp(Fixn, polymulmodp(polypowmodpmodpoly([0,1], j*n, n, Fix), [k], n), n)
         Fixn = polydivmodmodp(Fixn, Fix, n)[1]
         if Fixn != []: return False
-    # Jacobi step: Let S = $\sum_{2|i} deg(F_i(x))/i$.  If (-1)^S != jacobi(D, n), declare n to be composite.  If n is not yet
-    # declared composite, then it is a Frobenius PRP.
+    # Jacobi step: Let S = $\sum_{2|i} deg(F_i(x))/i$.  If (-1)^S != jacobi(D, n), declare n to be composite.
+    # If n is not yet declared composite, then it is a Frobenius PRP.
     S = 0
     for (i,Fi) in enumerate(Flist):
         if i % 2 == 1 or i == 0: continue
@@ -1952,26 +1956,26 @@ def frobenius_prp(n, poly, strong=False):
         S += Fid//i
     if (-1)**S != jacobi(D, n): return False
     # If we get to this point, then n is a Frobenius PRP.
-    if strong:
-        # Square root step: For each 1 <= i <= d, let n^i-1 = 2^r * s with s odd.  Let F_(i,0)(x) = gcmd(F_i(x),x^s-1) and let
-        # F_(i,j) = gcmd(F_i(x), x^(2^(j-1)*s)+1).  Then if F_i(x) != $\prod_{j=0}^r F_{i,j}(x)$, if for some j the degree of
-        # F_(i,j)(x) is not a multiple of i, or if one of the gcmds fails to exist, declare n to be composite and terminate.
-        for i in range(1, d+1):
-            r, s = 0, n**i - 1
-            while s % 2 == 0: s //= 2; r += 1
-            # Note that the source article (under the heading "Square Root Step") says that r should be odd.  This seems rather
-            # weird, and is in fact wrong, as shown by experiment and the fact that Theorem 5.1 immediately above indicates that
-            # it is s that should be odd.
-            assert n**i - 1 == 2**r * s
-            Fi = Flist[i]
-            Filist = [gcmd(Fi, polysubmodp(polypowmodpmodpoly([0,1], s, n, Fi), [1], n), n)]
-            for j in range(1, r+1): Filist.append(gcmd(Fi, polyaddmodp(polypowmodpmodpoly([0,1], s<<(j-1), n, Fi), [1], n), n))
-            if any(Fij is None for Fij in Filist): return False             # ... if one of the gcmds fails to exist
-            if any((len(Fij)-1) % i != 0 for Fij in Filist): return False   # ... if for some j, deg(Fij) is not a multiple of i
-            Filistprod = [1]
-            for Fij in Filist: Filistprod = polymulmodp(Filistprod, Fij, n)
-            if Fi != Filistprod: return False                               # ... if F_i(x) != $\prod_{j=0}^r F_{i,j}(x)$
-        # If we get to this point, then n is a strong Frobenius PRP.
+    if not strong: return True
+    # Square root step: For each 1 <= i <= d, let n^i-1 = 2^r * s with s odd.  Let F_(i,0)(x) = gcmd(F_i(x),x^s-1) and let
+    # F_(i,j) = gcmd(F_i(x), x^(2^(j-1)*s)+1).  Then if F_i(x) != $\prod_{j=0}^r F_{i,j}(x)$, if for some j the degree of
+    # F_(i,j)(x) is not a multiple of i, or if one of the gcmds fails to exist, declare n to be composite and terminate.
+    for i in range(1, d+1):
+        r, s = 0, n**i - 1
+        while s % 2 == 0: s //= 2; r += 1
+        # Note that the source article (under the heading "Square Root Step") says that r should be odd.  This seems rather
+        # weird, and is in fact wrong, as shown by experiment and the fact that Theorem 5.1 immediately above indicates that
+        # it is s that should be odd.
+        assert n**i - 1 == 2**r * s
+        Fi = Flist[i]
+        Filist = [gcmd(Fi, polysubmodp(polypowmodpmodpoly([0,1], s, n, Fi), [1], n), n)]
+        for j in range(1, r+1): Filist.append(gcmd(Fi, polyaddmodp(polypowmodpmodpoly([0,1], s<<(j-1), n, Fi), [1], n), n))
+        if any(Fij is None for Fij in Filist): return False                 # ... if one of the gcmds fails to exist
+        if any((len(Fij)-1) % i != 0 for Fij in Filist): return False       # ... if for some j, deg(Fij) is not a multiple of i
+        Filistprod = [1]
+        for Fij in Filist: Filistprod = polymulmodp(Filistprod, Fij, n)
+        if Fi != Filistprod: return False                                   # ... if F_i(x) != $\prod_{j=0}^r F_{i,j}(x)$
+    # If we get to this point, then n is a strong Frobenius PRP.
     return True
 
 def isprime(n, tb=(3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59)): # TODO optimize the basis, possibly by varying it with n
