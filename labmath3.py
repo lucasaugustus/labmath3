@@ -438,6 +438,7 @@ def primesum(n):
     >>> [primesum(n) for n in (100, 1729, 10**6)]
     [1060, 213538, 37550402023]
     """
+    if n < 2: return 0
     r = isqrt(n)
     V = [n//i for i in range(1,r+1)]
     V += list(range(V[-1]-1,0,-1))
@@ -475,7 +476,7 @@ def altseriesaccel(a, n):
     
     >>> altseriesaccel((1/j for j in count(1,2)), 24+1) * 4
     3.1415926535897932384626
-    """                             # TODO
+    """
     Vl, Vh = 2, 6
     for bit in bin(n)[2:]: Vl, Vh = (Vh * Vl - 6, Vh * Vh - 2) if bit == '1' else (Vl * Vl - 2, Vh * Vl - 6)
     d = Vl // 2
@@ -553,7 +554,19 @@ def riemannR(x, n=None, zc={}):
     Output: a floating-point real number.
     
     Examples:
-    """                             # TODO
+    
+    >>> riemannR(10**2)
+    25.6616332669241825932267979403556981499733590116719758717562720917115
+    
+    >>> riemannR(10**3)
+    168.359446281167348064913310986732910846599848149180538039907584278744
+    
+    >>> riemannR(10**4)
+    1226.93121834343310855421625817211837033992387117883498583439259905007
+    
+    >>> riemannR(10**5)
+    9587.43173884197341435161292390822943109805895679695117928210475718957
+    """
     if n is None: n = (11 * log(x) + 153) // 6
     lnx = log(x)
     total, lnxp, kfac = 0, 1, 1
@@ -578,7 +591,22 @@ def nthprimeapprox(n):
     Output: an integer
     
     Examples:
-    """                             # TODO
+    
+    >>> nthprimeapprox(10**1)
+    29
+    
+    >>> nthprimeapprox(10**2)
+    502
+    
+    >>> nthprimeapprox(10**3)
+    7830
+    
+    >>> nthprimeapprox(10**4)
+    104767
+    
+    >>> nthprimeapprox(10**5)
+    1299733
+    """
     if n <= 2000:
         if n < 26: return None if n < 1 else (0,2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97)[n]
         ln_n = log(n)
@@ -719,7 +747,7 @@ def introot(n, r=2):    # TODO Newton iteration?
     if n < 2: return n
     if r == 1: return n
     if r == 2: return isqrt(n)
-    #if r % 2 == 0: return introot(isqrt(n), r//2)      # TODO Check validity of this line.
+    if r % 2 == 0: return introot(isqrt(n), r//2)
     lower = upper = 1 << (n.bit_length() // r)
     while lower ** r >  n: lower >>= 2
     while upper ** r <= n: upper <<= 2
@@ -1209,7 +1237,7 @@ def linrecgen(a, b, m=None):
     """
     n = len(a)
     assert n == len(b)
-    if m is not None: a, b = [x%m for x in a], [x%m for x in b]              # Would it be better to convert b into a dict? TODO
+    if m is not None: a, b = [x%m for x in a], [x%m for x in b]
     while True:
         yield b[0]
         x = sum(a[x]*b[x] for x in range(n))
@@ -1450,7 +1478,6 @@ def miller(n):
     [False, False, False, False, False, False]
     """
     return n == 2 if n % 2 == 0 or n < 3 else mrab(n, range(2, min(n-1, int(2 * log(n)**2))))
-    # Heuristically, we can drop the upper limit to log(n) * log(log(n)) / log(2).  TODO write a function to that effect
 
 def lprp(n, a, b):
     """
@@ -2234,7 +2261,7 @@ def sqrtmod_prime(a, p):
         # CranPom ex 2.31, pg 112 / 126.  Pretty sure this amounts to Cipolla-Lehmer.
         if a == 0: return 0     # Necessary to avoid an infinite loop in the legendre section
         h = 2
-        while legendre(h*h - 4*a, p) != -1: h += 1                          # TODO compare speed vs random selection
+        while legendre(h*h - 4*a, p) != -1: h += 1
         #return ( lucasmod((p+1)//2, h, a, p)[1] * modinv(2, p) ) % p
         k, v, w, q, Q = (p+1)//2, 2, h % p, 1, 1
         for kj in bin(k)[2:]:
@@ -2278,7 +2305,6 @@ def cbrtmod_prime(a, p):
         # We already handled the p == 2 case, so the pow in the next line will not throw a ValueError.
         x, c = pow(a, (2*p+1)//9, p) if p%9 == 4 else pow(a, (p+2)//9, p), ( (-1 + sqrtmod_prime(-3, p)) * pow(2, -1, p) ) % p
         return sorted((x, (x*c)%p, (x*c*c)%p))
-    # TODO: Optimize.
     e, q = 2, (p-1)//9
     while q % 3 == 0: q //= 3; e += 1
     # 1: Find h in Zp at random such that [h/p] != 1 mod p.
@@ -3311,7 +3337,7 @@ def totientsieve(limit=inf, k=1):
         nextp = next(pg)
         lo, hi = hi, min(nextp**2, limit)
 
-def totientsum(n):
+def totientsum(n):  # TODO: What are the time- and space-complexities?
     """
     Computes sum(totient(n) for n in range(1, n+1)) efficiently.
     Derived from the Project Euler #351 overview.
@@ -3326,7 +3352,7 @@ def totientsum(n):
     [0, 1, 2, 4, 6, 10, 12, 18, 22, 28, 3044, 304192, 30396356427242]
     """
     if n < 12: return sum(totient(x) for x in range(1, n+1))
-    L = int((n/log(log(n)))**(2/3)) # TODO I hate floating point.
+    L = int((n/log(log(n)))**(2/3))
     sieve = list(range(L+1))
     bigV = [0] * (n//L + 1)
     for p in range(2, L+1):
@@ -4033,7 +4059,7 @@ def sqrtcfrac(n):
     
     >>> sqrtcfrac(16)
     (4, [])
-    """                         # TODO
+    """
     m0, d0 = 0, 1
     sr = a0 = isqrt(n)
     ret = (sr, [])
@@ -4329,7 +4355,7 @@ def ispractical(n):
     Output: True or False
     
     Examples:
-    """ # TODO
+    """
     # This bit here is an O(n) test that is derived directly from the definition.  Keeping it for some sort of nostalgia.
     #divs = [d for d in divisors(n) if d < n]
     #divsums = set([0]) # divsums will contain those subset sums over the divisors of n that are strictly less than n
@@ -4883,11 +4909,11 @@ def isprime_np1(n, fac=None):
             if j == 1: continue # Select another a,b
             # The lucasmod in the next line contains a pow(., -1, .) call.
             # This is guaranteed to not raise a ValueError thanks to the "if j == 0" bit above.
-            if lucasmod(n+1, a, b, n)[0] != 0: return False         # TODO inline?
+            if lucasmod(n+1, a, b, n)[0] != 0: return False
             for q in fac:
                 # The lucasmod in the next line contains a pow(., -1, .) call.
                 # This is guaranteed to not raise a ValueError thanks to the "if j == 0" bit above.
-                g = gcd(lucasmod((n+1)//q, a, b, n)[0], n)          # TODO inline?
+                g = gcd(lucasmod((n+1)//q, a, b, n)[0], n)
                 if g == 1: continue
                 elif g == n: break  # Select another a,b
                 else: assert 1 < g < n and n % g == 0; return False
@@ -5435,11 +5461,12 @@ def restrictedpartitions(n, parts):
     return plist
     # TODO: add an argument to compute distinct parts.  This is done by having the factors be (1+x^n).
 
-def sqfrcount(N, mobs=[], merts=[]):
+def sqfrcount(N, mobs=[], merts=[]):                       # TODO: Segmentate.  See https://arxiv.org/pdf/1107.4890 section 4.4.
     """
     Counts the number of squarefree integers in the interval [1,N].
     Uses Pawlewicz's O(N**0.4 * log(log(N))**0.6) algorithm.
-    Derived from the code at
+    This is the non-segmented version, so memory usage is also
+    O(N**0.4)-ish.  This code is derived from the code at
     https://smsxgz.github.io/post/pe/counting_square_free_numbers/.
     
     Input:
@@ -5766,5 +5793,3 @@ def dirichletcharacter(q, n, x, qfac=None):
     return Fraction(a*b, qtot) % 1
 
 #if __name__ == "__main__": import doctest; doctest.testmod()
-
-# TODO: Edit docstrings to have a maximum column count of 76.
