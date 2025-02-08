@@ -55,3 +55,4 @@ General TODOs:
 * A line in egypt_short is marked as being rather inefficient for large numbers of terms.  Figure out why, and improve it.
 * In sqfrcount, experiment with dfferent values for the multiplier.
 * Write an efficient dlog function and use it in dirichletcharacter.
+* Investigate alternate discriminant algorithms, such as https://math.stackexchange.com/questions/696335 and https://en.m.wikipedia.org/wiki/B%C3%A9zout_matrix.
