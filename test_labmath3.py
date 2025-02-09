@@ -287,7 +287,15 @@ def test_cubicintroots():
         # (x - a) * (bx^2 + cx + d)
         # bx^3 + (c - ab)x^2 + (d - ac)x - ad
         assert (a,) == cubicintroots(b, c - a*b, d - a*c, -a*d)
-    # One real root, not integer
+    # One real root, not integer, triple
+    for _ in range(1000):
+        a, b = 1, 1
+        while a % b == 0:
+            a = randrange(-100, 100)
+            b = randrange(1, 100)
+        assert Fraction(a,b).denominator != 1
+        assert cubicintroots(b*b*b, 3*b*b*a, 3*b*a*a, a*a*a) == ()
+    # One real root, not integer, single
     for _ in range(1000):
         a = Fraction(1)
         while a.denominator == 1:
@@ -301,6 +309,11 @@ def test_cubicintroots():
         # (gx - f) * (bx^2 + cx + d)
         # bgx^3 + (cg - bf)x^2 + (dg - cf)x - df
         assert () == cubicintroots(b*g, c*g - b*f, d*g - c*f, -d*f)
+    # Special tests to hit rare codepaths
+    assert cubicintroots(2,-17,40,-25) == (1,5)
+    assert cubicintroots(1,-4,4,-1) == (1,)
+    assert cubicintroots(1,-5,7,-2) == (2,)
+    assert cubicintroots(3,-13,17,-6) == (2,)
 
 def test_sqfrgen():
     assert sorted(sqfrgen(())) == [1]
@@ -433,9 +446,14 @@ def test_mrab():
     assert     mrab(factorial(38) - 1, (2,3))
     assert not mrab(factorial(38) + 1, (2,3))
 
-def test_sprp():    # TODO: False positives
+def test_sprp():
     assert     sprp(factorial(38) - 1, 2)
     assert not sprp(factorial(38) + 1, 2)
+    assert     sprp(4840261*9680521, 2)  # False positive
+    assert     sprp(4840261*9680521, 3)  # False positive
+    assert     sprp(4840261*9680521, 5)  # False positive
+    assert     sprp(4840261*9680521, 7)  # False positive
+    assert not sprp(4840261*9680521, 11)
 
 def test_legendre():
     assert [legendre(a, 11) for a in [-10, -7, -4, -2, -1, 0, 1, 2, 4, 7, 10]] == [1, 1, -1, 1, -1, 0, 1, -1, 1, -1, -1]
@@ -658,12 +676,12 @@ def test_polypowmodpmodpoly():
     assert polypowmodpmodpoly([1,1], 101, 15, [1,2,3,4,5]) is None
 
 def test_frobenius_prp():
-    pseuds = [911*2731,1087*3259,1619*6473,1031*10301,2003*6007,883*25579]
-    assert [frobenius_prp(n, [-1, 1, 0], strong=False) for n in pseuds] == [False, False, True, True, False, False]
-    assert [frobenius_prp(n, [-1, 1, 0], strong=True) for n in pseuds] == [False, False, True, False, False, False]
-    assert [frobenius_prp(n, [-1, 1, 1], strong=False) for n in pseuds] == [True, True, False, False, True, True]
-    assert [frobenius_prp(n, [-1, 1, 1], strong=True) for n in pseuds] == [True, True, False, False, True, False]
-    assert frobenius_prp(factorial(38)-1, [-1, 1, 0])
+    pseuds = [911*2731, 1087*3259, 1619*6473, 1031*10301, 2003*6007, 883*25579]
+    assert [frobenius_prp(n, [-1, 1, 0], strong=False) for n in pseuds] == [False, False, True , True , False, False]
+    assert [frobenius_prp(n, [-1, 1, 0], strong=True ) for n in pseuds] == [False, False, True , False, False, False]
+    assert [frobenius_prp(n, [-1, 1, 1], strong=False) for n in pseuds] == [True , True , False, False, True , True ]
+    assert [frobenius_prp(n, [-1, 1, 1], strong=True ) for n in pseuds] == [True , True , False, False, True , False]
+    assert     frobenius_prp(factorial(38)-1, [-1, 1, 0])
     assert not frobenius_prp(factorial(38)+1, [-1, 1, 0])
 
 def test_siqs():
@@ -875,7 +893,14 @@ def test_pell():
     assert list(islice(pell(2, -1)[0], 7)) == [(1, 1), (7, 5), (41, 29), (239, 169), (1393, 985), (8119, 5741), (47321, 33461)]
     assert pell(46, 12)[1:] == ([(14, 2), (10594, 1562)], (24335, 3588))
     assert pell(76, 36)[1:] == ([(6, 0), (44, 5), (70, 8), (1020, 117), (14890, 1708), (23756, 2725)], (57799, 6630))
-    assert list(islice(pell(76, 36)[0], 7)) == [(6, 0), (44, 5), (70, 8), (1020, 117), (14890, 1708), (23756, 2725), (346794, 39780)]
+    assert list(islice(pell(76, 36)[0], 7)) == [(6,0), (44,5), (70,8), (1020,117), (14890,1708), (23756,2725), (346794,39780)]
+    assert pell(0, 99) == (None, [], None)
+    assert pell(-5, 96) == (None, [(4,4)], None)
+    assert pell(-5, 97) == (None, [], None)
+    assert pell(-5, 98) == (None, [], None)
+    assert pell(-5, 99) == (None, [], None)
+    assert pell(-5, 100) == (None, [(10,0)], None)
+    assert pell(-5, 101) == (None, [(9,2)], None)
 
 def test_dirichletcharacter():
     assert dirichletcharacter(2, 1, 0) == complex(0, inf)
@@ -1276,6 +1301,7 @@ def test_nthprimeapprox():
 
 def test_partitions():
     assert partitions(26) == [1,1,2,3,5,7,11,15,22,30,42,56,77,101,135,176,231,297,385,490,627,792,1002,1255,1575,1958,2436]
+    assert partitions(28, distinct=True) == [1,1,1,2,2,3,4,5,6,8,10,12,15,18,22,27,32,38,46,54,64,76,89,104,122,142,165,192,222]
     assert partitions(23, parts=(1,)) == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     assert partitions(23, parts=(1,), distinct=True) == [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     assert partitions(23, parts=[2]) == [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
