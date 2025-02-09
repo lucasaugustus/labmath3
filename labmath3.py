@@ -13,7 +13,7 @@ from heapq import merge
 try: from gmpy2 import mpz; mpzv, inttypes = 2, (int, type(mpz(1)))
 except ImportError: mpz, mpzv, inttypes = int, 0, (int,)
 
-labmathversion = "3.0.0"
+labmathversion = "3.0.0"    # TODO: Should this be a tuple?
 
 def primegen(limit=inf):
     """
@@ -567,7 +567,7 @@ def riemannR(x, n=None, zc={}):
     >>> riemannR(10**5)
     9587.43173884197341435161292390822943109805895679695117928210475718957
     """
-    if n is None: n = (11 * log(x) + 153) // 6
+    if n is None: n = int((11 * log(x) + 153) // 6)
     lnx = log(x)
     total, lnxp, kfac = 0, 1, 1
     for k in range(1, n+1):
@@ -2967,8 +2967,9 @@ def factorsieve(limit=inf):
     """
     A segmented sieve to generate the sequence map(factorint, count(1)),
     up to some limit, far more efficiently than factoring each number.
-    Memory usage is on the order of the square root of the most-recently-
-    yielded term.
+    
+    The time- and space-complexities to iterate over the first n terms
+    are within logarithmic factors of O(n) and O(sqrt(n)), respectively.
     
     Input: limit -- a number; default == inf.  We generate factorizations
                     strictly less than this.
@@ -2980,7 +2981,7 @@ def factorsieve(limit=inf):
     >>> list(factorsieve(10))
     [{}, {2: 1}, {3: 1}, {2: 2}, {5: 1}, {2: 1, 3: 1}, {7: 1}, {2: 3}, {3: 2}]
     """
-    if limit <= 1: return
+    if limit < 1: return
     yield {}
     pg = primegen()
     primes = [next(pg)]
@@ -3143,6 +3144,9 @@ def divcountsieve(limit=inf):
     Uses a segmented sieve to compute the divisor count of all positive integers
     strictly less than the input.
     
+    The time- and space-complexities to iterate over the first n terms
+    are within logarithmic factors of O(n) and O(sqrt(n)), respectively.
+    
     Input: limit -- We stop the sieve at this value.  Default = inf.
     
     Output: Sequence of integers
@@ -3193,6 +3197,9 @@ def divsigmasieve(limit=inf, x=1):
     Uses a segmented sieve to compute the xth-power-sum-of-divisors for all
     positive integers strictly less than the input.
     
+    The time- and space-complexities to iterate over the first n terms
+    are within logarithmic factors of O(n) and O(sqrt(n)), respectively.
+    
     Input: limit -- We stop the sieve at this value.  Default = inf.
            x -- We compute the sums of the xth powers of the divisors.
     
@@ -3231,12 +3238,9 @@ def divsigmasieve(limit=inf, x=1):
             pxe = px
             pp = p
             while pp < hi:
-                #print(lo, hi, p, px, pxe)
                 for n in range((-lo) % pp, hi - lo, pp):
                     ints[n] //= p
                     mults[n] += pxe
-                #print(mults)
-                #print(ints)
                 pp *= p
                 pxe *= px
             for n in range((-lo) % p, hi - lo, p):
@@ -3284,6 +3288,9 @@ def totient(n, k=1):
 def totientsieve(limit=inf, k=1):
     """
     Uses a segmented sieve to compute the totients strictly less than limit.
+    
+    The time- and space-complexities to iterate over the first n terms
+    are within logarithmic factors of O(n) and O(sqrt(n)), respectively.
     
     Input: limit -- an integer.  Default = inf.
            k -- a positive integer.  We compute the kth-order Jordan totient
@@ -3394,6 +3401,9 @@ def mobiussieve(limit=inf):
     """
     Uses a segmented sieve to compute the Mobius function for all positive
     integers strictly less than the input.
+    
+    The time- and space-complexities to iterate over the first n terms
+    are within logarithmic factors of O(n) and O(sqrt(n)), respectively.
     
     Input: limit -- We stop the sieve at this value.  The last computed value
                    of the Mobius function is at limit-1.  Default = inf.
@@ -4181,52 +4191,6 @@ def quadratic_scf(P,Q,D):
         P, Q, D = newP//g, newQ//g, newD//(g*g)
         d = isqrt(D)
 
-def partitions(n, parts=[1]):
-    """
-    Computes with some semblance of efficiency the number of partitions of
-    an integer.  Code shamelessly stolen / derived from someone else's work.
-    I think I got it from oeis.org/A000041.
-    
-    Input:
-        n -- a whole number
-        parts -- list of integers.  This is a precomputed list of partitions
-                 ---i.e., parts[n] == partitions(n) for all n in
-                 range(len(parts)).  Note that calling partitions(n, l) on a
-                 valid l such that len(l) < n+1 will have the side effect of
-                 extending l to include the partitions up through n.
-    
-    Output: An integer
-    
-    Examples:
-    >>> pts = [1, 1, 2, 3, 5, 7, 11]
-    >>> # We do not use the second argument in this next call, so the only
-    >>> # effect of calling the function will be to return a number.
-    >>> partitions(18)
-    385
-    >>> pts                     # Now we check that pts is unmodified.
-    [1, 1, 2, 3, 5, 7, 11]
-    >>> # Now we use the second argument, so the function returns a number
-    >>> # and extends pts.
-    >>> partitions(17, pts)
-    297
-    >>> pts
-    [1, 1, 2, 3, 5, 7, 11, 15, 22, 30, 42, 56, 77, 101, 135, 176, 231, 297]
-    >>> # An invalid second argument produces incorrect results:
-    >>> partitions(18, [5, 0, -1, 5])
-    110
-    """
-    if parts == []: parts.append(1)
-    if len(parts) >= n+1: return parts[n]
-    for i in range(len(parts)-1, n):
-        party = 0; J = i; k = 2
-        while 0 <= J:
-            T = parts[J]
-            party = party+T if k//2 % 2 else party-T
-            J -= k if k % 2 else k//2
-            k += 1
-        parts.append(party)
-    return parts[n]
-
 def partgen(n):
     """
     Generates partitions of integers in ascending order via an iterative
@@ -4665,14 +4629,20 @@ def cubicintroots(a, b, c, d):
     if len(qr) == 2: inspect = ((-H,qr[0]), qr, (qr[1],H))
     elif len(qr) == 1:
         qr = qr[0]
-        # Divide x-qr into the derivative (3*a*x^2 + 2*b*x + c):
-        s = -2*b if c == 0 else c//qr
-        assert s*qr == c, (a,b,c,d)
-        # (x-qr) * (3*a*x - s) == 3*a*x^2 - (3*a*qr + s)*x + c
-        assert -(3*a*qr + s) == 2*b, (a,b,c,d,qr,s)
-        # So we have one critical point at qr, which is an integer.  The other one is at s/(3*a), which is not an integer.
-        assert deriv(qr) == 0 != s % (3*a), (a,b,c,d)
+        # Since qr is a root of the derivative, we have
+        # qr == (-2b +/- sqrt(4b^2 - 12ac)) / (6a)
+        #qs = Fraction(-2*b, 3*a) - qr
+        #assert deriv(qr) == 0, (a,b,c,d,qr)
+        #assert deriv(qs) == 0, (a,b,c,d,qs)
+        # qr is the integer critical point, and qs is the non-integer critical point.
+        s = -2*b - 3*a*qr
+        # So we have one critical point at qr, which is an integer.  The other one is at qs == s/(3*a), which is not an integer.
+        #assert s == qs * 3*a
+        assert deriv(qr) == 0, (a,b,c,d)
+        #assert qs.denominator != 1, (a,b,c,d)
+        assert s % (3*a) != 0, (a,b,c,d)
         # The inflection point is -b/(3*a).
+        # qs < -b/(3*a) --> (-2b) - 3*a*qr < (-b) --> s < (-b)
         if s < -b: # The nonintegral critical point is below the inflection point.
             inspect = ((qr,H),)
             q1, q2 = s//(3*a), qr # q1 is the floor of the lower critical point.
@@ -5192,7 +5162,7 @@ def determinant(M):
     ints = isinstance(d, inttypes) and isinstance(a, inttypes)
     return sign * d // a**(k-2) if ints else sign * d / a**(k-2)
 
-def discriminant(coefs):
+def discriminant(coefs):  #TODO https://math.stackexchange.com/questions/696335 https://en.wikipedia.org/wiki/B%C3%A9zout_matrix
     """
     Computes the discriminant of a polynomial.  The input is ordered from
     lowest degree to highest so that coefs[k] is the coefficient of the x**k
