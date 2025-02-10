@@ -13,7 +13,8 @@ from heapq import merge
 try: from gmpy2 import mpz; mpzv, inttypes = 2, (int, type(mpz(1)))
 except ImportError: mpz, mpzv, inttypes = int, 0, (int,)
 
-labmathversion = "3.0.0"    # TODO: Should this be a tuple?
+labmathversion = "3.0.0"
+__version__ = "3.0.0"
 
 def primegen(limit=inf):
     """
@@ -2192,7 +2193,7 @@ def randprime(digits, base=10, primetest=isprime):
     while not isprime(n): n = randrange(lo, hi)
     return n
 
-def randomfactored(n, primetest=isprime):                             # TODO: Use Bach's algorithm.
+def randomfactored(n, primetest=isprime):            # TODO: Use Bach's algorithm (https://pages.cs.wisc.edu/~cs812-1/pfrn.pdf).
     """
     Efficiently generates a factored integer in the range [1,n], selected
     at random with a uniform probability distribution.  Uses Adam Kalai's
@@ -3826,13 +3827,13 @@ def pell(D, N):                                                                 
         return (gen(D, nfun, pgen), [nfun], pgen)
     t, u = pgen
     L1, L2 = (0, isqrt(N * (t-1) // (2 * D))) if N > 0 else (isqrt(-N // D), isqrt(-N * (t+1) // (2 * D)))
-    print(L1, L2)
     if L2 - L1 < 64:     # Find the primitive set by brute force.
         primitives = set()
         for y in range(L1, L2+1):
             X = N + D * y**2
-            x = isqrt(X)
-            if x**2 == X: primitives |= {(x,y), (-x,y)}
+            if X >= 0:
+                x = isqrt(X)
+                if x**2 == X: primitives |= {(x,y), (-x,y)}
     else:                   # Find the primitive set by the LMM algorithm.
         n = isqrt(abs(N))
         primitives = {(n,0)} if N == n*n else set()
@@ -3860,7 +3861,7 @@ def pell(D, N):                                                                 
                         elif rr_Dss == -m:
                             if nfun: r, s = a*r + D*b*s, a*s + b*r
                             else: break
-                        else: break
+                        else: break     # TODO: Is this case possible?
                         primitives |= {(r, s), (-r, s)}
                     xp = x
     prims = set()
@@ -4774,7 +4775,7 @@ def isprime_nm1(n, fac=None): # CranPom Alg 4.1.7, pg 178/190
         c2, c1 = divmod(n//F, F)
         assert (c2 * F + c1) * F + 1 == n
         c = c1**2 - 4 * c2
-        return c != isqrt(c)**2
+        return (c < 0) or (c != isqrt(c)**2)
     # Suppose n-1 == F*R with F >= n**0.3.
     # 4.  Third magnitude test.
     # If conditions 1 and 2 of Theorem 4.1.6 (p176/188) hold, return True; otherwise, return False.  To wit:
@@ -4806,6 +4807,7 @@ def isprime_nm1(n, fac=None): # CranPom Alg 4.1.7, pg 178/190
         g = gcd(a,b,c,d)
         a, b, c, d = a//g, b//g, c//g, d//g
         for r in cubicintroots(a,b,c,d):
+            print(n)
             f = r*F + 1
             if 1 != f != n and n % f == 0: return False
         return True
