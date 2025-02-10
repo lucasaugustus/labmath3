@@ -907,8 +907,6 @@ def test_pell():
     assert pell(98, -31)[1:] == ([(19, 2), (79, 8)], (99, 10))
     assert list(islice(pell(98,-31)[0],6)) == [(19,2), (79,8), (3841,388), (15661,1582), (760499,76822), (3100799,313228)]
 
-
-
 def test_dirichletcharacter():
     assert dirichletcharacter(2, 1, 0) == complex(0, inf)
     assert dirichletcharacter(2, 1, 1) == 0
