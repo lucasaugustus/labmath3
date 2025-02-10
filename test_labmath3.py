@@ -901,6 +901,13 @@ def test_pell():
     assert pell(-5, 99) == (None, [], None)
     assert pell(-5, 100) == (None, [(10,0)], None)
     assert pell(-5, 101) == (None, [(9,2)], None)
+    assert pell(29, 28)[1:] == ([(12, 2), (17, 3), (307, 57), (447, 83), (8277, 1537), (12052, 2238)], (9801, 1820))
+    assert list(islice(pell(29,28)[0],8)) == [(12,2),(17,3),(307,57),(447,83),(8277,1537),(12052,2238),(223172,41442),(324957,60343)]
+    assert pell(46,28) == (None, [], None)
+    assert pell(98, -31)[1:] == ([(19, 2), (79, 8)], (99, 10))
+    assert list(islice(pell(98,-31)[0],6)) == [(19,2), (79,8), (3841,388), (15661,1582), (760499,76822), (3100799,313228)]
+
+
 
 def test_dirichletcharacter():
     assert dirichletcharacter(2, 1, 0) == complex(0, inf)
