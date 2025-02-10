@@ -6,7 +6,7 @@
 from multiprocessing import Process, Queue as mpQueue
 from itertools import chain, count, groupby, islice, tee, cycle, takewhile, compress, product, zip_longest
 from fractions import Fraction
-from random import randrange
+from random import randrange, random
 from math import log, log2, ceil, sqrt, factorial, comb, prod, gcd, lcm, isqrt; inf = float('inf')
 from heapq import merge
 
