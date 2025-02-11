@@ -644,9 +644,13 @@ def test_randprime():
 
 def test_randomfactored():
     for n in range(1, 256):
-        x, xfac = randomfactored(n**5)
+        x, xfac = randomfactored(n**5, "kalai")
         assert x == prod(p**e for (p,e) in xfac.items()), (x, xfac)
         assert 1 <= x <= n**5, (x, xfac, n)
+    for n in range(1, 256):
+        x, xfac = randomfactored(n**5, "bach")
+        assert x == prod(p**e for (p,e) in xfac.items()), (x, xfac)
+        assert (n**5)//2 < x <= n**5, (x, xfac, n)
 
 def test_polyaddmodp():
     assert polyaddmodp([1,2,3], [4,5,6], 7) == [5, 0, 2]
