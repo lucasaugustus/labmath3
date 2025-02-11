@@ -17,6 +17,7 @@ Minor alterations to behavior:
     primegen has been slightly optimized.
     primephi no longer has a keyword argument, and its third argument is now a 1-based list.
     primepi now uses the Lagarias-Miller-Odlyzko algorithm.  Its keyword arguments have changed.
+    randomfactored now implements both Bach's and Kalai's algorithms.  For backwards compatibility, the latter is the default.  The primality test is no longer user-selectable.
     randprime returns None when asked to produce a prime with 1 digit in base 2, rather than entering an infinite loop.
     riemannR's default value for n is now (11 * ln(x) + 153) // 6.
     totientsieve is now a generator, and it has an optional second argument to make it compute the Jordan totient function.
