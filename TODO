@@ -31,7 +31,6 @@ General TODOs:
 * Further analyze the bad-parameters cases of lprp, slprp, and xslprp.
 * In polydivmodmodp, convert the recursion to iteration.
 * In isprime, optimize the trial-division basis, possibly by varying it with n.
-* In randomfactored, implement Bach's algorithm (https://pages.cs.wisc.edu/~cs812-1/pfrn.pdf).  See also https://arxiv.org/pdf/2006.07445.
 * In pollard_pm1, what are the best bounds and way to increment them?
 * Implement the two-phase version of williams_pp1.
 * Find a better parameter sequence for ecmparams.
