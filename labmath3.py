@@ -2193,37 +2193,53 @@ def randprime(digits, base=10, primetest=isprime):
     while not isprime(n): n = randrange(lo, hi)
     return n
 
-def randomfactored(n, primetest=isprime):            # TODO: Use Bach's algorithm (https://pages.cs.wisc.edu/~cs812-1/pfrn.pdf).
+def randomfactored(n, method="kalai"):
     """
-    Efficiently generates a factored integer in the range [1,n], selected
-    at random with a uniform probability distribution.  Uses Adam Kalai's
-    algorithm, which in the average case uses O(log(n)^2) primality tests.
-    When using the default primality test (isprime), this results in
-    O(log(n)^3) arithmetic operations, which in turn results in O(log(n)^4)
-    to O(log(n)^5) bit ops, depending on how multiplication is handled.  See
-    https://doi.org/10.1007/s00145-003-0051-5 for details.
+    Efficiently generates a factored integer in the range [1,n] or (n/2,n],
+    selected at random with a uniform probability distribution.
     
-    Some future version of this software may implement Bach's algorithm,
-    which will result in a speedup by a logarithmic factor.
+    Both Bach's and Kalai's algorithms are implemented.  If Bach's algorithm
+    is selected, then the integer is in the interval (n/2, n].  This algorithm
+    uses O(log(n)) primality tests.  If Kalai's algorithm is selected, then the
+    integer is in the interval [1,n], and O(log(n)^2) primality tests are used.
     
     Input:
         n -- integer
-        primetest -- The primality test to use.  Default == isprime.
+        method -- "bach" or "kalai" (default).
     
     Output: 2-tuple.  The first element is the generated integer, and the
             second is its factorization in factorint format.
     """
     assert n > 0 and isinstance(n, inttypes)
-    while True:
-        r, ps, x = 1, [], n
-        while r <= n:
-            x = randrange(1, x+1)
-            if x == 1:
-                if randrange(1, n+1) > r: break
-                fac = {}
-                for p in ps: fac[p] = fac.get(p, 0) + 1
-                return (r, fac)
-            if primetest(x): r *= x; ps.append(x)
+    if method == "kalai":
+        while True:
+            r, ps, x = 1, [], n
+            while r <= n:
+                x = randrange(1, x+1)
+                if x == 1:
+                    if randrange(1, n+1) > r: break
+                    fac = {}
+                    for p in ps: fac[p] = fac.get(p, 0) + 1
+                    return (r, fac)
+                if isprime(x): r *= x; ps.append(x)
+    if method == "bach":
+        if n <= 10**6:
+            x = randrange(n//2 + 1, n + 1)
+            return (x, factorint(x))
+        while True:
+            while True:
+                j = 2**randrange(1, n.bit_length())
+                q = j + randrange(j)
+                if q > n: continue
+                pe = isprimepower(q)
+                if pe is None: continue
+                hi = n // q
+                if random() * log(n, pe[0]) * n < (hi - (hi//2)) * j: break
+            x, fac = randomfactored(n // q, method="bach")
+            x *= q
+            p, e = pe
+            fac[p] = fac.get(p,0) + e
+            if random() < log(n/2, x): return (x,fac)
 
 def sqrtmod_prime(a, p):
     """
