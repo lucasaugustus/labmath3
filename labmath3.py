@@ -7,7 +7,7 @@ from multiprocessing import Process, Queue as mpQueue
 from itertools import chain, count, groupby, islice, tee, cycle, takewhile, compress, product, zip_longest
 from fractions import Fraction
 from random import randrange, random
-from math import log, log2, ceil, sqrt, factorial, comb, prod, gcd, lcm, isqrt; inf = float('inf')
+from math import pi, log, log2, ceil, sqrt, factorial, comb, prod, gcd, lcm, isqrt; inf = float('inf')
 from heapq import merge
 
 try: from gmpy2 import mpz; mpzv, inttypes = 2, (int, type(mpz(1)))
@@ -53,13 +53,12 @@ def rpn(instr):
     """
     Evaluates a string in reverse Polish notation.
     
-    The available binary operators are +, -, *, /, //, %, and **, which
-    all indicate the same operations here as they indicate in Python3
-    source code.  The available unary operators are ! and #, which
-    denote the factorial and primorial, respectively.  For terminal
-    syntax compatibility reasons, the RPN expression may be enclosed in
-    quotes, and four aliases are allowed: x for *, xx for **, f for !,
-    and p for #.
+    The available binary operators are +, -, *, /, //, %, and **, which all
+    indicate the same operations here as they indicate in Python3 source
+    code.  The available unary operators are ! and #, which denote the
+    factorial and primorial, respectively.  For terminal syntax
+    compatibility reasons, the RPN expression may be enclosed in quotes, and
+    four aliases are allowed: x for *, xx for **, f for !, and p for #.
     
     Input: instr -- a string
     
@@ -105,13 +104,17 @@ def rpn(instr):
 
 def listprod(l):
     """
-    Product of the elements of a list.  Product of empty list == 1.
+    Computes the product of the elements of a list.
     
-    We use a binary algorithm because this can easily generate huge numbers,
-    and calling "math.prod(l)", which amounts to "reduce(lambda x,y:x*y, l)",
-    in such situations is quite a bit slower.  However, the size of the
-    problem required to make this superior to prod is quite large, so prod
-    should usually be used instead.
+    This function is superior to the built-in math.prod in situations where
+    the product is very large.  The reason is that algorithm used by
+    math.prod(l) amounts to
+        reduce(lambda x,y:x*y, l)
+    which is quadratically slow when the elements of l are similarly-sized.
+    The present algorithm splits the list into halves, recursively applies
+    itself to each half, and then returns the product of the results.  This
+    is asymptotically faster; however, it takes quite a long list to make
+    this faster than math.prod.
     
     Input: l -- list of numbers
     
@@ -135,9 +138,10 @@ def polyval(f, x, m=None):
     
     Input:
         f -- List.  These are the polynomial's coefficients in order of
-             increasing degree.
-        x -- Integer.  Evaluate here.
-        m -- Integer or None (default).  If not None, evaluate modulo m.
+             increasing degree; that is, f[k] is the coefficient of the term
+             of degree k.
+        x -- Integer.  The polynomial is evaluated at this point.
+        m -- Integer or None (default).  If not None, we evaluate modulo m.
     
     Output: An integer.
     
@@ -158,7 +162,8 @@ def polyval(f, x, m=None):
 
 def powerset(l):    # TODO: make this handle sets as well.
     """
-    Generates the powerset of a list, tuple, or string.  Output is a list.
+    Generates the powerset of a list, tuple, or string.  Output is a
+    sequence of lists.
     
     Input: l -- indexable iterable
     
@@ -425,9 +430,9 @@ def primepi(x, alpha=2.5):
     
     return pi_y - 1 - P2 + S1 + S2
 
-def primesum(n):
+def primesum(n):    # TODO: What are the time- and space-complexities?
     """
-    Sum of primes <= n.  Code shamelessly stolen from Lucy_Hedgehog's post
+    Sum of primes <= n.  This code is originally from Lucy_Hedgehog's post
     at https://projecteuler.net/thread=10;page=5.
     
     Input: n -- integer
@@ -457,26 +462,47 @@ def altseriesaccel(a, n):
     """
     Convergence acceleration for alternating series.  This is Algorithm 1
     from the article "Convergence Acceleration of Alternating Series" by
-    Cohen, Villegas, and Zagier, with a minor tweak so that the d-value
-    is not computed via floating point.  The article is available at
+    Cohen, Villegas, and Zagier, with a minor tweak so that the d-value is
+    not computed via floating point.  The article is available at
     https://people.mpim-bonn.mpg.de/zagier/files/exp-math-9/fulltext.pdf.
     
     Input:
-        a -- an iterable.  The series to be summed is a[0] - a[1] + a[2] - ...
-        n -- the number of terms to use.  A couple dozen terms is probably good.
+        a -- an iterable.  The series to be summed is
+             a[0] - a[1] + a[2] - a[3] + a[4] - a[5] ...
+        n -- the number of terms to use.  A few dozen is usually sufficient.
     
     Output: a floating-point number.
     
     Examples:
-    >>> zeta = lambda x: altseriesaccel((1/j**x for j in count(1)), 24+1) / (1-2**(1-x))
+    
+    The Riemann zeta function is
+        1/1^x + 1/2^x + 1/3^x + 1/4^x + ...
+    This is slowly-convergent, but it is not alternating, so this algorithm
+    does not seem to apply.  However, it is closely related to the Dirichlet
+    eta function:
+        1/1^x - 1/2^x + 1/3^x - 1/4^x + ...
+    which *is* alternating.  This is still slowly convergent, but feeding it
+    into this algorithm is profitable:
+    
+    >>> eta = lambda x: altseriesaccel((1/j**x for j in count(1)), 24)
+    >>> zeta = lambda x: eta(x) / (1-2**(1-x))
     >>> zeta(2)
     1.6449340668482264
+    >>> pi**2 / 6
     
-    >>> altseriesaccel((1/j for j in count(1)), 24+1)       # ln(2)
+    The sum of the harmonic series, modified to have alternating signs, is
+    the natural logarithm of 2.  It converges quite slowly, but because its
+    signs alternate, this algorithm can be used to great effect:
+    >>> altseriesaccel((1/j for j in count(1)), 24)
     0.69314718055994530942
+    >>> log(2)
     
-    >>> altseriesaccel((1/j for j in count(1,2)), 24+1) * 4
+    The Leibniz formula for pi/4 is the alternating reciprocal sum of the
+    odd numbers: 1/1 - 1/3 + 1/5 - 1/7 + ...  It converges quite slowly, but
+    because its signs alternate, this algorithm can be used to great effect:
+    >>> altseriesaccel((1/j for j in count(1,2)), 24) * 4
     3.1415926535897932384626
+    >>> pi
     """
     Vl, Vh = 2, 6
     for bit in bin(n)[2:]: Vl, Vh = (Vh * Vl - 6, Vh * Vh - 2) if bit == '1' else (Vl * Vl - 2, Vh * Vl - 6)
@@ -490,17 +516,14 @@ def altseriesaccel(a, n):
         b = (k + n) * (k - n) * b / ((k + 0.5) * (k + 1))
     return s / d
 
-def riemannzeta(n, k=24):   # TODO Use the functional equation for 0.5 < real(n) < 1.5.  This requires a complex gamma function.
+def riemannzeta(z, k=24):   # TODO: Where is this accurate?
     """
-    The Riemann zeta function, computed by applying a convergence-acceleration
-    technique (implemented as altseriesaccel) to the Dirichlet eta function.
-    Should be rather accurate throughout the complex plane except near n
-    such that 1 == 2**(n-1).
+    The Riemann zeta function, computed by using a convergence-acceleration
+    technique (implemented as altseriesaccel) on the Dirichlet eta function.
     
     Input:
-        n -- point to evaluate at
-        k -- number of terms to use.  Default == 24.  Since we use
-             altseriesaccel, this is almost certainly sufficient.
+        z -- point to evaluate at
+        k -- number of terms to use.  Default == 24.
     
     Output:
         A floating-point real number (if n is real) or a floating-point
@@ -508,19 +531,30 @@ def riemannzeta(n, k=24):   # TODO Use the functional equation for 0.5 < real(n)
         The pole at n == 1 manifests as a ZeroDivisionError.
     
     Examples:
+    
     >>> riemannzeta(2)
     1.6449340668482264
-    """                             # TODO
-    return altseriesaccel((1/j**n for j in count(1)), k+1) / (1-2**(1-n))
+    
+    The use of the Dirichlet eta function as an intermediary allows us to
+    investigate the critical strip:
+    >>> riemannzeta(complex(0.5, 14.134725))
+    (1.7672547844177162e-08-1.1100463048215172e-07j)
+    """
+    return altseriesaccel((1/j**z for j in count(1)), k+1) / (1-2**(1-z))
 
 def zetam1(n, k=24):
     """
     Computes the Riemann zeta function minus 1 by applying a convergence-
     acceleration technique (implemented as altseriesaccel) to the Dirichlet
-    eta function.  Should converge for any complex n with positive real part
-    unless 1 == 2**(n-1), and accuracy may be low near such points.
-    Accurate even when riemannzeta(n) is machine-indistinguishable from 1.0:
-    in particular, when n is a large real number.
+    eta function.  This should converge for any complex n with positive real
+    part unless 1 == 2**(n-1), and accuracy may be low near such points.
+    
+    When computing zeta(z) - 1 when the real part of z is large, floating-
+    point numbers cannot be expected to have enough precision to distinguish
+    zeta(z) from 1.0, so the formula
+        riemannzeta(z) - 1
+    will evaluate to 0.0.  This function returns accurate answers even in
+    such cases.
     
     Input:
         n -- point to evaluate at
@@ -533,6 +567,12 @@ def zetam1(n, k=24):
         The pole at n == 1 manifests as a ZeroDivisionError.
     
     Examples:
+    
+    >>> riemannzeta(100) - 1
+    0.0
+    
+    >>> zetam1(100)
+    7.888609052210118e-31
     """
     return (altseriesaccel((-1/j**n for j in count(2)), k+1) + 2**(1-n)) / (1-2**(1-n))
 
@@ -542,11 +582,12 @@ def riemannR(x, n=None, zc={}):
     good approximation to primepi.
     
     Input:
-        x -- Integer. Evaluate the function at this point.
+        x -- Integer. The function is evaluated at this point.
         n -- Integer.  Number of terms to use.  Default == None; in this
-             case, we set n = (11 * ln(x) + 153) / 6.  This was chosen by experiment
-             to get an error of < 10^-14 relative to the true values for x in
-             [10**2, 10**3, ..., 10**15].  An OverflowError may occur if n is sufficiently large.
+             case, we set n = (11 * ln(x) + 153) / 6.  This was chosen by
+             experiment to get a relateive error of < 10^-14 w.r.t. to the
+             true values for x in [10**2, 10**3, ..., 10**15].
+             An OverflowError may occur if n is sufficiently large.
         zc -- Dict.  Default = {}.  Keys are integers; values are the
               Riemann zeta function at those integers.  Erroneous values are
               neither detected nor corrected.  Unprovided values are
@@ -663,9 +704,8 @@ def nthprime(n):
 def xgcd(a, b):     # TODO: this is ugly.  Clean it up.
     """
     Extended Euclidean algorithm: returns a tuple (g,x,y) where
-    g == gcd(a, b) and g == a*x + b*y.  Note that many such tuples
-    exist for each (a,b); we make no guarantees about which
-    tuple will be returned.
+    g == gcd(a, b) and g == a*x + b*y.  Many such tuples for each (a,b);
+    we make no guarantees about which tuple will be returned.
     
     Input: a, b -- integers
     
@@ -703,7 +743,8 @@ def crt(rems, mods):
     range(prod(mods)) that reduces to x % y for (x,y) in zip(rems,mods).
     All elements of mods must be pairwise coprime.
     
-    Input: rems, mods -- iterables of the same finite length containing integers
+    Input: rems, mods -- iterables of the same finite length,
+                         containing integers
     
     Output: an integer in range(prod(mods))
     
@@ -765,10 +806,10 @@ def ispower(n, r=0):
     Checks whether n is a perfect power.
     
     If r == 0:
-        If n is a perfect power, return a tuple containing largest integer
-        (in terms of magnitude) that, when squared/cubed/etc, yields n as
-        the first component and the relevant power as the second component.
-        If n is not a perfect power, return None.
+        If n is a perfect power, then we return a tuple containing largest
+        integer (in terms of magnitude) that, when squared/cubed/etc, yields
+        n as the first entry; the relevant power is the second component.
+        If n is not a perfect power, then we return None.
     
     If r > 0:
         We check whether n is a perfect rth power; we return its rth root if
@@ -794,7 +835,7 @@ def ispower(n, r=0):
         if n in (0, 1, -1): return (n, 1)
         for r in primegen(n.bit_length()+1):
             x = ispower(n, r)
-            if x is not None: return (x, r)
+            if x: return (x, r)
         return None
     # TODO tricks for special cases
     if (r == 2) and (n & 2): return None
@@ -804,7 +845,7 @@ def ispower(n, r=0):
 
 def ilog(x, b):                                 # TODO: investigate optimization starting from x.bin_length() * 2 // b
     """
-    Greatest integer l such that b**l <= x
+    Greatest integer l such that b**l <= x.
     
     Input: x, b -- integers
     
@@ -837,8 +878,8 @@ def semiprimegen():                                                 # TODO: impl
     
     Examples:
     
-    >>> list(islice(semiprimegen(), 19))
-    [4, 6, 9, 10, 14, 15, 21, 22, 25, 26, 33, 34, 35, 38, 39, 46, 49, 51, 55]
+    >>> list(islice(semiprimegen(), 18))
+    [4, 6, 9, 10, 14, 15, 21, 22, 25, 26, 33, 34, 35, 38, 39, 46, 49, 51]
     """
     pg, pspg = primegen(), pspgen()
     p, psp = next(pg), next(pspg)
@@ -848,9 +889,9 @@ def semiprimegen():                                                 # TODO: impl
 
 def pspgen():                                                       # TODO: implement an upper bound as in primegen.
     """
-    Generates the primes and semiprimes, using a segmented sieve based on the
-    sieve of Eratosthenes and the fact that these are precisely the numbers not
-    divisible by any smaller semiprimes.
+    Generates the primes and semiprimes, using a segmented sieve based on
+    the sieve of Eratosthenes and the fact that these are precisely the
+    numbers not divisible by any smaller semiprimes.
     
     Input: none
     
@@ -859,7 +900,7 @@ def pspgen():                                                       # TODO: impl
     Examples:
     
     >>> list(islice(pspgen(), 20))
-    [2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 19, 21, 22, 23, 25, 26, 29]
+    [2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 19, 21, 22, 23, 25, 26]
     """
     yield from (2,3,4,5,6,7,9,10,11,13,14,15,17,19,21,22,23,25,26,29,31,33,34,35,37,38,39,41,43,46,47,49,51)
     low = 52
@@ -889,8 +930,8 @@ def pspgen():                                                       # TODO: impl
 
 def almostprimegen(k):                                              # TODO: implement an upper bound as in primegen.
     """
-    Generates the k-almost-primes, which are the numbers that have precisely k
-    prime factors, counted with multiplicity.  This is done by filtering
+    Generates the k-almost-primes, which are the numbers that have precisely
+    k prime factors, counted with multiplicity.  This is done by filtering
     nearlyprimegen(k-1) out of the output of nearlyprimegen(k).
     
     Input: k -- an integer
@@ -919,9 +960,9 @@ def almostprimegen(k):                                              # TODO: impl
 def nearlyprimegen(k):                                              # TODO: implement an upper bound as in primegen.
     """
     Generates the numbers (other than 1) that have k or fewer prime factors,
-    counted with multipicity.  This is done via a segmented sieve based on the
-    sieve of Eratosthenes and the fact that these are precisely the numbers not
-    divisible by any smaller k-almost-primes.
+    counted with multipicity.  This is done via a segmented sieve based on
+    the sieve of Eratosthenes and the fact that these are precisely the
+    numbers not divisible by any smaller k-almost-primes.
     
     Input: k -- an integer
     
@@ -986,8 +1027,8 @@ def fibogen():
     
     Examples:
     
-    >>> list(islice(fibogen(), 12))
-    [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]
+    >>> list(islice(fibogen(), 17))
+    [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987]
     """
     a, b = 0, 1
     while True: yield a; a, b = b, a+b
@@ -1010,8 +1051,11 @@ def fibo(n, f={0:0, 1:1, 2:1}):         # TODO iterative version
     >>> fibo(346)
     912511873855702065852730553217787283194150290277873860991322859307033303
     
-    >>> x = fibo(100000); (x // 10**20879, x % 10**20)
-    (25974069347221724166, 49895374653428746875)
+    >>> x = fibo(100000)
+    >>> x // 10**20879
+    25974069347221724166
+    >>> x % 10**20
+    49895374653428746875
     """
     if n in f: return f[n]
     if n % 2: f[n] = fibo(n//2 + 1 , f) ** 2  +  fibo(n//2     , f) ** 2
@@ -1069,10 +1113,11 @@ def lucaschain(n, x0, x1, op1, op2):
     
     >>> m, A, n = 10000, 5, 307
     
-    >>> lucaschain(m, 2, A, lambda x: (x*x - 2) % n, lambda x,y: (x*y - A) % n)
-    (154, 132)
+    To compute terms m and m + 1 of the Lucas sequence V(A,1) modulo n, we
+    can write
     
-    (That was computing terms m & m+1 of the Lucas sequence V(A,1) mod n.)
+    >>> lucaschain(m, 2, A, lambda x:(x*x-2)%n, lambda x,y:(x*y-A)%n)
+    (154, 132)
     """
     u, v = x0, x1
     for j in bin(n)[2:]:
@@ -1086,15 +1131,15 @@ def lucasgen(P, Q):
     
     Input: P, Q -- integers
     
-    Output: sequence of 2-tuples of integers.  First element is a term of
-            the U-sequence; second element is of the V-sequence.
+    Output: sequence of 2-tuples of integers.  The first element is a term
+            of the U-sequence; the second element is of the V-sequence.
     
     Examples:
     
-    >>> list(islice(lucasgen(1, -1), 8))     # Fibonacci & Lucas numbers
+    >>> list(islice(lucasgen(1, -1), 8))         # Fibonacci & Lucas numbers
     [(0, 2), (1, 1), (1, 3), (2, 4), (3, 7), (5, 11), (8, 18), (13, 29)]
     
-    >>> list(islice(lucasgen(3,  2), 7))     # (2**n - 1) & (2**n + 1)
+    >>> list(islice(lucasgen(3,  2), 7))         # (2**n - 1) & (2**n + 1)
     [(0, 2), (1, 3), (3, 5), (7, 9), (15, 17), (31, 33), (63, 65)]
     """
     u0, u1, v0, v1 = 0, 1, 2, P
@@ -1110,12 +1155,11 @@ def lucas(k, P, Q):    # coded after http://www.scirp.org/journal/PaperDownload.
     and we have the recursions
         U_n = P * U_(n-1) - Q * U_(n-2)
         V_n = P * V_(n-1) - Q * V_(n-2),
-    we compute U_k and V_k in O(ln(k)) arithmetic operations.
+    then we compute U_k and V_k in O(ln(k)) arithmetic operations.
     
-    If P**2 != 4*Q, these sequences grow exponentially, so the number of bit
-    operations is anywhere from O(k**2) to O(k * ln(k)**2 * ln(ln(k)))
-    depending on how multiplication is handled.  We recommend using MPZs
-    when k > 100 or so.
+    If P**2 != 4*Q, then these sequences grow exponentially, so the number
+    of bit operations is anywhere from O(k**2) to O(k * ln(k)**2),
+    depending on how multiplication is handled.
     
     Input: k, P, Q -- integers (k >= 0).
     
@@ -1144,8 +1188,8 @@ def lucas(k, P, Q):    # coded after http://www.scirp.org/journal/PaperDownload.
 
 def binlinrecgen(P, Q, a, b):
     """
-    The general binary linear recursion.  Exactly like lucasgen, except we
-    only compute one sequence, and we supply the seeds.
+    The general binary linear recursion.  This is exactly like lucasgen,
+    except we only compute one sequence, and we supply the seeds.
     
     Basically, it is the same thing as linrecgen([P, -Q], [a, b]).
     
@@ -1207,7 +1251,7 @@ def linrecgen(a, b, m=None):
     incrementally by plucking it out of this generator takes O(n**2) bit
     operations.  Extraction of distant terms should therefore be done via
     linrec; using Schoenhage-Strassen multiplication, it takes
-    O(n * ln(n)**2 * ln(ln(n))) bit ops.
+    O(n * ln(n)**2 * ln(ln(n))) bit operations.
     
     Input:
         a -- List or tuple of numbers.  The coefficients of the recursion.
@@ -1255,7 +1299,7 @@ def linrec(n, a, b, m=None):                    # TODO: See https://projecteuler
     incrementally by plucking it out of the sequence produced by
     linrecgen(a, b) takes O(n**2) bit operations while this method, using
     Schoenhage-Strassen multiplication, takes O(n * ln(n)**2 * ln(ln(n)))
-    bit ops.
+    bit operations.
     
     Input:
         n -- Integer.  Index of the term to extract.
@@ -1315,8 +1359,8 @@ def linrec(n, a, b, m=None):                    # TODO: See https://projecteuler
 
 def legendre(a, p):
     """
-    Legendre symbol (a|p): 1 if a is a quadratic residue mod p, -1 if it is
-    not, and 0 if a % p == 0.  If p is not an odd prime, then the return
+    The Legendre symbol (a|p): 1 if a is a quadratic residue mod p, -1 if it
+    is not, and 0 if a % p == 0.  If p is not an odd prime, then the return
     value is meaningless.
     
     Input:
@@ -1336,7 +1380,7 @@ def legendre(a, p):
     >>> [legendre(a, 101) for a in [-10, -9, -4, -2, -1, 0, 1, 2, 4, 9, 10]]
     [-1, 1, 1, -1, 1, 0, 1, -1, 1, 1, -1]
     """
-    return ((pow(a, (p-1) >> 1, p) + 1) % p) - 1# if isprime(p) else None
+    return ((pow(a, (p-1) >> 1, p) + 1) % p) - 1
 
 def jacobi(a, n):
     """
@@ -1408,7 +1452,8 @@ def kronecker(a, n):
 
 def sprp(n, b):
     """
-    Strong Probable Primality Test (single-round Miller-Rabin).
+    The Strong Probable Primality Test, also known as a single round
+    of the Miller-Rabin test.
     
     Input:
         n -- Integer.  Number to be checked.
@@ -1416,7 +1461,7 @@ def sprp(n, b):
     
     Output: True or False.  If True, then the number is probably prime; if
             False, then it is definitely composite.  Note that if n == b,
-            we return False regardless of n's actual primality.
+            then we return False regardless of n's actual primality.
     
     Examples:
     
@@ -1439,7 +1484,7 @@ def sprp(n, b):
 
 def mrab(n, basis):
     """
-    Miller-Rabin probable primality test.
+    The Miller-Rabin probable primality test.
     
     Input:
         n -- Integer.  Number to be checked.
@@ -1538,9 +1583,8 @@ def lucasmod(k, P, Q, m):    # coded after http://www.scirp.org/journal/PaperDow
 
 def slprp(n, a, b):
     """
-    Strong Lucas Probable Primality Test as described on Wikipedia.  Its
-    false positives are a strict subset of those for lprp with the same
-    parameters.
+    The Strong Lucas Probable Primality Test.  Its false positives are a
+    strict subset of those for lprp with the same parameters.
     
     Input: n, a, b -- integers
     
@@ -1581,9 +1625,9 @@ def slprp(n, a, b):
 
 def xslprp(n, a):
     """
-    Extra Strong Lucas Probable Primality Test as described on Wikipedia.
-    Its false positives are a strict subset of those for slprp (and
-    therefore lprp) with parameters (a, 1).
+    The Extra Strong Lucas Probable Primality Test.  Its false positives are
+    a strict subset of those for slprp (and therefore lprp) with the
+    parameters (a, 1).
     
     Input: n, a -- integers
     
@@ -1652,8 +1696,8 @@ def bpsw(n):
 
 def qfprp(n, a, b): # As described in CranPom Alg 3.6.9, pg 148/161
     """
-    Quadratic Frobenius Probable Primality Test as described in Crandall &
-    Pomerance 2005 (Alg 3.6.9, pg 148).
+    The Quadratic Frobenius Probable Primality Test as described in Crandall
+    & Pomerance 2005 (Alg 3.6.9, pg 148).
     
     Input: n, a, b -- integers
     
@@ -1690,11 +1734,11 @@ def polyaddmodp(a, b, p):
     Adds two polynomials and reduces their coefficients mod p.
     
     Polynomials are written as lists of integers with the constant terms
-    first.  If the high-degree coefficients are zero, then those terms will be
-    deleted from the answer so that the highest-degree term is nonzero.  We
-    assume that the inputs also satisfy this property.  The zero polynomial
-    is represented by the empty list.  If one of the input polynomials is
-    None, then we return None.
+    first.  If the high-degree coefficients are zero, then those terms will
+    be deleted from the answer so that the highest-degree term is nonzero.
+    We assume that the inputs also satisfy this property.  The zero
+    polynomial is represented by the empty list.  If one of the input
+    polynomials is None, then we return None.
     
     Input:
         a, b -- polynomials
@@ -1720,11 +1764,11 @@ def polysubmodp(a, b, p):
     Subtracts the polynomial b from a and reduces their coefficients mod p.
     
     Polynomials are written as lists of integers with the constant terms
-    first.  If the high-degree coefficients are zero, then those terms will be
-    deleted from the answer so that the highest-degree term is nonzero.  We
-    assume that the inputs also satisfy this property.  The zero polynomial
-    is represented by the empty list.  If one of the input polynomials is
-    None, then we return None.
+    first.  If the high-degree coefficients are zero, then those terms will
+    be deleted from the answer so that the highest-degree term is nonzero.
+    We assume that the inputs also satisfy this property.  The zero
+    polynomial is represented by the empty list.  If one of the input
+    polynomials is None, then we return None.
     
     Input:
         a, b -- polynomials
@@ -1750,11 +1794,11 @@ def polymulmodp(a, b, p):
     Multiplies the polynomials a and b and reduces their coefficients mod p.
     
     Polynomials are written as lists of integers with the constant terms
-    first.  If the high-degree coefficients are zero, then those terms will be
-    deleted from the answer so that the highest-degree term is nonzero.  We
-    assume that the inputs also satisfy this property.  The zero polynomial
-    is represented by the empty list.  If one of the input polynomials is
-    None, then we return None.
+    first.  If the high-degree coefficients are zero, then those terms will
+    be deleted from the answer so that the highest-degree term is nonzero.
+    We assume that the inputs also satisfy this property.  The zero
+    polynomial is represented by the empty list.  If one of the input
+    polynomials is None, then we return None.
     
     Input:
         a, b -- polynomials
@@ -1785,12 +1829,12 @@ def polydivmodmodp(a, b, p):    # TODO: Convert the recursion to iteration.  Als
     and remainder.  The coefficients are interpreted mod p.
     
     Polynomials are written as lists of integers with the constant terms
-    first.  If the high-degree coefficients are zero, then those terms will be
-    deleted from the answer so that the highest-degree term is nonzero.  We
-    assume that the inputs also satisfy this property.  The zero polynomial
-    is represented by the empty list.  If one of the input polynomials is
-    None, then we return None.  The result is not guaranteed to exist; in such
-    cases we return (None, None).
+    first.  If the high-degree coefficients are zero, then those terms will
+    be deleted from the answer so that the highest-degree term is nonzero.
+    We assume that the inputs also satisfy this property.  The zero
+    polynomial is represented by the empty list.  If an input polynomial is
+    None, or if b == [], then we return (None, None).  The result is not
+    guaranteed to exist; in such cases, we return (None, None).
     
     Input:
         a, b -- polynomials
@@ -1831,12 +1875,20 @@ def gcmd(f, g, p):   # CranPom 2.2.1
     The coefficients are interpreted mod p.
     
     Polynomials are written as lists of integers with the constant terms
-    first. If the high-degree coefficients are zero, then those terms will be
-    deleted from the answer so that the highest-degree term is nonzero.  We
-    assume that the inputs also satisfy this property.  The zero polynomial
-    is represented by the empty list.  If one of the input polynomials is
-    None, or if both input polynomials are [], then we return None.  The result
-    is not guaranteed to exist; in such cases, we return None.
+    first.  If the high-degree coefficients are zero, then those terms will
+    be deleted from the answer so that the highest-degree term is nonzero.
+    We assume that the inputs also satisfy this property.  The zero
+    polynomial is represented by the empty list.  If one of the input
+    polynomials is None, then we return (None, None).  The result is not
+    guaranteed to exist; in such cases, we return (None, None).
+    
+    Polynomials are written as lists of integers with the constant terms
+    first. If the high-degree coefficients are zero, then those terms will
+    be deleted from the answer so that the highest-degree term is nonzero.
+    We assume that the inputs also satisfy this property.  The zero
+    polynomial is represented by the empty list.  If an input polynomials is
+    None, or if both input polynomials are [], then we return None.  The
+    result is not guaranteed to exist; in such cases, we return None.
     
     Input:
         f, g -- polynomials
@@ -1871,12 +1923,12 @@ def polypowmodpmodpoly(a, e, p, f): # a**e mod p mod f
     and reduced modulo f.  The coefficients are interpreted mod p.
     
     Polynomials are written as lists of integers with the constant terms
-    first.  If the high-degree coefficients are zero, then those terms will be
-    deleted from the answer so that the highest-degree term is nonzero.  We
-    assume that the inputs also satisfy this property.  The zero polynomial
-    is represented by the empty list.  If one of the input polynomials is
-    None, or if f == [], then we return None.  The answer is not guaranteed to
-    exist.  In such cases, we return None.
+    first.  If the high-degree coefficients are zero, then those terms will
+    be deleted from the answer so that the highest-degree term is nonzero.
+    We assume that the inputs also satisfy this property.  The zero
+    polynomial is represented by the empty list.  If an input polynomials is
+    None, or if f == [], then we return None.  The answer is not guaranteed
+    to exist.  In such cases, we return None.
     
     Input:
         a, f -- polynomials
@@ -2024,8 +2076,8 @@ def isprime(n, tb=(3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59)): # TODO optimi
     
     Examples:
     
-    >>> [n for n in range(91) if isprime(1000*n+1)]
-    [3, 4, 7, 9, 13, 16, 19, 21, 24, 28, 51, 54, 55, 61, 69, 70, 76, 81, 88, 90]
+    >>> [n for n in range(90) if isprime(1000*n+1)]
+    [3, 4, 7, 9, 13, 16, 19, 21, 24, 28, 51, 54, 55, 61, 69, 70, 76, 81, 88]
     
     >>> [isprime(factorial(38)+1), isprime(factorial(38)-1)]
     [False, True]
@@ -2102,7 +2154,7 @@ def isprimepower(n):
 
 def nextprime(n, primetest=isprime):           # TODO: we can do better than this.
     """
-    Smallest prime strictly greater than n.
+    Computes the smallest prime strictly greater than n.
     
     Input:
         n -- an integer
@@ -2134,10 +2186,11 @@ def nextprime(n, primetest=isprime):           # TODO: we can do better than thi
 
 def prevprime(n, primetest=isprime):           # TODO: we can do better than this.
     """
-    Largest prime strictly less than n, or None if no such prime exists
+    Computes the largest prime strictly less than n,
+    or None if no such prime exists.
     
     Input:
-        n -- an integer
+        n -- an integer or None
         primetest -- boolean function.  Default == isprime.
     
     Output: An integer or None
@@ -2172,10 +2225,12 @@ def randprime(digits, base=10, primetest=isprime):
     
     Input:
         digits -- a positive integer
-        base -- base in which the output is to have the given number of digits
+        base -- base in which the output is to have
+                the specified number of digits
         primetest -- Function.  Default == isprime.
     
-    Output: A prime integer with the given number of digits in the given base
+    Output: A prime integer that, when rendered in the specified base,
+            has the specified number of digits.
     
     Examples:
     
@@ -2199,9 +2254,10 @@ def randomfactored(n, method="kalai"):
     selected at random with a uniform probability distribution.
     
     Both Bach's and Kalai's algorithms are implemented.  If Bach's algorithm
-    is selected, then the integer is in the interval (n/2, n].  This algorithm
-    uses O(log(n)) primality tests.  If Kalai's algorithm is selected, then the
-    integer is in the interval [1,n], and O(log(n)^2) primality tests are used.
+    is selected, then the integer is in the interval (n/2, n].  This
+    algorithm uses O(log(n)) primality tests.  If Kalai's algorithm is
+    selected, then the integer is in the interval [1,n], and O(log(n)^2)
+    primality tests are used.
     
     Input:
         n -- integer
@@ -2290,11 +2346,11 @@ def sqrtmod_prime(a, p):
 
 def cbrtmod_prime(a, p):
     """
-    Returns in a sorted list all cube roots of a mod p.
+    Returns, in a sorted list, all cube roots of a mod p.
     
     There are a bunch of easily-computed special formulae for various cases
-    with p != 1 (mod 9); we do those first, and then if p == 1 (mod 9) we
-    use Algorithm 4.2 in "Taking Cube Roots in Zm" by Padro and Saez,
+    with p != 1 (mod 9); we do those first, and then if p == 1 (mod 9) then
+    we use Algorithm 4.2 in "Taking Cube Roots in Zm" by Padro and Saez,
     Applied Mathematics Letters 15 (2002) 703-708,
     https://doi.org/10.1016/S0893-9659(02)00031-9, which is essentially
     a variation on the Tonelli-Shanks algorithm for modular square roots.
@@ -2347,9 +2403,9 @@ def cbrtmod_prime(a, p):
 
 def pollardrho_brent(n):
     """
-    Factors integers using Brent's variation of Pollard's rho algorithm.
-    If n is prime, we immediately return n; if not, we keep chugging until a
-    nontrivial factor is found.  This function calls the randomizer; two
+    Factors integers using Brent's variation of Pollard's rho algorithm.  If
+    n is prime, then we immediately return n; if not, we keep chugging until
+    a nontrivial factor is found.  This function calls the randomizer; two
     successive calls may therefore return two different results.
     
     Input: n -- number to factor
@@ -2357,8 +2413,10 @@ def pollardrho_brent(n):
     Output: A factor of n.
     
     Examples:
-    >>> n = factorial(20)+1; f = pollardrho_brent(n); n % f
-    0
+    >>> n = factorial(20)+1
+    >>> f = pollardrho_brent(n)
+    >>> n in (20639383, 117876683047)
+    True
     """
     if isprime(n): return n
     g = n
@@ -2483,8 +2541,7 @@ def secm(n, B1, B2, seed):
     divisor of n given two bounds and a seed.  Uses the two-phase algorithm
     on Montgomery curves.  See https://wp.me/prTJ7-zI and
     https://wp.me/prTJ7-A7 for more details.  Most of the code for this
-    function's "helpers" were shamelessly copied from the first of those
-    links.
+    function's "helpers" were copied from the first of those links.
     
     Input:
         n -- Integer to factor
@@ -2549,15 +2606,15 @@ def ecm(n, paramseq=ecmparams, nprocs=1):
     Output:
         A factor of n.
         Note that if the parameter sequence calls the randomizer (which is
-        currently the default behavior), then two successive calls may
-        therefore return two different results.
+        currently the default behavior), then two identical calls may return
+        two different results.
     
     Examples:
     
     >>> n = factorial(24) - 1
     >>> f = ecm(n)
-    >>> sorted([f, n//f])
-    [625793187653, 991459181683]
+    >>> f in (625793187653, 991459181683)
+    True
     """
     g = n % 6
     if g % 2 == 0: return 2
