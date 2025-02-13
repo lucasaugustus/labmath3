@@ -2911,29 +2911,40 @@ def primefac(n, trial=1000, rho=42000, primetest=isprime, methods=(pollardrho_br
     Generates the prime factors of the input.  Factors that appear x times
     are yielded x times.
     
+    This algorithm has three phases:
+    1.  Trial division.
+    2.  Pollard's rho algorithm.
+    3.  Handling difficult cofactors.
+    A future version of this software may add further phases, such as
+    Fermat's method or the elliptic curve method.
+    
     Input:
         n -- the number to be factored
-        trial -- Trial division is performed up to this limit and no
-                 further.  We trial divide by 2 whether the user wants to or
-                 not.  Default == 1000.  See also trialextra.
-        rho -- How long to have Pollard's rho chug before declaring a
-               cofactor difficult.  Default == 42,000 iterations.
-               Floating-point inf is an acceptable value.
+        trial -- integer.  Trial division is performed with all primes
+                 strictly less than this.  Default == 1000.  Regardless of
+                 what number is passed to this parameter, trial division is
+                 also performed w.r.t. 2, 3, and whichever numbers are
+                 listed in trialextra.
+        rho -- integer.  This is the number of rounds of Pollard's rho
+               algorithm that we use before declaring a cofactor difficult.
+               By default, this is 42,000.  Floating-point inf is also an
+               acceptable value.
         primetest -- Use this function to test primality.  Default: isprime.
-        methods -- Use these methods on difficult cofactors.  If the tuple
-                   has more than 1 element, we have multifactor handle it.
-                   Calling multifactor has a high overhead, so when the
-                   tuple has a single element, we call that function
-                   directly.  The default is (pollardrho_brent,).  Each
-                   function f in methods must accept a single number n as
-                   its argument.  If n is prime, f(n) must return n. If n is
-                   composite, f(n) must return a number strictly between 1
-                   and n that evenly divides n.  Giving up is not allowed.
-        trialextra -- List of numbers to include in the trial-division stage.
-                      The intent is that this argument will be used for primes
-                      that are known to be likely factors of n, but which are
-                      too large for trial division of all primes up to them
-                      to be practical.
+        methods -- Tuple of methods to use on difficult cofactors.  If the
+                   tuple has more than 1 element, then we use all elements
+                   in parallel by calling multifactor.  Calling multifactor
+                   has a high overhead, so when the tuple has a single
+                   element, we call that function directly.  The default is
+                   (pollardrho_brent,).  Each function f in methods must
+                   accept a single number n as its argument.  If n is prime,
+                   then f(n) must return n. If n is composite, then f(n)
+                   must return a nontrivial factor of n.  Giving up is not
+                   allowed.
+        trialextra -- List of numbers to include in the trial-division
+                      stage.  The intent is that this argument will be used
+                      for primes that are known to be likely factors of n,
+                      but which are too large for trial division of all
+                      primes up to them to be practical.
     
     Output: Prime factors of n
     
@@ -2999,7 +3010,6 @@ def primefac(n, trial=1000, rho=42000, primetest=isprime, methods=(pollardrho_br
             else: factors.append(n)
         except Exception: difficult.append(n) # Factoring n took too long.  We will have multifactor chug on it.
     
-    # TODO: P-1 by itself?
     # TODO: ECM by itself?
     
     factors = difficult
@@ -3026,12 +3036,8 @@ def factorint(n, trial=1000, rho=42000, primetest=isprime, methods=(pollardrho_b
     Examples:
     
     >>> fac = factorint(40320)
-    
-    >>> sorted(fac.keys())
-    [2, 3, 5, 7]
-    
-    >>> sorted(fac.values())
-    [1, 1, 2, 7]
+    >>> list(fac.items())
+    [(2, 7), (3, 2), (5, 1), (7, 1)]
     """
     fac = {}
     for p in primefac(n,trial=trial,rho=rho,primetest=primetest,methods=methods,trialextra=trialextra): fac[p]=fac.get(p,0)+1
@@ -3116,8 +3122,9 @@ def factorsieve(limit=inf):
 
 def divisors(n):
     """
-    Generates all natural numbers that evenly divide n.  The output is not
-    necessarily sorted.  Derived from https://stackoverflow.com/a/171784
+    Generates all natural numbers that evenly divide n.  Do not expect the
+    output to be in any particular order.  The code is derived from
+    https://stackoverflow.com/a/171784.
     
     Input: n -- an integer or a dict in the format produced by factorint
     
@@ -3152,7 +3159,8 @@ def divisors(n):
 
 def divisors_factored(n):
     """
-    Yields the divisors of n, in factorint format.
+    Yields the divisors of n, in factorint format.  Do not expect the output
+    to be in any particular order.
     
     Input: n -- an integer or the output of factorint
     
@@ -3215,8 +3223,8 @@ def divsigma(n, x=1):
 
 def divcountsieve(limit=inf):
     """
-    Uses a segmented sieve to compute the divisor count of all positive integers
-    strictly less than the input.
+    Uses a segmented sieve to compute the divisor-count of all positive
+    integers strictly less than the input.
     
     The time- and space-complexities to iterate over the first n terms
     are within logarithmic factors of O(n) and O(sqrt(n)), respectively.
@@ -3334,10 +3342,10 @@ def divsigmasieve(limit=inf, x=1):
 
 def totient(n, k=1):
     """
-    Euler's/Jordan's totient function: the number of k-tuples of (+) integers
-    all <= n that form a coprime (k+1)-tuple together with n.  When k == 1,
-    this is Euler's totient: the number of numbers less than a number that are
-    relatively prime to that number.
+    Euler's/Jordan's totient function: the number of k-tuples of positive
+    integers, all <= n, that form a coprime (k+1)-tuple together with n.
+    When k == 1, this is Euler's totient: the number of numbers less than a
+    number that are relatively prime to that number.
     
     Input: n, k -- natural numbers.  Default k == 1.
                    n may also be a factorint output.
@@ -3377,11 +3385,11 @@ def totientsieve(limit=inf, k=1):
     >>> list(totientsieve(21))
     [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10, 4, 12, 6, 8, 8, 16, 6, 18, 8]
     
-    >>> list(totientsieve(21, 2))
-    [1, 3, 8, 12, 24, 24, 48, 48, 72, 72, 120, 96, 168, 144, 192, 192, 288, 216, 360, 288]
+    >>> list(totientsieve(18, 2))
+    [1, 3, 8, 12, 24, 24, 48, 48, 72, 72, 120, 96, 168, 144, 192, 192, 288]
     
-    >>> list(totientsieve(21, 3))
-    [1, 7, 26, 56, 124, 182, 342, 448, 702, 868, 1330, 1456, 2196, 2394, 3224, 3584, 4912, 4914, 6858, 6944]
+    >>> list(totientsieve(15, 3))
+    [1, 7, 26, 56, 124, 182, 342, 448, 702, 868, 1330, 1456, 2196, 2394]
     """
     if limit <= 1: return
     yield 1
@@ -3479,8 +3487,7 @@ def mobiussieve(limit=inf):
     The time- and space-complexities to iterate over the first n terms
     are within logarithmic factors of O(n) and O(sqrt(n)), respectively.
     
-    Input: limit -- We stop the sieve at this value.  The last computed value
-                   of the Mobius function is at limit-1.  Default = inf.
+    Input: limit -- an integer.  Default == inf.
     
     Output: Sequence of integers
     
@@ -3531,8 +3538,8 @@ def liouville(n):
     
     Examples:
     
-    >>> list(liouville(n) for n in range(1, 22))
-    [1, -1, -1, 1, -1, 1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, -1, -1, -1, -1, 1]
+    >>> list(liouville(n) for n in range(1, 21))
+    [1, -1, -1, 1, -1, 1, -1, -1, 1, 1, -1, -1, -1, 1, 1, 1, -1, -1, -1, -1]
     """
     return (-1)**(len(list(primefac(n))) if isinstance(n, inttypes) else sum(n.values()))
 
@@ -3540,12 +3547,12 @@ def polyroots_prime(f, p, sqfr=False):
     """
     Generates without multiplicity the zeros of a polynomial modulo a prime.
     Coded after algorithm 2.3.10 in Crandall & Pomerance: this uses explicit
-    formulas for low degree polynomials and Cantor-Zassenhaus for cubics and
+    formulas for low-degree polynomials and Cantor-Zassenhaus for cubics and
     higher.
     
     Input:
         f -- List.  These are the polynomial's coefficients in order of
-               increasing degree.
+               increasing degree: f[k] is the coefficient of the x^k term.
         p -- Integer.  Assumed to be prime.
         sqfr -- True if f is known to be squarefree modulo p.
                 False (default) if it might not be squarefree.
@@ -3689,7 +3696,7 @@ def polyrootsmod(pol, n):
     
     Input:
         pol -- List.  These are the polynomial's coefficients in order of
-               increasing degree.
+               increasing degree; pol[k] is the coefficient of the x^k term.
         n -- Integer.
     
     Output: List of integers.
@@ -3707,7 +3714,7 @@ def polyrootsmod(pol, n):
         mods.append(m)
     return sorted(crt(r, mods) for r in product(*rems))      # When crt gets upgraded, use it here.  TODO
 
-def PQa(P, Q, D):
+def _PQa(P, Q, D):
     """
     Generates some sequences related to SCF expansions of certain quadratic
     surds.  A helper function for pell().  Let P,Q,D be integers such that
@@ -3732,7 +3739,7 @@ def pell(D, N):                                                                 
     This function solves the generalized Pell equation: we find all
     non-negative integers (x,y) such that x**2 - D * y**2 == N.
     
-    We have several cases:
+    There are several cases:
       Case 1: N == 0.  We solve x**2 == D * y**2.
         (0,0) is always a solution.
         Case 1a: If D is a nonsquare, then there are no further solutions.
@@ -3873,7 +3880,7 @@ def pell(D, N):                                                                 
         ans[1].sort()
         return ans
     # If we have gotten to this point, then N is nonzero and D is a positive nonsquare.  We now proceed with the PQa/LMM method.
-    pqa = PQa(0, 1, D)
+    pqa = _PQa(0, 1, D)
     x0 = next(pqa)
     for (k,x) in enumerate(pqa): # k, Bk, Gk, Pk, Qk
         if x[3] == 1: break
@@ -3918,7 +3925,7 @@ def pell(D, N):                                                                 
             for z in (((z-am) if z > am//2 else z) for z in sqrtmod(D, am)):
                 #assert -abs(m) < 2*z <= abs(m)
                 #assert z**2 % abs(m) == D % abs(m)
-                pqa = PQa(z, am, D)
+                pqa = _PQa(z, am, D)
                 end = None
                 xp = next(pqa)
                 for x in pqa:     #  x == ( B0 , G1 , P2 , Q3 )
@@ -3970,7 +3977,8 @@ def simplepell(D, bail=inf):
     concerned only with the simple Pell equation, which always has an
     infinite family of positive solutions generated from a single primitive
     solution and always has the trivial solution (1,0); since that trivial
-    solution always exists for this function's scope, we omit it from the output.
+    solution always exists for this function's scope, we omit it from the
+    output.
     
     Input:
         D -- an integer, assumed to be positive
@@ -4031,8 +4039,8 @@ def carmichael(n):
 
 def multord(b, n):
     """
-    Computes the multiplicative order of b modulo n (i.e., finds the smallest
-    k such that b**k == 1 mod n)
+    Computes the multiplicative order of b modulo n: that is, finds the
+    smallest k such that b**k == 1 mod n).
     
     Input:
         b -- integer
@@ -4057,12 +4065,14 @@ def multord(b, n):
 
 def pythags(maxperim, primitive=False):
     """
-    Uniquely generates all (primitive) Pythagorean triples up to and
-    including the user-specified maximum perimeter.  Uses Barning's tree.
+    Uses Barning's tree to uniquely generate all Pythagorean triples up to
+    and including the user-specified maximum perimeter.  Optionally, the
+    non-primitive triples can be omitted.
     
     Input:
         maxperim -- integer
-        primitive -- True or False (default False)
+        primitive -- True or False (default False).  If True, then only the
+                     primitive triples are generated.
     
     Output: A sequence of tuples, each of which contains three integers.
     
@@ -4188,7 +4198,6 @@ def convergents(a):
 def contfrac_rat(n, d):
     """
     Returns the simple continued fraction of the rational number n/d.
-    Note the similarity to Euclid's algorithm.
     
     Input:
         num -- integer
@@ -4216,17 +4225,18 @@ def contfrac_rat(n, d):
 
 def quadratic_scf(P,Q,D):
     """
-    Computes the simple continued fraction of the expression (P + sqrt(D)) / Q,
-    for any integers P, Q, and D with D >= 0 != Q.  Note that D can be a square
-    or a nonsquare.  The continued fraction of any such expression is eventually
-    periodic; if the expression is rational, then the periodic part has length
-    zero; if the expression is irrational, then the periodic part has positive
-    length.
+    Computes the simple continued fraction of the expression (P+sqrt(D))/Q,
+    for any integers P, Q, and D with D >= 0 != Q.  Note that D can be a
+    square or a nonsquare.  The continued fraction of any such expression is
+    eventually periodic; if the expression is rational, then the periodic
+    part has length zero; if the expression is irrational, then the periodic
+    part has positive length.
     
     Input: P, Q, D -- integers
     
-    Output: a tuple (head, tail), where head and tail are lists.  The continued
-            fraction can then be generated via chain(head, cycle(tail)).
+    Output: a tuple (head, tail), where head and tail are lists.  The
+            continued fraction can then be generated with
+                chain(head, cycle(tail)).
             If D is rational, then tail will be the empty list.
     
     Examples:
@@ -4327,7 +4337,7 @@ def partconj(p):        # TODO: Can we do better?
 def farey(n):
     """
     Generates the Farey sequence of maximum denominator n.
-    Includes 0/1 & 1/1.  Code shamelessly stolen from Wikipedia.
+    Includes 0/1 and 1/1.
     
     Input: n -- a positive integer
     
@@ -4347,7 +4357,8 @@ def farey(n):
 
 def fareyneighbors(n, p, q):
     """
-    Returns the neighbors of p/q in the Farey sequence of max denominator n.
+    Returns the neighbors of p/q in the Farey sequence whose maximum
+    denominator is n.
     
     Inputs: n, p, q -- positive integers
     
@@ -4473,8 +4484,8 @@ def sqfrgen(ps):
     
     Examples:
     
-    >>> sorted(filter(lambda x: x < 100, sqfrgen(list(primegen(12)))))
-    [1, 2, 3, 5, 6, 7, 10, 11, 14, 15, 21, 22, 30, 33, 35, 42, 55, 66, 70, 77]
+    >>> sorted(filter(lambda x: x < 75, sqfrgen(list(primegen(12)))))
+    [1, 2, 3, 5, 6, 7, 10, 11, 14, 15, 21, 22, 30, 33, 35, 42, 55, 66, 70]
     """
     if len(ps) == 0: yield 1; return
     for n in sqfrgen(ps[1:]): yield n; yield n*ps[0]
@@ -4495,8 +4506,8 @@ def sqfrgenb(ps, b, k=0, m=1):                               # TODO this can be 
     
     Examples:
     
-    >>> sorted(sqfrgenb(list(primegen(18)), 40))
-    [1, 2, 3, 5, 6, 7, 10, 11, 13, 14, 15, 17, 21, 22, 26, 30, 33, 34, 35, 39]
+    >>> sorted(sqfrgenb(list(primegen(18)), 36))
+    [1, 2, 3, 5, 6, 7, 10, 11, 13, 14, 15, 17, 21, 22, 26, 30, 33, 34, 35]
     """
     if m > b: return
     if k == len(ps): yield 1; return
@@ -4629,7 +4640,7 @@ def cubicintroots(a, b, c, d):
     """
     Given integers a,b,c,d, we efficiently find and return in a tuple all
     distinct integer roots of a * x^3 + b * x^2 + c * x + d.
-    This is primarily a helper function for isprime_nm1.
+    This is primarily a helper function for isprime_nm1 and isprime_np1.
     
     Algorithm:
     0.  We could just use the rational roots theorem, but that would require
@@ -4791,10 +4802,11 @@ def isprime_nm1(n, fac=None): # CranPom Alg 4.1.7, pg 178/190
     Input:
         n -- integer
         fac -- None or a (partial) factorization of n-1.  If fac == None
-               (default), we compute the factorization ourselves.  If fac is
-               provided and is either insufficient (i.e.
+               (default), then we compute the factorization ourselves.  If
+               fac is provided and is either insufficient (i.e.
                prod(p**e for (p,e) in fac.items()) < n**0.3) or is not a
-               (partial) factorization of n-1, we raise an AssertionError.
+               (partial) factorization of n-1, then we raise an
+               AssertionError.
     
     Output: True or False
     
@@ -4896,10 +4908,11 @@ def isprime_np1(n, fac=None):
     Input:
         n -- integer
         fac -- None or a (partial) factorization of n+1.  If fac == None
-               (default), we compute the factorization ourselves.  If fac is
-               provided and is either insufficient (i.e.
+               (default), then we compute the factorization ourselves.  If
+               fac is provided and is either insufficient (i.e.
                prod(p**e for (p,e) in fac.items()) < n**0.3) or is not a
-               (partial) factorization of n+1, we raise an AssertionError.
+               (partial) factorization of n+1, then we raise an
+               AssertionError.
     
     Output: True or False
     
@@ -5130,10 +5143,11 @@ def dirconv(f, g, ffac=False, gfac=False):
 
 def dirichletinverse(f):
     """
-    Computes the Dirichlet inverse of the input function f.  If f(1) == 0,
-    then we will enocounter a ZeroDivisionError.  More precisely, if f is a
-    function on the positive integers, dirichletinverse(f) returns the
-    unique function g such that dirconv(f, g)(n) == (1 if n == 1 else 0).
+    Computes the Dirichlet inverse of the input function f.  More precisely,
+    if f is a function on the positive integers, then dirichletinverse(f)
+    returns the unique function g such that
+        dirconv(f, g)(n) == (1 if n == 1 else 0).
+    If f(1) == 0, then we will enocounter a ZeroDivisionError.
     
     If f always returns integers and f(1) in (1, -1), then
     dirichletinverse(f) will always return integers.
@@ -5181,8 +5195,8 @@ def dirichletroot(f, r, val1):
     
     Examples:
     
-    >>> [str(dirichletroot(divcount, 2, 1)(n)) for n in range(1, 16)]
-    ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1']
+    >>> [str(dirichletroot(divcount, 2, 1)(n)) for n in range(1, 15)]
+    ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1']
     """
     assert val1**r == f(1), (val1, r, val1**r, f(1), f)
     def answer(f, r, n, val1):
@@ -5346,7 +5360,7 @@ def egypt_short(n, d, terms=0, minden=1):
 
 def egypt_greedy(n, d):
     """
-    Greedy algorithm for Egyptian fraction expansion (also called the
+    The greedy algorithm for Egyptian fraction expansion (also called the
     Fibonacci-Sylvester algorithm): at each step, extract the largest unit
     fraction less than the target and replace the target with the remainder.
     The numerator is guaranteed to decrease with each iteration.
@@ -5366,6 +5380,12 @@ def egypt_greedy(n, d):
     
     >>> egypt_greedy(9, 10)
     [2, 3, 15]
+    
+    >>> egypt_greedy(19, 10)
+    [1, 2, 3, 15]
+    
+    >>> egypt_greedy(29, 10)
+    [1, 1, 2, 3, 15]
     """
     g = gcd(n, d)
     n, d = n//g, d//g
@@ -5381,7 +5401,7 @@ def egypt_greedy(n, d):
 
 def rational_in_base(b, p, q):
     """
-    Given integers b, p, and q, with b >= 2 and 0 <= p and 0 < q, we
+    Given integers b, p, and q, with b >= 2 and p >= 0 and q > 0, we
     determine the base-b expansion of p/q.  We return a tuple containing
     three lists: the first is the base-b expansion of p//q, the second is
     the pre-reptend part of the fractional part of p/q, and the third is the
@@ -5392,7 +5412,7 @@ def rational_in_base(b, p, q):
     In each list, the most significant digit is at index 0.
     
     Copied from Wikipedia: https://en.wikipedia.org/wiki/Repeating_decimal,
-    section "Algorithm for positive bases"
+    section "Algorithm for positive bases".
     
     Input: b, p, q -- integers
     
@@ -5811,8 +5831,8 @@ def partitions(n, parts=None, distinct=False):
         n -- integer
         parts -- None (default), or a finite iterable.
                  If None, then we use (1, 2, ..., n) as the available parts.
-        distinct -- True or False (default).  If True, we compute the number
-                    of partitions into distinct parts.
+        distinct -- True or False (default).  If True, then we compute the
+                    number of partitions into distinct parts.
     
     Output: a list
     
