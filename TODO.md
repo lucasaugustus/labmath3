@@ -42,7 +42,7 @@ General TODOs:
 * Make `multord` more efficient.
 * Clean up `pell`.
 * Clean up `pythags_by_perimeter`.
-* In `partconj`, let *S* and *N* be the sum and number of parts in the partition.  The current algorithm is *O*(*S*&times;*N*) in time and space.  Do better.
+* In `partconj`, let *S* and *N* be the sum and number of parts in the partition.  The current algorithm is *O*(*S*&middot;*N*) in time and space.  Do better.
 * Figure out how to use `heapq` in `perfectpowers`.
 * An old comment on `sqfrgenb` claims that it can be made rather more efficient.  Figure out what I was thinking and do it.
 * Try memoizing `dirichletinverse` and `dirichletroot`.
