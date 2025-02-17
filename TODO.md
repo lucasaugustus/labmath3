@@ -3,7 +3,6 @@ Before publishing to PyPI:
 * Write more comprehensive tests for pytest.
 * Write more examples in the docstrings.
 * Ensure that the examples in the docstrings work.
-* Migrate the old `README.rst`.
 * Figure out where `riemannzeta` and `zetam1` are accurate.
 * Warn against expecting certain functions' output to remain stable from version to version, including `_primepi_S1`, `ecmparams`, and the lower-order bits of floating-point output.
 * For bounded generators like `primegen` and `factorsieve`, implement tests to ensure that the bounds are handled correctly.
