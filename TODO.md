@@ -23,7 +23,6 @@ General TODOs:
 * For `semiprimegen`, `pspgen`, `almostprimegen`, and `nearlyprimegen`, implement upper bounds as in `primegen`.  Also, write versions of these that are alterations of `factorsieve`, and compare performance.
 * Try iteratizing `fibo` and `fibomod`.
 * For `linrec`, see <https://projecteuler.net/thread=258#29618>.
-* Consider deleting the positive-odd-number check in `jacobi`.
 * In `lucasmod`, handle the case `gcd(D,m) != 1`.
 * Further analyze the bad-parameters cases of `lprp`, `slprp`, and `xslprp`.
 * In `polydivmodmodp`, convert the recursion to iteration.
