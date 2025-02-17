@@ -3479,7 +3479,7 @@ def mobius(n):
         facs.add(p)
     return 1 - 2 * (len(facs) % 2)
 
-def mobiussieve(limit=inf):
+def mobiussieve(limit=inf):     # TODO: Figure out a way to have the sieve be a bytearray.  This is doable up to 10**25 or so.
     """
     Uses a segmented sieve to compute the Mobius function for all positive
     integers strictly less than the input.
@@ -3504,28 +3504,26 @@ def mobiussieve(limit=inf):
     lo, hi = 2, min(nextp**2, limit)
     # We can sieve up to hi - 1.
     while lo < limit:
-        ints = list(range(lo, hi))
         mobs = [1] * (hi - lo)
         for p in primes:
-            for n in range((-lo) %   p  , hi - lo,  p ): mobs[n] *= -1; ints[n] //= p
-            for n in range((-lo) % (p*p), hi - lo, p*p): mobs[n]  =  0; ints[n] //= p
-            ppp = p*p*p
-            while ppp < hi:
-                for n in range((-lo) % ppp, hi - lo, ppp):
-                    ints[n] //= p
-                ppp *= p
-        # Any entries in ints that are not 1 are prime divisors of their
-        # corresponding numbers that were too large to be sieved out.
+            for n in range((-lo) %   p  , hi - lo,  p ): mobs[n] *= -p
+            for n in range((-lo) % (p*p), hi - lo, p*p): mobs[n]  =  0
         for n in range(hi - lo):
-            p = ints[n]
-            if p != 1:
-                mobs[n] *= -1
+            m = mobs[n]
+            if m == 0: continue
+            if -lo-n < m < lo+n:
+                if m > 0: mobs[n] = -1
+                if m < 0: mobs[n] =  1
+            else:
+                if m > 0: mobs[n] =  1
+                if m < 0: mobs[n] = -1
         
         yield from mobs
         
         primes.append(nextp)
         nextp = next(pg)
         lo, hi = hi, min(nextp**2, limit)
+
 
 def liouville(n):
     """
@@ -5482,7 +5480,7 @@ def rational_in_base(b, p, q):
     L = pos - occurs[p]    # Length of reptend
     return (ipart, s[:-L], s[-L:])
 
-def sqfrcount(N, mobs=[], merts=[]):                       # TODO: Segmentate.  See https://arxiv.org/pdf/1107.4890 section 4.4.
+def sqfrcount(N):                       # TODO: Segmentate.  See https://arxiv.org/pdf/1107.4890 section 4.4.
     """
     Counts the number of squarefree integers in the interval [1,N].
     Uses Pawlewicz's O(N**0.4 * log(log(N))**0.6) algorithm.
@@ -5490,14 +5488,7 @@ def sqfrcount(N, mobs=[], merts=[]):                       # TODO: Segmentate.  
     O(N**0.4)-ish.  This code is derived from the code at
     https://smsxgz.github.io/post/pe/counting_square_free_numbers/.
     
-    Input:
-        N -- a positive integer
-        mobs -- a list such that mobs[k] == mobius(k).
-                If the length of this list is insufficient,
-                then it will be extended.  Default == [].
-        merts -- a list such that merts[k] == mertens(k).
-                If the length of this list is insufficient,
-                then it will be extended.  Default == [].
+    Input: A positive integer
     
     Output: A positive integer
     
@@ -5512,23 +5503,13 @@ def sqfrcount(N, mobs=[], merts=[]):                       # TODO: Segmentate.  
     if N < 27: return 0 if N < 0 else (0,1,2,3,3,4,5,6,6,6,7,8,8,9,10,11,11,12,12,13,13,14,15,16,16,16,17,17)[N]
     Imax = int(N**0.2 * log(log(N))**0.8 * 0.45)  # TODO: Experiment with different values for the multiplier.
     D = isqrt(N // Imax)
-    if len(merts) <= D or len(mobs) <= D:
-        
-        if len(mobs) <= D:
-            mobs.clear()
-            mobs.append(0)
-            mobs.extend(mobiussieve(D+1))
-            merts.clear()
-        
-        if len(merts) <= D:
-            assert len(mobs) > D
-            merts.clear()
-            merts.extend([0] * (D+1))
-            for k in range(1, D+1): merts[k] = merts[k-1] + mobs[k]
     
-    assert len(merts) > D < len(mobs)
+    s1 = 0
+    merts = [0] * (D+1)
+    for (i,mu_i) in enumerate(mobiussieve(D+1), start=1):
+        s1 += mu_i * (N // (i*i))
+        merts[i] = merts[i-1] + mu_i
     
-    s1 = sum(mobs[i] * (N // (i * i)) for i in range(1, D+1))
     Mxi_list = []
     Mxi_sum = 0
     for i in range(Imax - 1, 0, -1):
@@ -5539,7 +5520,7 @@ def sqfrcount(N, mobs=[], merts=[]):                       # TODO: Segmentate.  
         for j in range(1, xi // (sqd + 1) + 1): Mxi -= (xi // j - xi // (j + 1)) * merts[j]
         for j in range(2, sqd + 1):
             if xi // j <= D: Mxi -= merts[xi // j]
-            else:            Mxi -= Mxi_list[Imax - j * j * i - 1]
+            else:            Mxi -= Mxi_list[Imax - j*j*i - 1]
         Mxi_list.append(Mxi)
         Mxi_sum += Mxi
     return s1 + Mxi_sum - (Imax - 1) * merts[D]
