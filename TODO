@@ -54,3 +54,4 @@ General TODOs:
 * Investigate alternate discriminant algorithms, such as https://math.stackexchange.com/questions/696335 and https://en.m.wikipedia.org/wiki/B%C3%A9zout_matrix.
 * Investigate parallelizing egypt_short.
 * What are the time- and space-complexities of primesum?
+* Implement the segmented Deleglise-Rivat algorithm for the Mertens function.
