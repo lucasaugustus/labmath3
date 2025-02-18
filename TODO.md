@@ -63,4 +63,5 @@ General TODOs:
 * Investigate alternate discriminant algorithms, such as <https://math.stackexchange.com/questions/696335> and <https://en.m.wikipedia.org/wiki/B%C3%A9zout_matrix>.
 * Investigate parallelizing `egypt_short`.
 * What are the time- and space-complexities of `primesum`?
-* Implement the segmented Deleglise-Rivat algorithm for the Mertens function.
+* Implement the segmented Deleglise-Rivat algorithm for the Mertens function.  This is in progress at `on_deck/mertens.py`.
+* Consider importing the Helfgott-Thompson code from <https://github.com/lucasaugustus/mertens>.
