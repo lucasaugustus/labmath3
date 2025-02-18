@@ -46,6 +46,7 @@ General TODOs:
 * Figure out the time- and space-complexities of `totientsum`, and look for more efficient methods.
 * In `polyroots_prime`, when should brute force be used, and when should we use Cantor-Zassenhaus?
 * In `polyrootsmod`, when should we use brute force?
+* In `sqrtmod`, when should we use brute force?
 * In `PQa`, figure out what the sequences are, and document that.
 * In `pell`, in the case `D < 0 & N != 0`, implement Cornacchia's algorithm.
 * Make `multord` more efficient.
