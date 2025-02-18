@@ -2,6 +2,16 @@ Before publishing to PyPI:
 
 * Write more comprehensive tests for pytest.
 * Write more examples in the docstrings.
+  * `randomfactored`
+  * `polyrootsmod`
+  * `_PQa`
+  * `ispractical`
+  * `quadintroots`
+  * `cubicintrootsgiven`
+  * `cubicintroots`
+  * `dirichletroot`
+  * `determinant`
+  * `discriminant`
 * Ensure that the examples in the docstrings work.
 * Figure out where `riemannzeta` and `zetam1` are accurate.
 * Warn against expecting certain functions' output to remain stable from version to version, including `_primepi_S1`, `ecmparams`, and the lower-order bits of floating-point output.
