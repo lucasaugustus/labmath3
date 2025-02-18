@@ -6,6 +6,7 @@ Before publishing to PyPI:
 * Figure out where `riemannzeta` and `zetam1` are accurate.
 * Warn against expecting certain functions' output to remain stable from version to version, including `_primepi_S1`, `ecmparams`, and the lower-order bits of floating-point output.
 * For bounded generators like `primegen` and `factorsieve`, implement tests to ensure that the bounds are handled correctly.
+* Rewrite `frobenius_prp` to require the leading coefficient in the basis polynomial.
 
 General TODOs:
 
