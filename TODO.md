@@ -1,6 +1,7 @@
 Before publishing to PyPI:
 
 * Write more comprehensive tests for pytest.
+  * For `cubicintroots` and `quadintroots`, use fully-randomized coefficients and test against a brute-force search over an interval provided by one of the theorems at <https://en.wikipedia.org/wiki/Geometrical_properties_of_polynomial_roots>.
 * Write more examples in the docstrings.
   * `randomfactored`
   * `polyrootsmod`
