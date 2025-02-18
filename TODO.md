@@ -1,7 +1,5 @@
 Before publishing to PyPI:
 
-* Write more comprehensive tests for pytest.
-  * For `cubicintroots` and `quadintroots`, use fully-randomized coefficients and test against a brute-force search over an interval provided by one of the theorems at <https://en.wikipedia.org/wiki/Geometrical_properties_of_polynomial_roots>.
 * Write more examples in the docstrings.
   * `randomfactored`
   * `polyrootsmod`
@@ -19,6 +17,7 @@ Before publishing to PyPI:
 
 General TODOs:
 
+* Write more comprehensive tests for pytest.
 * Figure out how to use serifed fonts in `.md` and `.rst` files.
 * Implement the segmented version of the `sqfrcount` algorithm.  See section 4.4 of <https://arxiv.org/pdf/1107.4890> and `in_progress/sqfrcount.py`.
 * Make `powerset` handle sets.
