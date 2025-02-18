@@ -3796,7 +3796,7 @@ def polyrootsmod(pol, n):
         mods.append(m)
     yield from (crt(r, mods) for r in product(*rems))      # When crt gets upgraded, use it here.  TODO
 
-def _PQa(P, Q, D):
+def PQa(P, Q, D):
     """
     Generates some sequences related to SCF expansions of certain quadratic
     surds.  A helper function for pell().  Let P,Q,D be integers such that
@@ -3962,7 +3962,7 @@ def pell(D, N):                                                                 
         ans[1].sort()
         return ans
     # If we have gotten to this point, then N is nonzero and D is a positive nonsquare.  We now proceed with the PQa/LMM method.
-    pqa = _PQa(0, 1, D)
+    pqa = PQa(0, 1, D)
     x0 = next(pqa)
     for (k,x) in enumerate(pqa): # k, Bk, Gk, Pk, Qk
         if x[3] == 1: break
@@ -4007,7 +4007,7 @@ def pell(D, N):                                                                 
             for z in (((z-am) if z > am//2 else z) for z in sqrtmod(D, am)):
                 #assert -abs(m) < 2*z <= abs(m)
                 #assert z**2 % abs(m) == D % abs(m)
-                pqa = _PQa(z, am, D)
+                pqa = PQa(z, am, D)
                 end = None
                 xp = next(pqa)
                 for x in pqa:     #  x == ( B0 , G1 , P2 , Q3 )
@@ -5949,4 +5949,4 @@ def partitions(n, parts=None, distinct=False):
         plist = ans
     return plist
 
-if __name__ == "__main__": import doctest; doctest.testmod()
+#if __name__ == "__main__": import doctest; doctest.testmod()
