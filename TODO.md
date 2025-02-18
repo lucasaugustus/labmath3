@@ -1,4 +1,4 @@
-Before publishing to PyPI:
+General TODOs:
 
 * Write more examples in the docstrings.
   * `randomfactored`
@@ -13,9 +13,6 @@ Before publishing to PyPI:
   * `discriminant`
 * Ensure that the examples in the docstrings work.
 * Figure out where `riemannzeta` and `zetam1` are accurate.
-
-General TODOs:
-
 * Write more comprehensive tests for pytest.
   * For bounded generators like `primegen` and `factorsieve`, implement tests to ensure that the bounds are handled correctly.
 * Figure out how to use serifed fonts in `.md` and `.rst` files.
