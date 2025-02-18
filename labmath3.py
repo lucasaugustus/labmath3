@@ -13,8 +13,7 @@ from heapq import merge
 try: from gmpy2 import mpz; mpzv, inttypes = 2, (int, type(mpz(1)))
 except ImportError: mpz, mpzv, inttypes = int, 0, (int,)
 
-labmathversion = "3.0.0"
-__version__ = "3.0.0"
+__version__ = labmathversion = "3.0.0"
 
 def primegen(limit=inf):
     """
@@ -111,10 +110,10 @@ def listprod(l):
     math.prod(l) amounts to
         reduce(lambda x,y:x*y, l)
     which is quadratically slow when the elements of l are similarly-sized.
-    The present algorithm splits the list into halves, recursively applies
-    itself to each half, and then returns the product of the results.  This
-    is asymptotically faster; however, it takes quite a long list to make
-    this faster than math.prod.
+    The algorithm implemented here splits the list into halves, recursively
+    applies itself to each half, and then returns the product of the
+    results.  This is asymptotically faster for cases where the products get
+    large; however, it takes a long list to make this faster than math.prod.
     
     Input: l -- list of numbers
     
@@ -124,6 +123,9 @@ def listprod(l):
     
     >>> listprod(range(1, 8))
     5040
+    
+    >>> listprod([])
+    1
     """
     if len(l) == 0: return 1
     while len(l) > 1:
@@ -165,14 +167,25 @@ def powerset(l):    # TODO: make this handle sets as well.
     Generates the powerset of a list, tuple, or string.  Output is a
     sequence of lists.
     
+    Do not expect the output to be in any particular order.
+    
     Input: l -- indexable iterable
     
     Output: Sequence of lists
     
     Examples:
     
-    >>> list(powerset([1, 2, 3]))
-    [[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]
+    >>> sorted(powerset([]))
+    [[]]
+    
+    >>> sorted(powerset([1]))
+    [[], [1]]
+    
+    >>> sorted(powerset([1, 2]))
+    [[], [1], [1, 2], [2]]
+    
+    >>> sorted(powerset([1, 2, 3]))
+    [[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]
     """
     n = len(l)
     for mask in range(2**n): yield [l[i-1] for i in range(1, n+1) if mask & (1 << (i-1))]
@@ -204,22 +217,25 @@ def primephi(x, a, primes):
     Output: an integer.
     
     Examples:
-    >>> primephi(123456789, 0, [0] + list(primegen(20)))
+    
+    >>> primes20 = [0, 2, 3, 5, 7, 11, 13, 17, 19]
+    
+    >>> primephi(123456789, 0, primes20)
     123456789
     
-    >>> primephi(123456789, 1, [0] + list(primegen(20)))
+    >>> primephi(123456789, 1, primes20)
     61728395
     
-    >>> primephi(123456789, 2, [0] + list(primegen(20)))
+    >>> primephi(123456789, 2, primes20)
     41152263
     
-    >>> primephi(123456789, 3, [0] + list(primegen(20)))
+    >>> primephi(123456789, 3, primes20)
     32921810
     
-    >>> primephi(123456789, 4, [0] + list(primegen(20)))
+    >>> primephi(123456789, 4, primes20)
     28218694
     
-    >>> primephi(123456789, 5, [0] + list(primegen(20)))
+    >>> primephi(123456789, 5, primes20)
     25653358
     """
     if a == 0: return x
@@ -249,8 +265,29 @@ def primepi(x, alpha=2.5):
     
     Examples:
     
-    >>> list(map(primepi, [97, 542, 10**6, 2**27]))
-    [25, 100, 78498, 7603553]
+    >>> primepi(97)
+    25
+    
+    >> primepi(100)
+    25
+    
+    >>> primepi(542)
+    100
+    
+    >>> primepi(10**6)
+    78498
+    
+    >>> primepi(10**6, alpha=1)
+    78498
+    
+    >>> primepi(10**6, alpha=5)
+    78498
+    
+    >>> primepi(10**6, alpha=9.9)
+    78498
+    
+    >>> primepi(2**27)
+    7603553
     """
     if x < 29: return 0 if x < 0 else (0,0,1,2,2,3,3,4,4,4,4,5,5,6,6,6,6,7,7,8,8,8,8,9,9,9,9,9,9)[x]
     
@@ -489,20 +526,23 @@ def altseriesaccel(a, n):
     >>> zeta(2)
     1.6449340668482264
     >>> pi**2 / 6
+    1.6449340668482264
     
     The sum of the harmonic series, modified to have alternating signs, is
     the natural logarithm of 2.  It converges quite slowly, but because its
     signs alternate, this algorithm can be used to great effect:
     >>> altseriesaccel((1/j for j in count(1)), 24)
-    0.69314718055994530942
+    0.6931471805599452
     >>> log(2)
+    0.6931471805599453
     
     The Leibniz formula for pi/4 is the alternating reciprocal sum of the
     odd numbers: 1/1 - 1/3 + 1/5 - 1/7 + ...  It converges quite slowly, but
     because its signs alternate, this algorithm can be used to great effect:
     >>> altseriesaccel((1/j for j in count(1,2)), 24) * 4
-    3.1415926535897932384626
+    3.1415926535897936
     >>> pi
+    3.141592653589793
     """
     Vl, Vh = 2, 6
     for bit in bin(n)[2:]: Vl, Vh = (Vh * Vl - 6, Vh * Vh - 2) if bit == '1' else (Vl * Vl - 2, Vh * Vl - 6)
@@ -531,6 +571,14 @@ def riemannzeta(z, k=24):   # TODO: Where is this accurate?
         The pole at n == 1 manifests as a ZeroDivisionError.
     
     Examples:
+    
+    >>> try: riemannzeta(1)
+    ... except ZeroDivisionError: print("Do not pass 1 to this function.")
+    Do not pass 1 to this function.
+    
+    >>> try: riemannzeta(1.0)
+    ... except ZeroDivisionError: print("Do not pass 1.0 to this function.")
+    Do not pass 1.0 to this function.
     
     >>> riemannzeta(2)
     1.6449340668482264
@@ -568,10 +616,10 @@ def zetam1(n, k=24):
     
     Examples:
     
-    >>> riemannzeta(100) - 1
+    >>> riemannzeta(100) - 1        # A misleading result!
     0.0
     
-    >>> zetam1(100)
+    >>> zetam1(100)                 # Rather more accurate!
     7.888609052210118e-31
     """
     return (altseriesaccel((-1/j**n for j in count(2)), k+1) + 2**(1-n)) / (1-2**(1-n))
@@ -598,16 +646,16 @@ def riemannR(x, n=None, zc={}):
     Examples:
     
     >>> riemannR(10**2)
-    25.6616332669241825932267979403556981499733590116719758717562720917115
+    25.661633266924188
     
     >>> riemannR(10**3)
-    168.359446281167348064913310986732910846599848149180538039907584278744
+    168.3594462811672
     
     >>> riemannR(10**4)
-    1226.93121834343310855421625817211837033992387117883498583439259905007
+    1226.9312183434338
     
     >>> riemannR(10**5)
-    9587.43173884197341435161292390822943109805895679695117928210475718957
+    9587.431738841964
     """
     if n is None: n = int((11 * log(x) + 153) // 6)
     lnx = log(x)
@@ -899,7 +947,7 @@ def pspgen():                                                       # TODO: impl
     
     Examples:
     
-    >>> list(islice(pspgen(), 20))
+    >>> list(islice(pspgen(), 19))
     [2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 19, 21, 22, 23, 25, 26]
     """
     yield from (2,3,4,5,6,7,9,10,11,13,14,15,17,19,21,22,23,25,26,29,31,33,34,35,37,38,39,41,43,46,47,49,51)
@@ -940,11 +988,11 @@ def almostprimegen(k):                                              # TODO: impl
     
     Examples:
     
-    >>> list(islice(almostprimegen(3), 19))
-    [8, 12, 18, 20, 27, 28, 30, 42, 44, 45, 50, 52, 63, 66, 68, 70, 75, 76, 78]
+    >>> list(islice(almostprimegen(3), 18))
+    [8, 12, 18, 20, 27, 28, 30, 42, 44, 45, 50, 52, 63, 66, 68, 70, 75, 76]
     
-    >>> list(islice(almostprimegen(4), 17))
-    [16, 24, 36, 40, 54, 56, 60, 81, 84, 88, 90, 100, 104, 126, 132, 135, 136]
+    >>> list(islice(almostprimegen(4), 16))
+    [16, 24, 36, 40, 54, 56, 60, 81, 84, 88, 90, 100, 104, 126, 132, 135]
     """
     # A number is called a k-almost-prime if it has exactly k prime factors, counted with multiplicity.
     # We proceed by generating the k-nearly-primes and (k-1)-nearly-primes, and filtering the (k-1)-nps out of the k-nps.
@@ -1298,8 +1346,7 @@ def linrec(n, a, b, m=None):                    # TODO: See https://projecteuler
     this sequence grow exponentially, so computing a distant term
     incrementally by plucking it out of the sequence produced by
     linrecgen(a, b) takes O(n**2) bit operations while this method, using
-    Schoenhage-Strassen multiplication, takes O(n * ln(n)**2 * ln(ln(n)))
-    bit operations.
+    Schoenhage-Strassen multiplication, takes O(n * ln(n)**2) operations.
     
     Input:
         n -- Integer.  Index of the term to extract.
@@ -1384,11 +1431,12 @@ def legendre(a, p):
 
 def jacobi(a, n):
     """
-    The Jacobi symbol (a|n).
+    The Jacobi symbol (a|n).  If n is not a positive odd integer, then the
+    return value is meaningless.
     
     Input:
         a -- any integer
-        n -- odd integer
+        n -- positive odd integer
     
     Output: -1, 0, or 1
     
@@ -1403,7 +1451,6 @@ def jacobi(a, n):
     >>> [jacobi(a, 11) for a in [-10, -9, -4, -2, -1, 0, 1, 2, 4, 9, 10]]
     [1, -1, -1, 1, -1, 0, 1, -1, 1, 1, -1]
     """
-    if (n%2 == 0) or (n < 0): return None # n must be a positive odd number     TODO delete this check?
     if (a == 0) or (a == 1): return a
     a, t = a%n, 1
     while a != 0:
@@ -1536,15 +1583,15 @@ def lprp(n, a, b):
     
     Examples:
     
-    >>> [n for n in range(11, 85) if lprp(n, 1, -1)]
-    [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83]
+    >>> [n for n in range(11, 80) if lprp(n, 1, -1)]
+    [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79]
     
     >>> [lprp(n, 1, -1) for n in (factorial(38)+1, factorial(38)-1)]
     [False, True]
     
-    >>> false_positives = (17*19, 13*29, 31*61, 43*89, 37*113, 53*109, 7*23*41)
+    >>> pseudoprimes = (17*19, 13*29, 31*61, 43*89, 37*113, 53*109, 7*23*41)
     
-    >>> [lprp(n, 1, -1) for n in false_positives]
+    >>> [lprp(n, 1, -1) for n in pseudoprimes]
     [True, True, True, True, True, True, True]
     """
     D = a*a - 4*b
@@ -1598,9 +1645,9 @@ def slprp(n, a, b):
     >>> [slprp(n, 1, -1) for n in (factorial(38)+1, factorial(38)-1)]
     [False, True]
     
-    >>> errors = (17*19, 13*29, 31*61, 43*89, 37*113, 53*109, 7*23*41)
+    >>> pseudoprimes = (17*19, 13*29, 31*61, 43*89, 37*113, 53*109, 7*23*41)
     
-    >>> [slprp(n, 1, -1) for n in errors]
+    >>> [slprp(n, 1, -1) for n in pseudoprimes]
     [False, False, False, False, True, True, False]
     """
     D = a*a - 4*b
@@ -1641,9 +1688,9 @@ def xslprp(n, a):
     >>> [xslprp(n, 3) for n in (factorial(38)+1, factorial(38)-1)]
     [False, True]
     
-    >>> false_positives = (17*19, 13*29, 31*61, 43*89, 37*113, 53*109, 7*23*41)
+    >>> pseudoprimes = (17*19, 13*29, 31*61, 43*89, 37*113, 53*109, 7*23*41)
     
-    >>> [xslprp(n, 3) for n in false_positives]
+    >>> [xslprp(n, 3) for n in pseudoprimes]
     [False, False, False, False, True, True, False]
     """
     D = a*a - 4
@@ -1711,12 +1758,12 @@ def qfprp(n, a, b): # As described in CranPom Alg 3.6.9, pg 148/161
     >>> [qfprp(n, 1, -1) for n in (factorial(38)+1, factorial(38)-1)]
     [False, True]
     
-    >>> fp = (3*3, 5*13, 3*5*7, 3*7*13, 13*37, 7*73, 3*11*17, 3*3*5*13, 7*11*13)
-    >>> [qfprp(n, 4, 8) for n in fp]    # False positives
+    >>> fp = (9, 65, 105, 3*7*13, 13*37, 7*73, 3*11*17, 3*3*5*13, 7*11*13)
+    >>> [qfprp(n, 4, 8) for n in fp]                       # False positives
     [True, True, True, True, True, True, True, True, True]
     
     >>> fp = (23*67, 151*3301, 661*1321, 23*199*353, 1153*3457, 919*4591)
-    >>> [qfprp(n, 7, 5) for n in fp]    # False positives
+    >>> [qfprp(n, 7, 5) for n in fp]                       # False positives
     [True, True, True, True, True, True]
     """
     D = a**2 - 4*b
@@ -1960,10 +2007,9 @@ def frobenius_prp(n, poly, strong=False):
         n -- integer.  The number to be tested.
         poly -- the polynomial to test n against, represented as the list
                 of its coefficients in order of increasing degree.  The
-                leading coefficient must be 1, so we omit it.  For example,
-                to test against the polynomial x^3 + 2x^2 + 3x + 4, this
-                argument is [4, 3, 2].
-        strong -- True or False.  If True, we do the strong Frobenius PRP test.
+                leading coefficient must be 1.  For example, to test against
+                the polynomial x^3 + 2x^2 + 3x + 4, use [4, 3, 2, 1].
+        strong -- True or False.  If True, then we do the strong test.
     
     Output: True or False.
     
@@ -1971,32 +2017,32 @@ def frobenius_prp(n, poly, strong=False):
     
     >>> pseuds = [911*2731,1087*3259,1619*6473,1031*10301,2003*6007,883*25579]
     
-    >>> [frobenius_prp(n, [-1, 1, 0], strong=False) for n in pseuds]
+    >>> [frobenius_prp(n, [-1, 1, 0, 1], strong=False) for n in pseuds]
     [False, False, True, True, False, False]
     
-    >>> [frobenius_prp(n, [-1, 1, 0], strong=True) for n in pseuds]
+    >>> [frobenius_prp(n, [-1, 1, 0, 1], strong=True) for n in pseuds]
     [False, False, True, False, False, False]
     
-    >>> [frobenius_prp(n, [-1, 1, 1], strong=False) for n in pseuds]
+    >>> [frobenius_prp(n, [-1, 1, 1, 1], strong=False) for n in pseuds]
     [True, True, False, False, True, True]
     
-    >>> [frobenius_prp(n, [-1, 1, 1], strong=True) for n in pseuds]
+    >>> [frobenius_prp(n, [-1, 1, 1, 1], strong=True) for n in pseuds]
     [True, True, False, False, True, False]
     
-    >>> frobenius_prp(factorial(38)-1, [-1, 1, 0])
+    >>> frobenius_prp(factorial(38)-1, [-1, 1, 0, 1])
     True
     
-    >>> frobenius_prp(factorial(38)+1, [-1, 1, 0])
+    >>> frobenius_prp(factorial(38)+1, [-1, 1, 0, 1])
     False
     """
-    # Input is a monic polynomial with the high-degree term deleted; eg, if poly == [4,3], then the polynomial used is [4,3,1].
+    # Input is a monic polynomial.
     # Let f(x) in Z[x] be a monic polynomial of degree d with discriminant D.  An odd integer > 1 is said to pass the Frobenius
     # PRP test wrt f(x) if gcd(n, f(0)*D) == 1 and it is declared to be a PRP by the following algorithm.  (Such an integer will
     # be called a Frobenius PRP wrt f(x).)  All computations are done in (Z/nZ)[x].
     if n % 2 == 0: return n == 2
-    f = [k % n for k in poly] + [1]
+    f = [k % n for k in poly]
     g = gcd(n, f[0])
-    d = len(poly)
+    d = len(f) - 1
     if 1 < g < n: return False
     assert g == 1, (n, poly, D) # If this fails, then the number being checked divides the constant term.
     D = discriminant(f)
@@ -2217,7 +2263,7 @@ def prevprime(n, primetest=isprime):           # TODO: we can do better than thi
         if primetest(m+6): return m+6
         if primetest(m+4): return m+4
 
-def randprime(digits, base=10, primetest=isprime):
+def randprime(digits, base=10):
     """
     Returns a random prime with the specified number of digits when rendered
     in the specified base.  The primes are selected uniformly among all
@@ -2415,7 +2461,7 @@ def pollardrho_brent(n):
     Examples:
     >>> n = factorial(20)+1
     >>> f = pollardrho_brent(n)
-    >>> n in (20639383, 117876683047)
+    >>> f in (20639383, 117876683047)
     True
     """
     if isprime(n): return n
@@ -2911,6 +2957,8 @@ def primefac(n, trial=1000, rho=42000, primetest=isprime, methods=(pollardrho_br
     Generates the prime factors of the input.  Factors that appear x times
     are yielded x times.
     
+    Do not expect the output to be in any particular order.
+    
     This algorithm has three phases:
     1.  Trial division.
     2.  Pollard's rho algorithm.
@@ -3122,9 +3170,10 @@ def factorsieve(limit=inf):
 
 def divisors(n):
     """
-    Generates all natural numbers that evenly divide n.  Do not expect the
-    output to be in any particular order.  The code is derived from
-    https://stackoverflow.com/a/171784.
+    Generates all natural numbers that evenly divide n.  The code is derived
+    from https://stackoverflow.com/a/171784.
+    
+    Do not expect the output to be in any particular order.
     
     Input: n -- an integer or a dict in the format produced by factorint
     
@@ -3159,8 +3208,9 @@ def divisors(n):
 
 def divisors_factored(n):
     """
-    Yields the divisors of n, in factorint format.  Do not expect the output
-    to be in any particular order.
+    Yields the divisors of n, in factorint format.
+    
+    Do not expect the output to be in any particular order.
     
     Input: n -- an integer or the output of factorint
     
@@ -3184,7 +3234,7 @@ def divisors_factored(n):
 
 def divcount(n):
     """
-    Counts the number of divisors of n
+    Counts the number of divisors of n.
     
     Input: n -- number to consider, or an output from factorint
     
@@ -3524,7 +3574,6 @@ def mobiussieve(limit=inf):     # TODO: Figure out a way to have the sieve be a 
         nextp = next(pg)
         lo, hi = hi, min(nextp**2, limit)
 
-
 def liouville(n):
     """
     The Liouville lambda function: lambda(n) == (-1)**k, where k is the
@@ -3547,6 +3596,8 @@ def polyroots_prime(f, p, sqfr=False):
     Coded after algorithm 2.3.10 in Crandall & Pomerance: this uses explicit
     formulas for low-degree polynomials and Cantor-Zassenhaus for cubics and
     higher.
+    
+    Do not expect the output to be in any particular order.
     
     Input:
         f -- List.  These are the polynomial's coefficients in order of
@@ -3618,6 +3669,8 @@ def hensel(f, p, k): # Finds all solutions to f(x) == 0 mod p**k.
     Uses Hensel lifting to generate with some efficiency all zeros of a
     polynomial modulo a prime power.
     
+    Do not expect the output to be in any particular order.
+    
     Input:
         f -- List.  These are the polynomial's coefficients in order of
              increasing degree.
@@ -3653,9 +3706,10 @@ def hensel(f, p, k): # Finds all solutions to f(x) == 0 mod p**k.
 
 def sqrtmod(a, n):
     """
-    Computes all square roots of a modulo n and returns them in a sorted
-    list.  The heavy lifting is done in the integer-factoring functions, in
-    crt(), and in hensel().
+    Generates all square roots of a modulo n.  The heavy lifting is done in
+    the integer-factoring functions, in crt(), and in hensel().
+    
+    Do not expect the output to be in any particular order.
     
     Input: a, n -- integers
     
@@ -3663,34 +3717,40 @@ def sqrtmod(a, n):
     
     Examples:
     
-    >>> sqrtmod(100, 187)
+    >>> sorted(sqrtmod(100, 187))
     [10, 78, 109, 177]
     
-    >>> sqrtmod(100, {11:1, 17:1})
+    >>> sorted(sqrtmod(100, {11:1, 17:1}))
     [10, 78, 109, 177]
     
-    >>> sqrtmod(0, 100)
+    >>> sorted(sqrtmod(0, 100))
     [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
     
-    >>> sqrtmod(97, 1009)
+    >>> sorted(sqrtmod(97, 1009))
     []
     """
     n, nf = (prod(p**e for (p,e) in n.items()), n) if isinstance(n, dict) else (n, None)
-    if n <= 324: return [x for x in range(n) if (x*x - a) % n == 0]
+    if n <= 10:                                             # This bound is chosen arbitrarily.  TODO: optimize.
+        yield from (x for x in range(n) if (x*x - a) % n == 0)
+        return
     sqrts = [(list(hensel([-a, 0, 1], p, e)), p**e) for (p,e) in (factorint(n) if nf is None else nf).items()]
-    if len(sqrts) == 1: return sorted(sqrts[0][0])
+    if len(sqrts) == 1:
+        yield from sqrts[0][0]
+        return
     rems, mods = [], []
     for (rts, m) in sqrts:
-        if len(rts) == 0: return []
+        if len(rts) == 0: return
         rems.append(rts)
         mods.append(m)
-    return sorted(crt(r, mods) for r in product(*rems))      # When crt gets upgraded, use it here.  TODO
+    yield from (crt(r, mods) for r in product(*rems))      # When crt gets upgraded, use it here.  TODO
 
 def polyrootsmod(pol, n):
     """
     Computes the zeros of a polynomial modulo an integer.  We do this by
     factoring the modulus, solving mod the prime power factors, and putting
     the results together via the Chinese Remainder Theorem.
+    
+    Do not expect the output to be in any particular order.
     
     Input:
         pol -- List.  These are the polynomial's coefficients in order of
@@ -3702,15 +3762,19 @@ def polyrootsmod(pol, n):
     Examples:
     """         # TODO
     n, nf = (prod(p**e for (p,e) in n.items()), n) if isinstance(n, dict) else (n, None)
-    if n <= 324: return [x for x in range(n) if polyval(pol, x, n) == 0]            # TODO: This bound is chosen arbitrarily.
+    if n <= 10:                                             # This bound is chosen arbitrarily.  TODO: optimize.
+        yield from (x for x in range(n) if polyval(pol, x, n) == 0)
+        return
     roots = [(list(hensel(pol, p, e)), p**e) for (p,e) in (factorint(n) if nf is None else nf).items()]
-    if len(roots) == 1: return sorted(roots[0][0])
+    if len(roots) == 1:
+        yield from roots[0][0]
+        return
     rems, mods = [], []
     for (rts, m) in roots:
-        if len(rts) == 0: return []
+        if len(rts) == 0: return
         rems.append(rts)
         mods.append(m)
-    return sorted(crt(r, mods) for r in product(*rems))      # When crt gets upgraded, use it here.  TODO
+    yield from (crt(r, mods) for r in product(*rems))      # When crt gets upgraded, use it here.  TODO
 
 def _PQa(P, Q, D):
     """
@@ -3846,12 +3910,12 @@ def pell(D, N):                                                                 
         if n*n == N: return ((( n , t) for t in count()), None, None)
         else: return (None, [], None)
     if D < 0:               # x**2 + abs(D) * y**2 == N != 0.  We are looking for lattice points on an ellipse.  TODO Cornacchia
-        # Slightly better than scanning y.  Runs in O(sqrt(N) * len(sqrtmod(N, D)) / D) time, plus the time to factor D.
+        # Slightly better than scanning y.  Runs in O(sqrt(N) * len(list(sqrtmod(N, D))) / D) time, plus the time to factor D.
         ans = (None, [], None)
         D *= -1
         if N < 0: return ans
         n = isqrt(N)
-        rts = sqrtmod(N, D)
+        rts = list(sqrtmod(N, D))
         if len(rts) == 0: return ans
         for x in count(0, D):
             for r in rts:
@@ -4067,6 +4131,8 @@ def pythags(maxperim, primitive=False):
     and including the user-specified maximum perimeter.  Optionally, the
     non-primitive triples can be omitted.
     
+    Do not expect the output to be in any particular order.
+    
     Input:
         maxperim -- integer
         primitive -- True or False (default False).  If True, then only the
@@ -4102,6 +4168,8 @@ def pythags_by_perimeter(p):          # TODO: This is hideous.  Clean it up.
     """
     Generates all Pythagorean triples of a given perimeter.  Does so by
     examining the factors of the perimeter.
+    
+    Do not expect the output to be in any particular order.
     
     Input: p -- integer
     
@@ -4442,7 +4510,7 @@ def hamming(ps, *ps2):
 
 def perfectpowers():                                                 # TODO This can probably be made more efficient with heapq.
     """
-    Generates the sequence of perfect powers without multiplicity.
+    Generates in order the sequence of perfect powers without multiplicity.
     
     Input: none
     
@@ -4476,6 +4544,8 @@ def sqfrgen(ps):
     """
     Generates squarefree products of elements of ps.
     
+    Do not expect the output to be in any particular order.
+    
     Input: ps -- indexable iterable of primes
     
     Output: sequence of integers
@@ -4494,6 +4564,8 @@ def sqfrgenb(ps, b, k=0, m=1):                               # TODO this can be 
     this with some efficiency by conducting a depth-first search and pruning
     branches of the tree that generate numbers greater than the bound.  For
     fastest results, ps should be sorted in decreasing order.
+    
+    Do not expect the output to be in any particular order.
     
     Input:
         ps -- indexable iterable of primes
@@ -4525,6 +4597,8 @@ def stormer(ps, *ps2, abc=None, sep=1):
     nth-prime-smooth numbers up to the largest such value appears to scale
     singly exponentially; however, max(stormer(ps)) cannot yet be computed
     without actually executing the Stormer-Lehmer algorithm.
+    
+    Do not expect the output to be in any particular order.
     
     Let S be a set of primes, let x and x+{1,2} be S-smooth, and let T be
     the product of the elements of S.  Then on the abc conjecture we have
@@ -4600,6 +4674,8 @@ def quadintroots(a, b, c):
     Given integers a,b,c, we return in a tuple all distinct integers x such
     that a*x^2 + b*x + c == 0.  This is primarily a helper function for
     cubicintrootsgiven and cubicintroots.
+    
+    Do not expect the output to be in any particular order.
     """
     if a == 0: return () if b == 0 else ((-c//b,) if c % b == 0 else ())
     if c == 0:
@@ -4621,6 +4697,8 @@ def cubicintrootsgiven(a, b, c, d, r):
     integer roots (including r).  This is primarily a helper function for
     cubicintroots.  Algorithm: divide (a*x^3 + b*x^2 + c*x + d) by (x - r)
     and use quadintroots on the result.
+    
+    Do not expect the output to be in any particular order.
     """
     cubic = lambda x: ((a*x + b) * x + c) * x + d
     assert cubic(r) == 0, (a,b,c,d,r)
@@ -4639,6 +4717,8 @@ def cubicintroots(a, b, c, d):
     Given integers a,b,c,d, we efficiently find and return in a tuple all
     distinct integer roots of a * x^3 + b * x^2 + c * x + d.
     This is primarily a helper function for isprime_nm1 and isprime_np1.
+    
+    Do not expect the output to be in any particular order.
     
     Algorithm:
     0.  We could just use the rational roots theorem, but that would require
@@ -5047,6 +5127,8 @@ def mulparts(n, r=None, nfac=None):
     Generates all multiplicative partitions of n: that is, all ordered
     r-tuples of positive integers whose product is n.
     
+    Do not expect the output to be in any particular order.
+    
     Input:
         n, r -- integers.
                 If r is None and n == 1: yield (1,) and stop.
@@ -5298,6 +5380,8 @@ def egypt_short(n, d, terms=0, minden=1):
     Generates all shortest Egyptian fractions for n/d using at least the
     indicated number of terms and whose denominators are all >= minden.
     This can take impractically long times, even on modest-seeming inputs.
+    
+    Do not expect the output to be in any particular order.
     
     Input:
         n, d -- integers.
@@ -5845,4 +5929,4 @@ def partitions(n, parts=None, distinct=False):
         plist = ans
     return plist
 
-#if __name__ == "__main__": import doctest; doctest.testmod()
+if __name__ == "__main__": import doctest; doctest.testmod()
