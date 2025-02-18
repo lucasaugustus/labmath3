@@ -151,6 +151,18 @@ def test_quadintroots():
         if D == 0 and len(roots) == 0: assert b % (2*a) != 0, (a,b,c)
         if D == 0 and len(roots) == 1: assert len(roots) == 1, (a,b,c)
         for x in roots: assert a*x*x + b*x + c == 0, (a,b,c,x)
+    # Fully randomized coefficients, tested against brute force
+    for _ in range(10000):
+        a, b, c = randrange(-100, 100), randrange(-100, 100), randrange(-100, 100)
+        if a != 0:
+            H = 2 + max(abs(b),abs(c)) // abs(a)
+        if a == 0 and b != 0:
+            H = 2 + abs(c) // abs(b)
+        if a == 0 and b == 0:
+            H = 2
+        # By the Rouche theorem, H is strictly greater than each root's magnitude.
+        roots = [x for x in range(-H, H+1) if (a*x+b)*x+c == 0]
+        assert roots == sorted(quadintroots(a,b,c)), (a,b,c,H,roots,quadintroots(a,b,c))
 
 def test_cubicintrootsgiven():
     for _ in range(1000):
@@ -314,6 +326,20 @@ def test_cubicintroots():
     assert cubicintroots(1,-4,4,-1) == (1,)
     assert cubicintroots(1,-5,7,-2) == (2,)
     assert cubicintroots(3,-13,17,-6) == (2,)
+    # Fully randomized coefficients, tested against brute force
+    for _ in range(1000):
+        a, b, c, d = randrange(-100, 100), randrange(-100, 100), randrange(-100, 100), randrange(-100, 100)
+        if a != 0:
+            H = 2 + max(abs(b),abs(c),abs(d)) // abs(a)
+        if a == 0 and b != 0:
+            H = 2 + max(abs(c),abs(d)) // abs(b)
+        if a == 0 and b == 0 and c != 0:
+            H = 2 + abs(d) // abs(c)
+        if a == 0 and b == 0 and c == 0:
+            H = 2
+        # By the Rouche theorem, H is strictly greater than each root's magnitude.
+        roots = [x for x in range(-H, H+1) if ((a*x+b)*x+c)*x+d == 0]
+        assert roots == sorted(cubicintroots(a,b,c,d)), (a,b,c,d,H,roots,cubicintroots(a,b,c,d))
 
 def test_sqfrgen():
     assert sorted(sqfrgen(())) == [1]
