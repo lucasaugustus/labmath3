@@ -16,7 +16,6 @@ Minor alterations to behavior:
     mobiussieve is now a generator.
     partitions now has an optional keyword argument to make it compute the number of partitions into distinct parts, and the meaning of its parts keyword argument has changed.
     polyrootsmod is now a generator, and its output should not be expected to be sorted.
-    PQa is now _PQa.
     primefac now has the trialextra keyword argument.
     primegen has been slightly optimized.
     primephi no longer has a keyword argument, and its third argument is now a 1-based list.
