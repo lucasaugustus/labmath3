@@ -13,11 +13,11 @@ Before publishing to PyPI:
   * `discriminant`
 * Ensure that the examples in the docstrings work.
 * Figure out where `riemannzeta` and `zetam1` are accurate.
-* For bounded generators like `primegen` and `factorsieve`, implement tests to ensure that the bounds are handled correctly.
 
 General TODOs:
 
 * Write more comprehensive tests for pytest.
+  * For bounded generators like `primegen` and `factorsieve`, implement tests to ensure that the bounds are handled correctly.
 * Figure out how to use serifed fonts in `.md` and `.rst` files.
 * Implement the segmented version of the `sqfrcount` algorithm.  See section 4.4 of <https://arxiv.org/pdf/1107.4890> and `in_progress/sqfrcount.py`.
 * Make `powerset` handle sets.
