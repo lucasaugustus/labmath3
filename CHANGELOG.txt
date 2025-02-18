@@ -7,12 +7,16 @@ Minor alterations to behavior:
     ecmul is now _ecmul.
     factorint now has the trialextra keyword argument.
     factorsieve is now a generator, and it starts at 1 instead of 0.
+    frobenius_prp now requires the leading coefficient to be listed explicitly.
     gcd is now imported from math, rather than defined here.
     isqrt is now imported from math, rather than defined here.
+    jacobi no longer checks that the modulus is a positive odd number.
     lcm is now imported from math, rather than defined here.
     mlucas is now _mlucas.
     mobiussieve is now a generator.
     partitions now has an optional keyword argument to make it compute the number of partitions into distinct parts, and the meaning of its parts keyword argument has changed.
+    polyrootsmod is now a generator, and its output should not be expected to be sorted.
+    PQa is now _PQa.
     primefac now has the trialextra keyword argument.
     primegen has been slightly optimized.
     primephi no longer has a keyword argument, and its third argument is now a 1-based list.
@@ -20,6 +24,7 @@ Minor alterations to behavior:
     randomfactored now implements both Bach's and Kalai's algorithms.  For backwards compatibility, the latter is the default.  The primality test is no longer user-selectable.
     randprime returns None when asked to produce a prime with 1 digit in base 2, rather than entering an infinite loop.
     riemannR's default value for n is now (11 * ln(x) + 153) // 6.
+    sqrtmod is now a generator, and its output should not be expected to be sorted.
     totientsieve is now a generator, and it has an optional second argument to make it compute the Jordan totient function.
 
 New functions: dirichletcharacter, divsigmasieve, powerfulmap, pythags, rational_in_base, sqfrcount
