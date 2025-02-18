@@ -20,7 +20,7 @@ Before publishing to PyPI:
 General TODOs:
 
 * Figure out how to use serifed fonts in `.md` and `.rst` files.
-* Implement the segmented version of the `sqfrcount` algorithm.  See section 4.4 of <https://arxiv.org/pdf/1107.4890> and `on_deck/sqfrcount.py`.
+* Implement the segmented version of the `sqfrcount` algorithm.  See section 4.4 of <https://arxiv.org/pdf/1107.4890> and `in_progress/sqfrcount.py`.
 * Make `powerset` handle sets.
 * Make `_primepi_S1` non-recursive.
 * Extend `riemannzeta` to handle more of the complex plane.
@@ -64,5 +64,5 @@ General TODOs:
 * Investigate alternate discriminant algorithms, such as <https://math.stackexchange.com/questions/696335> and <https://en.m.wikipedia.org/wiki/B%C3%A9zout_matrix>.
 * Investigate parallelizing `egypt_short`.
 * What are the time- and space-complexities of `primesum`?
-* Implement the segmented Deleglise-Rivat algorithm for the Mertens function.  This is in progress at `on_deck/mertens.py`.
+* Implement the segmented Deleglise-Rivat algorithm for the Mertens function.  See `in_progress/mertens.py`.
 * Consider importing the Helfgott-Thompson code from <https://github.com/lucasaugustus/mertens>.
