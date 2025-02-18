@@ -681,12 +681,12 @@ def test_polypowmodpmodpoly():
 
 def test_frobenius_prp():
     pseuds = [911*2731, 1087*3259, 1619*6473, 1031*10301, 2003*6007, 883*25579]
-    assert [frobenius_prp(n, [-1, 1, 0], strong=False) for n in pseuds] == [False, False, True , True , False, False]
-    assert [frobenius_prp(n, [-1, 1, 0], strong=True ) for n in pseuds] == [False, False, True , False, False, False]
-    assert [frobenius_prp(n, [-1, 1, 1], strong=False) for n in pseuds] == [True , True , False, False, True , True ]
-    assert [frobenius_prp(n, [-1, 1, 1], strong=True ) for n in pseuds] == [True , True , False, False, True , False]
-    assert     frobenius_prp(factorial(38)-1, [-1, 1, 0])
-    assert not frobenius_prp(factorial(38)+1, [-1, 1, 0])
+    assert [frobenius_prp(n, [-1, 1, 0, 1], strong=False) for n in pseuds] == [False, False, True , True , False, False]
+    assert [frobenius_prp(n, [-1, 1, 0, 1], strong=True ) for n in pseuds] == [False, False, True , False, False, False]
+    assert [frobenius_prp(n, [-1, 1, 1, 1], strong=False) for n in pseuds] == [True , True , False, False, True , True ]
+    assert [frobenius_prp(n, [-1, 1, 1, 1], strong=True ) for n in pseuds] == [True , True , False, False, True , False]
+    assert     frobenius_prp(factorial(38)-1, [-1, 1, 0, 1])
+    assert not frobenius_prp(factorial(38)+1, [-1, 1, 0, 1])
 
 def test_siqs():
     assert siqs(factorial(24) - 1) in (625793187653, 991459181683)
@@ -729,15 +729,15 @@ def test_hensel():
                     assert sorted(hensel(poly, p, e)) == [x for x in range(p**e) if polyval(poly, x, p**e) == 0], (d,p,e, poly)
 
 def test_sqrtmod():
-    assert sqrtmod(100, 187) == [10, 78, 109, 177]
-    assert sqrtmod(100, {11:1, 17:1}) == [10, 78, 109, 177]
-    assert sqrtmod(0, 100) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-    assert sqrtmod(97, 1009) == []
+    assert sorted(sqrtmod(100, 187)) == [10, 78, 109, 177]
+    assert sorted(sqrtmod(100, {11:1, 17:1})) == [10, 78, 109, 177]
+    assert sorted(sqrtmod(0, 100)) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+    assert sorted(sqrtmod(97, 1009)) == []
     
     # Check the fancy algorithm against the brute-force solution:
     for a in range(42):
         for b in range(1, 400):
-            assert sqrtmod(a,b) == [x for x in range(b) if pow(x, 2, b) == a % b], (a,b)
+            assert sorted(sqrtmod(a,b)) == [x for x in range(b) if pow(x, 2, b) == a % b], (a,b)
 
 def test_polyrootsmod():
     # Check the fancy algorithm against the brute-force solution:
@@ -855,25 +855,25 @@ def test_totient():
     assert totient(factorint(120)) == 32
 
 def test_PQa():
-    assert list(islice(PQa(1, 1, 2), 5)) == [(1, 1, 1, 1), (2, 3, 1, 1), (5, 7, 1, 1), (12, 17, 1, 1), (29, 41, 1, 1)]
-    assert list(islice(PQa(1, 1, 3), 5)) == [(1, 1, 1, 1), (1, 2, 1, 2), (3, 5, 1, 1), (4, 7, 1, 2), (11, 19, 1, 1)]
-    assert list(islice(PQa(1, 1, 5), 5)) == [(1, 2, 1, 1), (4, 9, 2, 1), (17, 38, 2, 1), (72, 161, 2, 1), (305, 682, 2, 1)]
-    assert list(islice(PQa(1, 2, 3), 5)) == [(1, 1, 1, 2), (2, 4, 1, 1), (3, 5, 1, 2), (8, 14, 1, 1), (11, 19, 1, 2)]
-    assert list(islice(PQa(1, 2, 5), 5)) == [(1, 1, 1, 2), (1, 3, 1, 2), (2, 4, 1, 2), (3, 7, 1, 2), (5, 11, 1, 2)]
-    assert list(islice(PQa(1, 4, 5), 5)) == [(1, -1, 1, 4), (1, 3, -1, 1), (5, 11, 2, 1), (21, 47, 2, 1), (89, 199, 2, 1)]
-    assert list(islice(PQa(2, 2, 2), 5)) == [(1, 0, 2, 2), (1, 2, 0, 1), (3, 4, 1, 1), (7, 10, 1, 1), (17, 24, 1, 1)]
-    assert list(islice(PQa(2, 2, 3), 5)) == [(1, 0, 2, 2), (1, 2, 0, 1), (2, 2, 1, 2), (5, 6, 1, 1), (7, 8, 1, 2)]
-    assert list(islice(PQa(2, 3, 5), 5)) == [(1, 1, 2, 3), (3, 6, 1, 1), (13, 25, 2, 1), (55, 106, 2, 1), (233, 449, 2, 1)]
-    assert list(islice(PQa(2, 4, 2), 5)) == [(1, -2, 2, 4), (0, 4, -2, -1), (1, 2, 2, 2), (1, 6, 0, 1), (3, 14, 1, 1)]
-    assert list(islice(PQa(2, 4, 3), 5)) == [(1, -2, 2, 4), (0, 4, -2, -1), (1, 10, 2, 1), (1, 14, 1, 2), (3, 38, 1, 1)]
-    assert list(islice(PQa(3, 2, 3), 5)) == [(1, 1, 3, 2), (2, 4, 1, 1), (3, 5, 1, 2), (8, 14, 1, 1), (11, 19, 1, 2)]
-    assert list(islice(PQa(3, 2, 5), 5)) == [(1, 1, 3, 2), (1, 3, 1, 2), (2, 4, 1, 2), (3, 7, 1, 2), (5, 11, 1, 2)]
-    assert list(islice(PQa(3, 3, 3), 5)) == [(1, 0, 3, 3), (1, 3, 0, 1), (2, 3, 1, 2), (5, 9, 1, 1), (7, 12, 1, 2)]
-    assert list(islice(PQa(3, 3, 5), 5)) == [(1, 0, 3, 3), (2, 3, 0, 1), (9, 12, 2, 1), (38, 51, 2, 1), (161, 216, 2, 1)]
-    assert list(islice(PQa(3, 4, 5), 5)) == [(1, 1, 3, 4), (3, 7, 1, 1), (13, 29, 2, 1), (55, 123, 2, 1), (233, 521, 2, 1)]
-    assert list(islice(PQa(4, 2, 2), 5)) == [(1, 0, 4, 2), (1, 2, 0, 1), (3, 4, 1, 1), (7, 10, 1, 1), (17, 24, 1, 1)]
-    assert list(islice(PQa(4, 2, 3), 5)) == [(1, 0, 4, 2), (1, 2, 0, 1), (2, 2, 1, 2), (5, 6, 1, 1), (7, 8, 1, 2)]
-    assert list(islice(PQa(4, 4, 5), 5)) == [(1, 0, 4, 4), (2, 4, 0, 1), (9, 16, 2, 1), (38, 68, 2, 1), (161, 288, 2, 1)]
+    assert list(islice(_PQa(1, 1, 2), 5)) == [(1, 1, 1, 1), (2, 3, 1, 1), (5, 7, 1, 1), (12, 17, 1, 1), (29, 41, 1, 1)]
+    assert list(islice(_PQa(1, 1, 3), 5)) == [(1, 1, 1, 1), (1, 2, 1, 2), (3, 5, 1, 1), (4, 7, 1, 2), (11, 19, 1, 1)]
+    assert list(islice(_PQa(1, 1, 5), 5)) == [(1, 2, 1, 1), (4, 9, 2, 1), (17, 38, 2, 1), (72, 161, 2, 1), (305, 682, 2, 1)]
+    assert list(islice(_PQa(1, 2, 3), 5)) == [(1, 1, 1, 2), (2, 4, 1, 1), (3, 5, 1, 2), (8, 14, 1, 1), (11, 19, 1, 2)]
+    assert list(islice(_PQa(1, 2, 5), 5)) == [(1, 1, 1, 2), (1, 3, 1, 2), (2, 4, 1, 2), (3, 7, 1, 2), (5, 11, 1, 2)]
+    assert list(islice(_PQa(1, 4, 5), 5)) == [(1, -1, 1, 4), (1, 3, -1, 1), (5, 11, 2, 1), (21, 47, 2, 1), (89, 199, 2, 1)]
+    assert list(islice(_PQa(2, 2, 2), 5)) == [(1, 0, 2, 2), (1, 2, 0, 1), (3, 4, 1, 1), (7, 10, 1, 1), (17, 24, 1, 1)]
+    assert list(islice(_PQa(2, 2, 3), 5)) == [(1, 0, 2, 2), (1, 2, 0, 1), (2, 2, 1, 2), (5, 6, 1, 1), (7, 8, 1, 2)]
+    assert list(islice(_PQa(2, 3, 5), 5)) == [(1, 1, 2, 3), (3, 6, 1, 1), (13, 25, 2, 1), (55, 106, 2, 1), (233, 449, 2, 1)]
+    assert list(islice(_PQa(2, 4, 2), 5)) == [(1, -2, 2, 4), (0, 4, -2, -1), (1, 2, 2, 2), (1, 6, 0, 1), (3, 14, 1, 1)]
+    assert list(islice(_PQa(2, 4, 3), 5)) == [(1, -2, 2, 4), (0, 4, -2, -1), (1, 10, 2, 1), (1, 14, 1, 2), (3, 38, 1, 1)]
+    assert list(islice(_PQa(3, 2, 3), 5)) == [(1, 1, 3, 2), (2, 4, 1, 1), (3, 5, 1, 2), (8, 14, 1, 1), (11, 19, 1, 2)]
+    assert list(islice(_PQa(3, 2, 5), 5)) == [(1, 1, 3, 2), (1, 3, 1, 2), (2, 4, 1, 2), (3, 7, 1, 2), (5, 11, 1, 2)]
+    assert list(islice(_PQa(3, 3, 3), 5)) == [(1, 0, 3, 3), (1, 3, 0, 1), (2, 3, 1, 2), (5, 9, 1, 1), (7, 12, 1, 2)]
+    assert list(islice(_PQa(3, 3, 5), 5)) == [(1, 0, 3, 3), (2, 3, 0, 1), (9, 12, 2, 1), (38, 51, 2, 1), (161, 216, 2, 1)]
+    assert list(islice(_PQa(3, 4, 5), 5)) == [(1, 1, 3, 4), (3, 7, 1, 1), (13, 29, 2, 1), (55, 123, 2, 1), (233, 521, 2, 1)]
+    assert list(islice(_PQa(4, 2, 2), 5)) == [(1, 0, 4, 2), (1, 2, 0, 1), (3, 4, 1, 1), (7, 10, 1, 1), (17, 24, 1, 1)]
+    assert list(islice(_PQa(4, 2, 3), 5)) == [(1, 0, 4, 2), (1, 2, 0, 1), (2, 2, 1, 2), (5, 6, 1, 1), (7, 8, 1, 2)]
+    assert list(islice(_PQa(4, 4, 5), 5)) == [(1, 0, 4, 4), (2, 4, 0, 1), (9, 16, 2, 1), (38, 68, 2, 1), (161, 288, 2, 1)]
 
 def test_pell():
     assert pell(2, 0) == (None, [(0, 0)], None)
