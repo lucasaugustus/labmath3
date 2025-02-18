@@ -1,5 +1,3 @@
-General TODOs:
-
 * Write more examples in the docstrings.
   * `randomfactored`
   * `polyrootsmod`
