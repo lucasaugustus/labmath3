@@ -503,6 +503,9 @@ def altseriesaccel(a, n):
     not computed via floating point.  The article is available at
     https://people.mpim-bonn.mpg.de/zagier/files/exp-math-9/fulltext.pdf.
     
+    This function returns a floating-point number.  Do not expect the lower-
+    order bits to remain stable between versions.
+    
     Input:
         a -- an iterable.  The series to be summed is
              a[0] - a[1] + a[2] - a[3] + a[4] - a[5] ...
@@ -561,6 +564,9 @@ def riemannzeta(z, k=24):   # TODO: Where is this accurate?
     The Riemann zeta function, computed by using a convergence-acceleration
     technique (implemented as altseriesaccel) on the Dirichlet eta function.
     
+    This function returns a floating-point number.  Do not expect the lower-
+    order bits to remain stable between versions.
+    
     Input:
         z -- point to evaluate at
         k -- number of terms to use.  Default == 24.
@@ -604,6 +610,9 @@ def zetam1(n, k=24):
     will evaluate to 0.0.  This function returns accurate answers even in
     such cases.
     
+    This function returns a floating-point number.  Do not expect the lower-
+    order bits to remain stable between versions.
+    
     Input:
         n -- point to evaluate at
         k -- number of terms to use.  Default == 24.  Since we are using
@@ -628,6 +637,9 @@ def riemannR(x, n=None, zc={}):
     """
     Uses the Gram series to compute Riemann's R function, which is a very
     good approximation to primepi.
+    
+    This function returns a floating-point number.  Do not expect the lower-
+    order bits to remain stable between versions.
     
     Input:
         x -- Integer. The function is evaluated at this point.
@@ -673,8 +685,12 @@ def riemannR(x, n=None, zc={}):
 
 def nthprimeapprox(n):
     """
-    Produces an integer that should be rather close to the nth prime number
-    by using binary splitting on Riemann's R function.
+    Produces an integer that should be rather close to the nth prime number.
+    
+    
+    Currently, the algorithm proceeds by using binary splitting on Riemann's
+    R function.  Do not expect the algorithm or the output to remain stable
+    between versions.
     
     Input: n -- an integer
     
@@ -2620,6 +2636,10 @@ def secm(n, B1, B2, seed):
         p = next(pg)
     return gcd(g, n)
 def ecmparams(n):   # TODO: Better parameters.
+    """
+    This is a generator to produce a sequence of parameters for ecm.
+    Do not expect its output to remain stable between versions.
+    """
     counter = 0
     for i in count():
         for _ in range(2*i+1):
