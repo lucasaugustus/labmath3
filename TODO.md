@@ -19,6 +19,7 @@ Before publishing to PyPI:
 
 General TODOs:
 
+* Figure out how to use serifed fonts in `.md` and `.rst` files.
 * Implement the segmented version of the `sqfrcount` algorithm.  See section 4.4 of <https://arxiv.org/pdf/1107.4890> and `on_deck/sqfrcount.py`.
 * Make `powerset` handle sets.
 * Make `_primepi_S1` non-recursive.
