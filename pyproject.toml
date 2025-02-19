@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "labmath3"
+version = "3.0.0"
+authors = [{name="Lucas A. Brown", email="lucasbrown.cit@gmail.com"},]
+description = "Module for basic math in the general vicinity of computational number theory"
+readme = "README.rst"
+requires-python = ">= 3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["math", "mathematics", "number theory", "computational number theory",
+            "factoring", "integer factoring", "factorization", "integer factorization",
+            "primes", "prime numbers", "primality", "primality testing", "BPSW", "almost-prime", "almost prime", "semiprime",
+            "prime counting", "prime-counting", "prime counting function", "prime-counting function", "primepi", "LMO", "lagarias-miller-odlyzko",
+            "xgcd", "extended gcd", "extended euclidean algorithm",
+            "crt", "chinese remainder theorem",
+            "fibo", "fibonacci", "fibonacci numbers", "fibonacci sequence", "lucas numbers",
+            "legendre symbol", "jacobi symbol", "kronecker symbol",
+            "pollard rho", "pollard's rho",
+            "quadratic sieve", "multiple polynomial quadratic sieve", "mpqs", "multiple-polynomial quadratic sieve",
+            "self initializing quadratic sieve", "self-initializing quadratic sieve", "siqs",
+            "sieve", "sieve of eratosthenes", "segmented sieve",
+            "pythagorean triple", "pythagorean triples",
+            "elliptic curve", "elliptic curve factoring", "elliptic curve factorization", "elliptic curve method",
+            "miller rabin", "miller-rabin",
+            "frobenius", "quadratic frobenius",
+            "sprp", "strong probable primality test",
+            "lucas probable primality test", "strong lucas probable primality test", "extra strong lucas probable primality test",
+            "lprp", "slprp", "xslprp",
+            "linear recurrence", "linear recurrences", "lucas sequence", "lucas sequences",
+            "modular square root", "modular square roots",
+            "hensel lifting",
+            "pell", "pell equation", "generalized pell equation",
+            "stormer's theorem", "størmer's theorem", "smooth numbers", "hamming numbers",
+            "totient", "divisor", "divisors", "divisor counting",
+            "mobius", "mobius function", "moebius", "moebius function", "möbius", "möbius function",
+            "continued fraction", "continued fractions", "convergent", "convergents",
+            "farey", "farey sequence",
+            "pocklington", "n+1", "n-1",
+            "determinant", "discriminant",
+            "egyptian fraction", "egyptian fractions",
+            "partitions",
+            "dirichlet convolution", "dirichlet character",
+            "zeta function", "riemann zeta function",
+]
+
+[project.urls]
+Homepage = "https://github.com/lucasaugustus/labmath3/"
+Issues = "https://github.com/lucasaugustus/labmath3/issues/"
+
