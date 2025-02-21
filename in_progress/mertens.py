@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 from labmath3 import *
+from time import process_time
 
 def mertens(x):
     """
@@ -33,6 +34,8 @@ def mertens(x):
     # Both phases need isqrt(x//m) for various m in [1, u], with many repeats.
     # Preparing a cache of these values for all m speeds things up considerably in exchange for a constant-factor space penalty.
     isqrtxm = [0] + [isqrt(x//m) for m in range(1, u+1)]
+    
+    print(process_time())
     
     # Here beginneth the S1 phase.
     
@@ -101,19 +104,19 @@ def mertens(x):
         min_m = max(local_min_m, global_min_m) + 1
         
         for m in range(min_m, u+1):
-            min_n = max(1, x//(m*hi) + 1, (u//m) + 1)   # n >= this
-            max_n = min(isqrtxm[m], x//(m*lo))          # n <= this
+            if mobs_u[m] == 0: continue
+            min_n = max(0, x//(m*hi), (u//m)) + 1
+            max_n = min(isqrtxm[m], x//(m*lo))
             subtotal = 0
-            for n in range(min_n, max_n+1):
-                xmn = x // (m*n)
-                if lo <= xmn < hi:
-                    subtotal += merts_lo[xmn-lo]
+            for n in range(min_n, max_n + 1):
+                subtotal += merts_lo[(x // (m*n)) - lo]
             S1 += mobs_u[m] * subtotal
         
         lo, hi = hi, hi + u
         M_lo = merts_lo[u]
     
     # Here endeth the S1 phase.
+    print(process_time())
     # Here beginneth the S2 phase.
     
     S2, M = 0, 0
@@ -122,21 +125,13 @@ def mertens(x):
         # We now have M == Mertens(k).
         innersum = 0
         for m in range(1, min(u, x//(k*k))+1):
-            if mobs_u[m] == 0: continue            # This line can be deleted without error, but with a noticeable time penalty.
-            lo1 = isqrtxm[m] + 1
-            hi1 = x // m
-            lo2 = x // (m * (k+1)) + 1
-            hi2 = x // (m * k)
-            lo = max(lo1, lo2)
-            hi = min(hi1, hi2)
-            l = hi - lo + 1
-            if l < 0: l = 0
-            # l is now the number of integers n in the interval (sqrt(y), y] such that y // n == k.
+            innersum += mobs_u[m] * max(0, (x // (m*k)) - max(isqrtxm[m], x // (m * (k+1))))
+            # The second term in that product is the number of integers n in the interval (sqrt(y), y] such that y // n == k.
             # These are the n such that k <= x/(mn) < k+1, or equivalently, x / ((k+1)*m) < n <= x / (m*k).
-            innersum += mobs_u[m] * l
         S2 += M * innersum
     
     # Here endeth the S2 phase.
+    print(process_time())
     
     return merts_u - S1 - S2
 
