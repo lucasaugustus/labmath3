@@ -30,10 +30,14 @@ def mertens(x):
     merts_u = [0] * (u+1)
     for n in range(u+1): merts_u[n] = merts_u[n-1] + mobs_u[n]
     
+    # Both phases need isqrt(x//m) for various m in [1, u], with many repeats.
+    # Preparing a cache of these values for all m speeds things up considerably in exchange for a constant-factor space penalty.
+    isqrtxm = [0] + [isqrt(x//m) for m in range(1, u+1)]
+    
     # Here beginneth the S1 phase.
     
     S1 = 0
-    # We will sieve the Mertens function in blocks of size u.
+    # We will sieve the Mertens function in blocks of size u, covering the interval [lo, hi).
     lo = isqrt(x//u)
     hi = lo + u
     M_lo = merts_u[lo]
@@ -47,9 +51,6 @@ def mertens(x):
     
     # m must be strictly greater than this, and this bound does not vary with the sieving iteration.
     global_min_m = max(0, u**2//x)   # This bound becomes nontrivial when c > sqrt(x) / log(log(x))^2.
-    
-    isqrtxm = [0]
-    isqrtxm.extend([isqrt(x//m) for m in range(1, u+1)])
     
     while lo <= max_xmn:
         # First, we sieve a block of Mobius values in the array merts_lo, and then convert it to a block of Mertens values.
@@ -94,11 +95,6 @@ def mertens(x):
         For a given m, the range of admissible n-values is bounded by (2) and (4):
         
             x / (m*hi) < n   and   n^2 <= x / m
-        
-        If we are to have our outer loop be m and the inner loop be n, then we will be calculating many square roots.
-        However, the range of admissible m-values for the whole S1 phase is 1 <= m <= u.
-        We can therefore store a cache of isqrt(x//m) values for all m for only a constant factor penalty in the memory usage.
-        In the S2 phase, we will need to calculate these again, so there are further benefits to be had in doing so.
         """
         
         local_min_m = x // hi**2
@@ -120,14 +116,13 @@ def mertens(x):
     # Here endeth the S1 phase.
     # Here beginneth the S2 phase.
     
-    S2 = 0
-    M = 0
+    S2, M = 0, 0
     for (k,mu) in enumerate(mobiussieve(isqrt(x)+1), start=1):
         M += mu
+        # We now have M == Mertens(k).
         innersum = 0
         for m in range(1, min(u, x//(k*k))+1):
-            # l is the number of integers n in the interval (sqrt(y), y] such that y // n == k.
-            # These are the n such that k <= x/(mn) < k+1, or equivalently, x / ((k+1)*m) < n <= x / (m*k).
+            if mobs_u[m] == 0: continue            # This line can be deleted without error, but with a noticeable time penalty.
             lo1 = isqrtxm[m] + 1
             hi1 = x // m
             lo2 = x // (m * (k+1)) + 1
@@ -136,6 +131,8 @@ def mertens(x):
             hi = min(hi1, hi2)
             l = hi - lo + 1
             if l < 0: l = 0
+            # l is now the number of integers n in the interval (sqrt(y), y] such that y // n == k.
+            # These are the n such that k <= x/(mn) < k+1, or equivalently, x / ((k+1)*m) < n <= x / (m*k).
             innersum += mobs_u[m] * l
         S2 += M * innersum
     
