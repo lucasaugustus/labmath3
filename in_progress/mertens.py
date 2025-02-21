@@ -2,7 +2,7 @@
 
 from labmath3 import *
 
-# https://projecteuclid.org/journals/experimental-mathematics/volume-5/issue-4/Computing-the-summation-of-the-M%c3%b6bius-function/em/1047565447.full
+# https://projecteuclid.org/euclid.em/1047565447
 
 def mobiusblock(a, b, primes):
     """
