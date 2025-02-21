@@ -26,16 +26,11 @@ def mertens(x):
     """
     if x < 22: return (0, 1, 0, -1, -1, -2, -1, -2, -2, -2, -1, -2, -2, -3, -2, -1, -1, -2, -2, -3, -3, -2)[x]
     u = int((x * log(log(x))**2)**(1/3))
-    primes = list(primegen(isqrt(x//u) + 1))
-    mobs_u = [0] + list(mobiussieve(u+1))
-    merts_u = [0] * (u+1)
-    for n in range(u+1): merts_u[n] = merts_u[n-1] + mobs_u[n]
+    mobs_u = [0] + list(mobiussieve(u+1))   # We will need this in both phases.
     
     # Both phases need isqrt(x//m) for various m in [1, u], with many repeats.
     # Preparing a cache of these values for all m speeds things up considerably in exchange for a constant-factor space penalty.
     isqrtxm = [0] + [isqrt(x//m) for m in range(1, u+1)]
-    
-    print(process_time())
     
     # Here beginneth the S1 phase.
     
@@ -43,8 +38,8 @@ def mertens(x):
     # We will sieve the Mertens function in blocks of size u, covering the interval [lo, hi).
     lo = isqrt(x//u)
     hi = lo + u
-    M_lo = merts_u[lo]
-    merts_u = merts_u[u]
+    M_lo = 0
+    for n in range(1, lo+1): M_lo += mobs_u[n]
     
     # We need to sieve Mertens up to the maximum value of x/mn that gets passed into it.
     # This means that we need to find the minimum value of mn in the sum.
@@ -55,24 +50,14 @@ def mertens(x):
     # m must be strictly greater than this, and this bound does not vary with the sieving iteration.
     global_min_m = max(0, u**2//x)   # This bound becomes nontrivial when c > sqrt(x) / log(log(x))^2.
     
+    msieve = mobiussieve()
+    for _ in range(lo): next(msieve)    # We need to consume the first several terms here to prepare for the first block.
+    
+    merts_lo = [0] * (u+1)  # We will allocate this once and overwrite it at the start of each sieving block.
+    
     while lo <= max_xmn:
-        # First, we sieve a block of Mobius values in the array merts_lo, and then convert it to a block of Mertens values.
-        merts_lo = [1] * (hi-lo+1)
-        for p in primes:
-            for n in range((-lo) %   p  , hi - lo + 1,  p ): merts_lo[n] *= -p
-            for n in range((-lo) % (p*p), hi - lo + 1, p*p): merts_lo[n]  =  0
-        for n in range(hi - lo + 1):
-            m = merts_lo[n]
-            if m == 0: continue
-            if -lo-n < m < lo+n:
-                if m > 0: merts_lo[n] = -1
-                if m < 0: merts_lo[n] =  1
-            else:
-                if m > 0: merts_lo[n] =  1
-                if m < 0: merts_lo[n] = -1
-        # At this point, merts_lo[k] == mobius(lo+k).
         merts_lo[0] = M_lo
-        for n in range(1, hi+1-lo): merts_lo[n] += merts_lo[n-1]
+        for n in range(1, u+1): merts_lo[n] = merts_lo[n-1] + next(msieve)
         # We now have merts_lo[k] == Mertens(lo+k).
         
         # TODO: This implementation proceeds by, within each sieving block, iterating over m in an outer loop and then
@@ -115,14 +100,16 @@ def mertens(x):
         lo, hi = hi, hi + u
         M_lo = merts_lo[u]
     
+    del merts_lo, msieve
+    
     # Here endeth the S1 phase.
-    print(process_time())
     # Here beginneth the S2 phase.
     
     S2, M = 0, 0
     for (k,mu) in enumerate(mobiussieve(isqrt(x)+1), start=1):
         M += mu
         # We now have M == Mertens(k).
+        if k == u: merts_u = M
         innersum = 0
         for m in range(1, min(u, x//(k*k))+1):
             innersum += mobs_u[m] * max(0, (x // (m*k)) - max(isqrtxm[m], x // (m * (k+1))))
@@ -131,7 +118,6 @@ def mertens(x):
         S2 += M * innersum
     
     # Here endeth the S2 phase.
-    print(process_time())
     
     return merts_u - S1 - S2
 
