@@ -2,47 +2,31 @@
 
 from labmath3 import *
 
-# https://projecteuclid.org/euclid.em/1047565447
-
-def mobiusblock(a, b, primes):
-    """
-    [mu(n) for n in range(a, b)].
-    primes is assumed to include all primes <= sqrt(b).
-    """
-    mobs = [1] * (b-a)
-    for p in primes:
-        for n in range((-a) %   p  , b - a,  p ): mobs[n] *= -p
-        for n in range((-a) % (p*p), b - a, p*p): mobs[n]  =  0
-        # TODO: Do we need to check here whether p*p > b?
-    for n in range(b - a):
-        m = mobs[n]
-        if m == 0: continue
-        if -a-n < m < a+n:
-            if m > 0: mobs[n] = -1
-            if m < 0: mobs[n] =  1
-        else:
-            if m > 0: mobs[n] =  1
-            if m < 0: mobs[n] = -1
-    return mobs
-
-def mertensblock(a, b, Ma, primes):
-    """
-    [Mertens(n) for n in range(a,b)].
-    Ma == Mertens(a).
-    primes is assumed to include all primes <= sqrt(b).
-    """
-    M = mobiusblock(a, b, primes)
-    # At this point, M[k] == mobius(a+k).
-    M[0] = Ma
-    for n in range(1, b-a): M[n] += M[n-1]
-    # We now have M[k] == Mertens(a+k).
-    return M
-
 def mertens(x):
+    """
+    Computes the Mertens function (the partial sums of the Mobius function) using the Deleglise-Rivat algorithm.
+    The time- and space-complexities are within logarithmic factors of O(x^(2/3)) and O(x^(1/3)), respectively.
+    See https://projecteuclid.org/euclid.em/1047565447 for further explanation.
+    
+    Input: x -- an integer.
+    
+    Output: an integer.
+    
+    Examples:
+    
+    >>> list(map(mertens, range(22)))
+    [0, 1, 0, -1, -1, -2, -1, -2, -2, -2, -1, -2, -2, -3, -2, -1, -1, -2, -2, -3, -3, -2]
+    
+    >>> mertens(10**10)
+    -33722
+    
+    >>> mertens(2**32)
+    1814
+    """
     if x < 22: return (0, 1, 0, -1, -1, -2, -1, -2, -2, -2, -1, -2, -2, -3, -2, -1, -1, -2, -2, -3, -3, -2)[x]
     u = int((x * log(log(x))**2)**(1/3))
     primes = list(primegen(isqrt(x//u) + 1))
-    mobs_u = mobiusblock(0, u+1, primes)
+    mobs_u = [0] + list(mobiussieve(u+1))
     merts_u = [0] * (u+1)
     for n in range(u+1): merts_u[n] = merts_u[n-1] + mobs_u[n]
     
@@ -68,7 +52,24 @@ def mertens(x):
     isqrtxm.extend([isqrt(x//m) for m in range(1, u+1)])
     
     while lo <= max_xmn:
-        merts_lo = mertensblock(lo, hi+1, M_lo, primes)
+        # First, we sieve a block of Mobius values in the array merts_lo, and then convert it to a block of Mertens values.
+        merts_lo = [1] * (hi-lo+1)
+        for p in primes:
+            for n in range((-lo) %   p  , hi - lo + 1,  p ): merts_lo[n] *= -p
+            for n in range((-lo) % (p*p), hi - lo + 1, p*p): merts_lo[n]  =  0
+        for n in range(hi - lo + 1):
+            m = merts_lo[n]
+            if m == 0: continue
+            if -lo-n < m < lo+n:
+                if m > 0: merts_lo[n] = -1
+                if m < 0: merts_lo[n] =  1
+            else:
+                if m > 0: merts_lo[n] =  1
+                if m < 0: merts_lo[n] = -1
+        # At this point, merts_lo[k] == mobius(lo+k).
+        merts_lo[0] = M_lo
+        for n in range(1, hi+1-lo): merts_lo[n] += merts_lo[n-1]
+        # We now have merts_lo[k] == Mertens(lo+k).
         
         # TODO: This implementation proceeds by, within each sieving block, iterating over m in an outer loop and then
         # iterating over n in an inner one.  Would it be better to iterate over n in the outer loop and m in the inner?
