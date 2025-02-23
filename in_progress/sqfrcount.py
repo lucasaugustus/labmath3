@@ -1,137 +1,105 @@
 #! /usr/bin/env python3
 
+from labmath3 import primegen, isqrt, introot, log
 from sys import argv
-from time import time
-from labmath3 import *
-n = int(argv[1])
 
-def sqfrcount1(n): return sum(mu*(n//(d*d)) for (d,mu) in enumerate(mobiussieve(isqrt(n)+1),start=1))   # O(n^0.5)T, O(n^0.25)S
-
-def TabulateMobiusBlock(a,b):   # https://arxiv.org/pdf/1107.4890, algorithm 6
-    # In the reference's pseudocode, the arrays m and mu are indexed over the interval (a,b].
-    # We will index them from 0 to b-a, inclusive, so that mu[k] == mobius(a+k).
-    mu = [1] * (b-a+1)
-    m  = [1] * (b-a+1)
-    for p in primegen(isqrt(b)+1):
-        for k in range((-a) % p*p, b-a+1, p*p): mu[k]  =  0
-        for k in range((-a) %  p , b-a+1,  p ): mu[k] *= -1; m[k] *=  p
-    for k in range(b-a+1):
-        if m[k] < a+k: mu[k] *= -1
-    return mu
-
-starttime = time()
-print("Algorithm 1: ", end='', flush=True)
-answer_1 = sqfrcount1(n)
-print(answer_1, time() - starttime)
-
-def MxBlockUpdate(a,b,i,k): # https://arxiv.org/pdf/1107.4890, algorithm 3
-    global Mx,n,I,M,al,B,L,l
-    assert 0 <= a < b
-    assert 1 <= i < I
-    xi = isqrt(n//i)    # as per section 3, line (3)
-    da = xi // k
-    while True:
-        db = xi // (k+1)
-        try: Mx[i] -= (da - db) * M[k-al]
-        except IndexError:
-            print(M, len(M))
-            print(k, al, k-al)
-            print(B, L, l, D)
-            raise
-        k = xi // db
-        da = db
-        if k > b: break
-    return k
-
-# Line 1:
-I = int((n**0.2) * (log(log(n))**0.8) * 1.0) # TODO: the "1.0" part is a tunable parameter.
-D = isqrt(n//I)
-
-s1_brute = sum(mu * (n//(d*d)) for (d,mu) in enumerate(mobiussieve(D+1), start=1))
-print("s1 brute:", s1_brute)
-
-B = isqrt(D)
-L = -(D // -B)  # ceil(D/B)
-# Lines 2,3,4:
-ilist = [set() for l in range(L+1)]
-# Lines 5,6,7,8,9:
-Mx = [1] * I
-mink = [1] * I
-ilist[0] = set(range(I))
-# Line 10:
-s1 = 0
-# My addition:
-lastM = 0
-# Line 11:
-for l in range(L):
-    al = B * l              # as per the first paragraph of section 4.3
-    alp1 = min(al + B, D)   # as per the first paragraph of section 4.3
-    # Line 12:
-    mu = TabulateMobiusBlock(al, alp1)
-    # Lines 13,14,15:
-    for k in range(al+1, alp1+1): s1 += mu[k-al] * (n // (k*k))
-    # Line 16:
-    M = [0] * (alp1 - al + 1)
-    M[0] = lastM
-    for k in range(1, alp1+1):
-        M[k] = M[k-1] + mu[k]
-    # At this point, M[k] == mertens(al + k) for all 0 <= k <= alp1.
-    # My addition:
-    lastM = M[-1]
-    # Line 17:
-    for i in ilist[l]:
-        # Line 18:
-        mink[i] = MxBlockUpdate(al, alp1, i, mink[i])
-        # Line 19:
-        lprime = mink[i] // B
-        # My addition:
-        xi = isqrt(n//i)    # as per section 3, line (3)
-        # Line 20:
-        if lprime <= L and mink[i] < xi:
-            # Line 21:
-            ilist[lprime].add(i)
-        # Line 22: end if
-    # Line 23: end for
-    # Line 24:
-    ilist[l] = set()
-# Line 25: end for
-
-print("s1 fancy:", s1)
-assert s1 == s1_brute
-
-# My addition:
-Mx.append(lastM)    # records M(D) as Mx[I]
-
-# Line 26:
-for i in range(I-1, 0, -1):
-    # Line 27:
-    d = 2
-    while d*d*i < I:
-        # Line 28:
-        Mx[i] -= Mx[d*d*i]
-        # Line 27:
-        d += 1
-    # Line 29: end while
-# Line 30: end for
-
-s2_brute = sum(mu * (n//(d*d)) for (d,mu) in enumerate(mobiussieve(isqrt(n)+1), start=1) if d > D)
-print("s2 brute:", s2_brute)
-
-# Line 31:
-s2 = sum(Mx[i] for i in range(1, I)) - (I-1) * Mx[I]
-print("s2 fancy:", s2)
-
-answer_4 = s1 + s2
-print("Algorithm 4:", answer_4, time() - starttime)
-
-assert s2 == s2_brute
-assert answer_1 == answer_4
-
-
-
-
+# https://arxiv.org/abs/1107.4890
 # https://github.com/jakubpawlewicz/sqrfree/blob/debug/sol5.cpp
 
+def calc_mu(a, b, mu):
+    D = b - a
+    val = [1] * D
+    for i in range(D): mu[i] = 1
+    for p in primes:
+        for i in range(((a+p-1)//p)*p - a, D, p): mu[i] *= -1; val[i] *= p
+        p *= p
+        for i in range(((a+p-1)//p)*p - a, D, p): mu[i]  =  0; val[i]  = 0
+    for i in range(D):
+        if val[i] < a + i:
+            mu[i] *= -1
 
+def process_i(M, a, b, i):
+    global D, maxd, x, T, BLOCK_SIZE, next_, q
+    b = min(b, D)
+    # updates T[i] with M[y] for all a <= y < b
+    d = maxd[i]
+    xi = x[i]
+    y = xi // d
+    assert y < b
+    while True:
+        assert a <= y and y < b
+        e = xi // (y + 1)
+        assert e < d
+        #if i == 2: print("Update M(" + str(x[i]) + ") by -" + str(d - e) + "*M(" + str(y) + ")")
+        T[i] -= (d - e) * M[y - a]
+        d = e
+        assert xi // d > y
+        y = xi // d
+        if d <= 1 or y >= b: break
+    if d == 1 or y >= D: return
+    # insert to queue
+    maxd[i] = d
+    l = (y - 1) // BLOCK_SIZE
+    next_[i] = q[l]
+    q[l] = i
 
+def process_block(l):
+    global BLOCK_SIZE, D, mu, n, res, q, Mi
+    a = 1 + l * BLOCK_SIZE
+    b = min(a + BLOCK_SIZE, D + 1)
+    calc_mu(a, b, mu)
+    M = [0] * (b - a)   # M[i - a] = M(i)
+    
+    for i in range(a, b):
+        mu_i = mu[i - a]
+        Mi += mu_i
+        M[i - a] = Mi
+        if mu_i == 0: continue
+        j = i
+        v = n // (j * j)
+        if mu_i > 0: res += v
+        else:        res -= v
+    
+    while q[l] != 0:
+        i = q[l]
+        q[l] = next_[i]
+        process_i(M, a, b, i)
 
+def count_():
+    global L, T, Mi, res
+    Mi = 0
+    for l in range(L): process_block(l)
+    T[I] = Mi
+    res -= (I - 1) * T[I]
+    for i in range(I-1, 0, -1):
+        d = 2
+        while True:
+            j = i * d * d
+            if j > I: break
+            T[i] -= T[j]
+            #if i == 2: print("Update M(" + str(x[i]) + ") by -M(" + str(x[j]) + ")")
+            d += 1
+        res += T[i]
+    #for i in range(1, I+1): print("M(" + str(x[i]) + ")=" + str(T[i]))
+    return res
+
+BLOCK_SIZE = 1024 * 1024 * 5 // 10
+mu = [0] * BLOCK_SIZE
+
+n = int(argv[1])
+I = int(n**(1/5) * log(log(n))**(4/5) * 0.35)
+print("I=" + str(I))
+D = isqrt(n // I)
+print("D=" + str(D))
+Mi = 0
+primes = list(primegen(isqrt(D) + 1))
+x = [0] + [isqrt(n//i) for i in range(1, I+1)]  # x[i] = sqrt(n/i)
+maxd = x[:-1]   # subtract M(sqrt(n/i/d^2)) from M(sqrt(n/i)) for d <= maxd[i]
+T = [1] * (I+1) # T[i] = M[i] = M(sqrt(n/i))
+assert BLOCK_SIZE * 0xFFFFFFFF >= D
+L = (D + BLOCK_SIZE - 1) // BLOCK_SIZE  # total number of blocks
+print("L=" + str(L))
+next_ = [0] + list(range(I-1))    # for lists
+q = [I - 1] + [0] * (L-1)   # q[l] lists i's to be processed at block l */
+res = 0
+print(count_())
