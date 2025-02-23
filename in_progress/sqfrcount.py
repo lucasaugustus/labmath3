@@ -8,23 +8,41 @@ from sys import argv
 
 def sqfrcount(N):
     """
-    Computes the number of squarefree integers in [1, N] using Pawlewicz's algorithm.
-    Up to logarithmic factors, this uses O(N^(2/5)) time and O(N^(1/5)) space.
+    Counts the number of squarefree integers in the interval [1,N].
+    We use Pawlewicz's algorithm, which takes O(N**0.4)-ish time and
+    O(N**0.2)-ish space.  This code is derived from
+    https://github.com/jakubpawlewicz/sqrfree/blob/debug/sol5.cpp.
+    For further reading, see https://arxiv.org/pdf/1107.4890.
+    
+    Input: A positive integer
+    
+    Output: A positive integer
+    
+    Examples:
+    
+    >>> sqfrcount(1)
+    1
+    
+    >>> sqfrcount(10)
+    7
+    
+    >>> sqfrcount(10**15)
+    607927101854103
     """
     if N < 53: return 0 if N < 0 else (0,1,2,3,3,4,5,6,6,6,7,8,8,9,10,11,11,12,12,13,13,14,15,16,16,16,17,17,17,\
                                        18,19,20,20,21,22,23,23,24,25,26,26,27,28,29,29,29,30,31,31,31,31,32,32)[N]
-    I = int(N**(1/5) * log(log(N))**(4/5) * 0.35)
+    I = int(N**(1/5) * log(log(N))**(4/5) * 0.35)       # The 0.35 is a tunable parameter.
     print("I =", I)
     D = isqrt(N // I)
     print("D =", D)
-    x = [0] + [isqrt(N//i) for i in range(1, I+1)]  # x[i] = sqrt(N/i)
+    x = [0] + [isqrt(N//i) for i in range(1, I+1)]  # x[i] = sqrt(N/i).  x[0] is never accessed.
     maxd = x[:-1]   # subtract M(sqrt(N/i/d^2)) from M(sqrt(N/i)) for d <= maxd[i]
     T = [1] * (I+1) # T[i] = M[i] = M(sqrt(N/i))
     B = isqrt(D)           # Block size.  This is not set in stone.  The article says isqrt(D); Pawlewicz's code uses 2**19.
     print("B =", B)
     L = (D + B - 1) // B  # total number of blocks
     print("L =", L)
-    next_ = [0] + list(range(I-1))    # for lists.  TODO: Does next_[0] matter?  If not, use list(range(-1, I-1)).
+    next_ = list(range(-1, I-1))    # for lists.  next_[0] is never accessed.
     q = [I - 1] + [0] * (L-1)   # q[l] lists those i that will be processed during block l.
     
     Mi = 0      # will hold mertens(i)
