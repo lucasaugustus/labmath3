@@ -35,7 +35,6 @@ def sqfrcount(N):
     M = [0] * (b - a)   # We will have M[i - a] == mertens(i)
     
     for l in range(L):
-        print("\b"*42, l, end='', flush=True)
         #assert a == 1 + l * B
         #assert b == min(a + B, D + 1), l
         
@@ -56,15 +55,15 @@ def sqfrcount(N):
             d = maxd[i]
             xi = x[i]
             y = xi // d
-            assert y < bD
+            #assert y < bD
             while True:
-                assert a <= y and y < bD
+                #assert a <= y and y < bD
                 e = xi // (y + 1)
-                assert e < d
+                #assert e < d
                 #if i == 2: print("Update M(" + str(x[i]) + ") by -" + str(d - e) + "*M(" + str(y) + ")")
                 T[i] -= (d - e) * M[y - a]
                 d = e
-                assert xi // d > y
+                #assert xi // d > y
                 y = xi // d
                 if d <= 1 or y >= bD: break
             if d == 1 or y >= D: continue
@@ -75,11 +74,10 @@ def sqfrcount(N):
             q[il] = i
         
         a, b = b, min(b + B, D + 1)
-    print()
+    
     T[I] = Mi
     res -= (I - 1) * T[I]
     for i in range(I-1, 0, -1):
-        print("\b"*42, i, end='', flush=True)
         d = 2
         while True:
             j = i * d * d
@@ -89,7 +87,6 @@ def sqfrcount(N):
             d += 1
         res += T[i]
     #for i in range(1, I+1): print("M(" + str(x[i]) + ")=" + str(T[i]))
-    print()
     return res
 
 print(sqfrcount(int(argv[1])))
