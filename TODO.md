@@ -1,6 +1,6 @@
 # Before the next release:
 * Integrate the completed in-progress stuff.
-  * `sqfrcount.py`
+  * <sqfrcount.py>
   * `mertens.py`
 
 # General TODOs:
