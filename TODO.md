@@ -1,7 +1,7 @@
 # Before the next release:
 * Integrate the completed in-progress stuff.
-  * </in_progress/sqfrcount.py>
-  * `mertens.py`
+  * [sqfrcount.py](/in_progress/sqfrcount.py) now has the segmented Pawlewicz algorithm.
+  * [mertens.py](/in_progress/mertens.py) now has the segmented Deleglise-Rivat algorithm.
 
 # General TODOs:
 * Write more examples in the docstrings.
