@@ -1,3 +1,9 @@
+# Before the next release:
+* Integrate the completed in-progress stuff.
+  * `sqfrcount.py`
+  * `mertens.py`
+
+# General TODOs:
 * Write more examples in the docstrings.
   * `randomfactored`
   * `polyrootsmod`
@@ -14,7 +20,6 @@
 * Write more comprehensive tests for pytest.
   * For bounded generators like `primegen` and `factorsieve`, implement tests to ensure that the bounds are handled correctly.
 * Figure out how to use serifed fonts in `.md` and `.rst` files.
-* Implement the segmented version of the `sqfrcount` algorithm.  See section 4.4 of <https://arxiv.org/pdf/1107.4890> and `in_progress/sqfrcount.py`.
 * Make `powerset` handle sets.
 * Make `_primepi_S1` non-recursive.
 * Extend `riemannzeta` to handle more of the complex plane.
@@ -42,7 +47,7 @@
 * In `polyrootsmod`, when should we use brute force?
 * In `sqrtmod`, when should we use brute force?
 * In `PQa`, figure out what the sequences are, and document that.
-* In `pell`, in the case `D < 0 & N != 0`, implement Cornacchia's algorithm.
+* In `pell`, in the case `D < 0 & N != 0`, implement Cornacchia's algorithm, or something else that is more efficient than the current code.
 * Make `multord` more efficient.
 * Clean up `pell`.
 * Clean up `pythags_by_perimeter`.
@@ -53,10 +58,8 @@
 * What is the complexity of the determinant algorithm?
 * Currently, `discriminant` uses the determinant formula.  Is there a way to take advantage of the matrix's special form?
 * A line in `egypt_short` is marked as being rather inefficient for large numbers of terms.  Figure out why, and improve it.
-* In `sqfrcount`, experiment with dfferent values for the multiplier.
 * Write an efficient dlog function and use it in `dirichletcharacter`.
 * Investigate alternate discriminant algorithms, such as <https://math.stackexchange.com/questions/696335> and <https://en.m.wikipedia.org/wiki/B%C3%A9zout_matrix>.
 * Investigate parallelizing `egypt_short`.
 * What are the time- and space-complexities of `primesum`?
-* Implement the segmented Deleglise-Rivat algorithm for the Mertens function.  See `in_progress/mertens.py`.
 * Consider importing the Helfgott-Thompson code from <https://github.com/lucasaugustus/mertens>.
