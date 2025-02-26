@@ -7,7 +7,7 @@
 * Write more examples in the docstrings.
   * `randomfactored`
   * `polyrootsmod`
-  * `_PQa`
+  * `PQa`
   * `ispractical`
   * `quadintroots`
   * `cubicintrootsgiven`
