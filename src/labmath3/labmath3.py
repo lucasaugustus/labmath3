@@ -2327,6 +2327,20 @@ def randomfactored(n, method="kalai"):
     
     Output: 2-tuple.  The first element is the generated integer, and the
             second is its factorization in factorint format.
+    
+    Examples:
+    
+    >>> x, xfac = randomfactored(10**9, "bach")
+    >>> 10**9 // 2 < x <= 10*9
+    True
+    >>> factorint(x) == xfac
+    True
+    
+    >>> x, xfac = randomfactored(10**9, "kalai")
+    >>> 1 <= x <= 10*9
+    True
+    >>> factorint(x) == xfac
+    True
     """
     assert n > 0 and isinstance(n, inttypes)
     if method == "kalai":
@@ -3501,6 +3515,9 @@ def totientsum(n):  # TODO: What are the time- and space-complexities?
     Computes sum(totient(n) for n in range(1, n+1)) efficiently.
     Derived from the Project Euler #351 overview.
     
+    The  time-complexity appears to be O(n^(3/4))-ish.
+    The space-complexity       is      O(n^(2/3))-ish.
+    
     Input: n -- integer.
     
     Output: an integer
@@ -3780,7 +3797,13 @@ def polyrootsmod(pol, n):
     Output: List of integers.
     
     Examples:
-    """         # TODO
+    
+    >>> sorted(polyrootsmod([0,1,2,3,4,5], 120))
+    [0, 16, 40, 56, 80, 96]
+    
+    >>> sorted(polyrootsmod([1,2,3,4,5,6], 120))
+    []
+    """
     n, nf = (prod(p**e for (p,e) in n.items()), n) if isinstance(n, dict) else (n, None)
     if n <= 10:                                             # This bound is chosen arbitrarily.  TODO: optimize.
         yield from (x for x in range(n) if polyval(pol, x, n) == 0)
@@ -3806,6 +3829,30 @@ def PQa(P, Q, D):
     complete quotient of x, and Bi is the denominator of the ith convergent
     to x.  For full details, see
     https://web.archive.org/web/20180831180333/http://www.jpr2718.org/pell.pdf.
+    
+    Input: P, Q, D -- integers
+    
+    Output: Sequence of 4-tuples of integers
+    
+    Examples:
+    
+    >>> list(islice(PQa(2, 2, 3), 5))
+    [(1, 0, 2, 2), (1, 2, 0, 1), (2, 2, 1, 2), (5, 6, 1, 1), (7, 8, 1, 2)]
+    
+    >>> list(islice(PQa(4, 2, 3), 5))
+    [(1, 0, 4, 2), (1, 2, 0, 1), (2, 2, 1, 2), (5, 6, 1, 1), (7, 8, 1, 2)]
+    
+    >>> list(islice(PQa(1, 2, 5), 5))
+    [(1, 1, 1, 2), (1, 3, 1, 2), (2, 4, 1, 2), (3, 7, 1, 2), (5, 11, 1, 2)]
+    
+    >>> list(islice(PQa(3, 2, 5), 5))
+    [(1, 1, 3, 2), (1, 3, 1, 2), (2, 4, 1, 2), (3, 7, 1, 2), (5, 11, 1, 2)]
+    
+    >>> list(islice(PQa(3, 3, 3), 5))
+    [(1, 0, 3, 3), (1, 3, 0, 1), (2, 3, 1, 2), (5, 9, 1, 1), (7, 12, 1, 2)]
+    
+    >>> list(islice(PQa(1, 1, 3), 5))
+    [(1, 1, 1, 1), (1, 2, 1, 2), (3, 5, 1, 1), (4, 7, 1, 2), (11, 19, 1, 1)]
     """ # TODO What is the G sequence?
     #assert Q != 0 and D > 0 and (P**2 - D) % Q == 0
     d, B0, G0, B1, G1 = isqrt(D), 1, -P, 0, Q
@@ -4490,6 +4537,12 @@ def ispractical(n):
     Output: True or False
     
     Examples:
+    
+    >>> ispractical(54)
+    True
+    
+    >>> ispractical(53)
+    False
     """
     # This bit here is an O(n) test that is derived directly from the definition.  Keeping it for some sort of nostalgia.
     #divs = [d for d in divisors(n) if d < n]
@@ -4722,7 +4775,7 @@ def cubicintrootsgiven(a, b, c, d, r):
     """
     cubic = lambda x: ((a*x + b) * x + c) * x + d
     assert cubic(r) == 0, (a,b,c,d,r)
-    # We have 3 distinct real roots.  r is one of them and happens to be an integer.  Divide the polynomial by x-r.
+    # r is a root and happens to be an integer.  Divide the polynomial by x-r.
     # The result will be a quadratic with integer coefficients.
     p = b + a*r
     q = c + p*r
@@ -5297,6 +5350,25 @@ def dirichletroot(f, r, val1):
     
     >>> [str(dirichletroot(divcount, 2, 1)(n)) for n in range(1, 15)]
     ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1']
+    
+    >>> f = dirichletroot(divcount, 2, 1)
+    >>> [f(n) for n in range(1, 10)]
+    [1, 1, 1, 1, 1, 1, 1, 1, 1]
+    
+    >>> def one(n): return 1
+    >>> f = dirichletroot(one, 2, 1)
+    >>> f(1)
+    1
+    >>> f(2)
+    Fraction(1, 2)
+    >>> f(3)
+    Fraction(1, 2)
+    >>> f(4)
+    Fraction(3, 8)
+    >>> f(5)
+    Fraction(1, 2)
+    >>> f(6)
+    Fraction(1, 4)
     """
     assert val1**r == f(1), (val1, r, val1**r, f(1), f)
     def answer(f, r, n, val1):
@@ -5331,6 +5403,12 @@ def determinant(M):
     
     >>> determinant([[1,2,3,4],[1,2,3,5],[1,2,4,4],[4,3,2,1]])
     5
+    
+    >>> determinant([[1,2], [2,1]])
+    -3
+    
+    >>> determinant([[1]])
+    1
     """
     # TODO: What is the algorithm's complexity?
     k = len(M)
@@ -5370,6 +5448,27 @@ def discriminant(coefs):  #TODO https://math.stackexchange.com/questions/696335 
     
     >>> discriminant([1,2,3,4,5])
     10800
+    
+    >>> discriminant([1,2,3])
+    -8
+    
+    >>> discriminant([1,-2,3])
+    -8
+    
+    >>> discriminant([1,-2,-3])
+    16
+    
+    >>> discriminant([1,2,3,4])
+    -200
+    
+    >>> discriminant([1,2,3,4,5])
+    10800
+    
+    >>> discriminant([1,2,3,4,5,6])
+    1037232
+    
+    >>> discriminant([1,2,3,4,5,6,7])
+    -157351936
     """
     n = len(coefs) - 1  # degree of polynomial
     if n < 2: return n
