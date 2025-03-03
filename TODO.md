@@ -5,16 +5,9 @@
 
 # General TODOs:
 * Write more examples in the docstrings.
-  * `randomfactored`
-  * `polyrootsmod`
-  * `PQa`
-  * `ispractical`
   * `quadintroots`
   * `cubicintrootsgiven`
   * `cubicintroots`
-  * `dirichletroot`
-  * `determinant`
-  * `discriminant`
 * Ensure that the examples in the docstrings work.
 * Figure out where `riemannzeta` and `zetam1` are accurate.
 * Write more comprehensive tests for pytest.
