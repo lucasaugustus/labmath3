@@ -1,6 +1,10 @@
 #! /usr/bin/env python3
 
+from sys import argv
 from labmath3 import *
+from time import process_time, time
+
+from mertens import mertens
 
 def totientsum_brute(x): return sum(totient(n) for n in range(1, x+1))
 
@@ -95,45 +99,191 @@ def totientsum3(N, bcache=[], rcache={}):
     if N in rcache: return rcache[N]
     if len(bcache) == 0:
         k = introot(int(N/log(log(N)))**2, 3)
-        bcache = [0] + list(totientsieve(k+1))
-        for x in range(1, k+1): bcache[x] += bcache[x-1]
-    if N <= len(bcache): return bcache[N]
-    answer = N * (N+1) // 2
-    for k in range(2, N+1):
-        answer -= totientsum3(N//k, bcache=bcache, rcache=rcache)
-    rcache[N] = answer
-    return answer
-
-def totientsum4(N, bcache=[], rcache={}):
-    if N < 10: return 0 if N < 0 else (0, 1, 2, 4, 6, 10, 12, 18, 22, 28)[N]
-    if N in rcache: return rcache[N]
-    if len(bcache) == 0:
-        k = introot(int(N/log(log(N)))**2, 3)
-        bcache = [0] + list(totientsieve(k+1))
-        for x in range(1, k+1): bcache[x] += bcache[x-1]
+        bcache = [0] * (k+1)
+        T = 0
+        for (x,t) in enumerate(totientsieve(k+1), start=1):
+            T += t
+            bcache[x] = T
+        print(process_time())
     if N <= len(bcache): return bcache[N]
     answer = N * (N+1) // 2
     for k in range(1, isqrt(N)+1):
-        if k != 1:      answer -= totientsum4(N//k, bcache=bcache, rcache=rcache)
+        if k != 1:      answer -= totientsum3(N//k, bcache=bcache, rcache=rcache)
         if k != N // k: answer -= ((N//k) - (N//(k+1))) * bcache[k]
     rcache[N] = answer
     return answer
 
 #for x in chain(range(10), (100, 1000, 10000)):
-#    print(totientsum_brute(x), totientsum(x), totientsum0(x), totientsum1(x), totientsum2(x), totientsum4(x))
-"""
-n      _t     4t      _m       4m
-10   0.16   0.42   84736   107856
-11   0.69   1.79  144384   237772
-12   3.46   8.08  418048   818456
-13  20.32  41.56 1673216  3527668
-14        223.33         15960760
-"""
+#    print(totientsum_brute(x), totientsum(x), totientsum0(x), totientsum1(x), totientsum2(x), totientsum3(x))
 
 
 #import cProfile; cProfile.run("print(totientsum0(10**9))", sort="tottime")
 
 
+
+def totientsum4(n):
+    z = time()
+    HI = introot(n**2, 3)
+    totsums = [0] * HI
+    T = 0
+    for (x,t) in enumerate(totientsieve(HI), start=1):
+        T += t
+        totsums[x] = T
+    print(time() - z)
+    big = [0] * (n // HI + 2)
+    for i in range(n // HI + 1, 0, -1):
+        mx = n // i
+        big[i] = mx * (mx + 1) // 2
+        fac = 2
+        while fac <= mx:
+            quo = mx // fac
+            nex = mx // quo + 1
+            big[i] -= (nex - fac) * (totsums[quo] if quo < HI else big[i * fac])
+            fac = nex
+    
+    return big[1]
+
+
+
+
+
+
+
+
+class FIArray(object):  # https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim
+    
+    def __init__(self, x):
+        self.x = x
+        self.isqrt = isqrt(x)
+        self.L = 2 * self.isqrt
+        if self.isqrt == self.x // self.isqrt: self.L -= 1
+        self.arr = [0] * self.L
+    
+    def __getitem__(self, v):
+        if v <= 0: return 0
+        if v <= self.isqrt: return self.arr[v-1]
+        return self.arr[-(self.x//v)]
+    
+    def __setitem__(self, v, z):
+        if v <= self.isqrt: self.arr[v-1] = z
+        else: self.arr[-(self.x // v)] = z
+    
+    def indexOf(self, v):
+        if v <= self.isqrt: return v - 1
+        return self.L - (self.x // v)
+    
+    def keysInc(self):
+        for v in range(1, self.isqrt+1): yield v
+        if self.isqrt != self.x // self.isqrt: yield self.x // self.isqrt
+        for n in range(self.isqrt - 1, 0, -1): yield self.x // n
+    
+    def keysDec(self):
+        for n in range(1, self.isqrt): yield self.x // n
+        if self.isqrt != self.x // self.isqrt: yield self.x // self.isqrt
+        for v in range(self.isqrt, 0, -1): yield v
+
+
+
+def mertensFast1(x):
+    M = FIArray(x)
+    y = introot(int(x * 1.0)**2, 3)
+    x12 = isqrt(x)
+    mobs = [0] * (x12+1)
+    mert = 0
+    Mkeygen = M.keysInc()
+    nextMkey = next(Mkeygen)    # This goes all the way up to x; we do not need to worry about running out.
+    for (k, mu) in enumerate(mobiussieve(y+1), start=1):
+        mert += mu
+        if k <= x12: mobs[k] = mu
+        if k == nextMkey:
+            M[k] = mert
+            nextMkey = next(Mkeygen)
+    for v in M.keysInc():
+        if v <= y: continue
+        muV = 1
+        vsqrt = isqrt(v)
+        for i in range(1, vsqrt+1):
+            muV -= mobs[i] * (v // i)
+            muV -= M[v // i]
+        muV += M[vsqrt] * vsqrt
+        M[v] = muV
+    return M
+
+def sumN(x): return x * (x + 1) // 2
+
+def totientsum_1(x):
+    # Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html.
+    M = mertensFast1(x)
+    xsqrt = M.isqrt
+    result = 0
+    for n in range(1, xsqrt+1):
+        result += (M[n] - M[n-1]) * sumN(x // n)
+        result += n * M[x // n]
+    result -= sumN(xsqrt) * M[xsqrt]
+    return result
+
+def totientsum_2(x):
+    Phi = FIArray(x)
+    y = introot(int(x * 1.0)**2, 3)
+    smallPhi = [0] * (y+1)
+    T = 0
+    for (x,t) in enumerate(totientsieve(y+1), start=1):
+        T += t
+        smallPhi[x] = T
+    for v in Phi.keysInc():
+        if v <= y:
+            Phi[v] = smallPhi[v]
+            continue
+        phiV = sumN(v)
+        vsqrt = isqrt(v)
+        for i in range(1, vsqrt+1):
+            phiV -= (smallPhi[i] - smallPhi[i-1]) * (v // i)
+            phiV -= Phi[v // i]
+        phiV += Phi[vsqrt] * vsqrt
+        Phi[v] = phiV
+    return phiV
+
+#z = time()
+#print(totientsum(int(argv[1])))
+#print(time() - z)
+
+z = time()
+print(totientsum_1(int(argv[1])))
+print(time() - z)
+
+#print(totientsum(int(argv[1])))
+
+#z = time()
+#print(totientsum_2(int(argv[1])))
+#print(time() - z)
+
+#z = time()
+#print(totientsum3(int(argv[1])))
+#print(time() - z)
+
+#z = time()
+#print(totientsum4(int(argv[1])))
+#print(time() - z)
+
+
+"""
+201   120   012
+3.397 3.364 3.433
+2.288 2.523 2.464
+4.163 4.104 4.286
+
+"""
+
+
+
+exit()
+starttime = time()
+print(totientsum3(int(argv[1])))
+print(time() - starttime)
+print()
+starttime = time()
+print(totientsum4(int(argv[1])))
+print(time() - starttime)
 
 
 
