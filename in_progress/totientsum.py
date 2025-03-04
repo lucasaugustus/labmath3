@@ -148,7 +148,7 @@ def totientsum4(n):
 
 
 
-
+"""
 
 class FIArray(object):  # https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim
     
@@ -243,53 +243,81 @@ def totientsum_2(x):
         Phi[v] = phiV
     return phiV
 
-#z = time()
-#print(totientsum(int(argv[1])))
-#print(time() - z)
+"""
+
+
+
+
+
+
+
+def sumN(x): return x * (x + 1) // 2
+
+def totientsum_1(x):
+    # Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    # and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
+    xr = isqrt(x)
+    L = 2 * xr
+    if xr == x // xr: L -= 1
+    M = [0] * L
+    # M is a "floor-indexed array".  It stores values of the Mertens function.
+    # In the first half, M[n] == Mertens(n + 1).  In the second half, M[-(x//n)] == Mertens(n).
+    # getting: M[v]
+    # 0 if v <= 0 else (M[v-1] if v <= xr else M[-(x//v)])
+    # setting: M[v] = z
+    # M[(v-1) if v <= xr else -(x//v)] = z
+    y = introot(int(x * 1.0)**2, 3)
+    mobs = [0] * (xr+1)
+    mert = 0
+    Mkeygen = chain(range(1, xr+1), \
+                    (x//xr,) if xr != x//xr else (), \
+                    ((x//n) for n in range(xr-1, 0, -1)))
+    # We need to fill M with a bunch of Mertens values.
+    # First, we sieve the Mobius function up to y.
+    nextMkey = next(Mkeygen)    # This goes all the way up to x; we do not need to worry about running out.
+    for (k, mu) in enumerate(mobiussieve(y+1), start=1):
+        mert += mu
+        if k <= xr: mobs[k] = mu
+        if k == nextMkey:
+            M[(k-1) if k <= xr else -(x//k)] = mert
+            nextMkey = next(Mkeygen)
+    # Now that we have Mobius values up to y stored in mobs, we compute the rest with the formula
+    # M(v) == 1 - sum(mu(n) * (v//n)) - sum(M(v//n)) + isqrt(v) * M(sqrt(v)),
+    # where the first sum runs over n <= sqrt(v) and the second is over 2 <= n <= sqrt(v).
+    for v in ((x//n) for n in range(xr-1, 0, -1)):
+        if v <= y: continue
+        muV = 1
+        vsqrt = isqrt(v)
+        for i in range(1, vsqrt+1):
+            vi = v // i
+            muV -= mobs[i] * (vi)
+            muV -= 0 if vi <= 0 else (M[vi-1] if vi <= xr else M[-(x//vi)])
+        muV += (0 if vsqrt <= 0 else (M[vsqrt-1] if vsqrt <= xr else M[-(x//vsqrt)])) * vsqrt
+        M[(v-1) if v <= xr else -(x//v)] = muV
+    # Now we can compute the totient sum.  We use the formula
+    # totientsum(n) == 1/2 * sum(mu(k) * (n//k) * (1 + n//k)), where 1 <= k <= n.
+    # We exploit the fact that n//k takes many repeated values when sqrt(n) <= k <= n.
+    result = 0
+    for n in range(1, xr+1):
+        result += mobs[n] * sumN(x // n)
+        v = x // n
+        result += n * (0 if v <= 0 else (M[v-1] if v <= xr else M[-(x//v)]))    # result += n * M[x//n]
+    result -= sumN(xr) * M[xr-1]
+    return result
+
+
+
+
+
+
+
+z = time()
+print(totientsum(int(argv[1])))
+print(time() - z)
 
 z = time()
 print(totientsum_1(int(argv[1])))
 print(time() - z)
-
-#print(totientsum(int(argv[1])))
-
-#z = time()
-#print(totientsum_2(int(argv[1])))
-#print(time() - z)
-
-#z = time()
-#print(totientsum3(int(argv[1])))
-#print(time() - z)
-
-#z = time()
-#print(totientsum4(int(argv[1])))
-#print(time() - z)
-
-
-"""
-201   120   012
-3.397 3.364 3.433
-2.288 2.523 2.464
-4.163 4.104 4.286
-
-"""
-
-
-
-exit()
-starttime = time()
-print(totientsum3(int(argv[1])))
-print(time() - starttime)
-print()
-starttime = time()
-print(totientsum4(int(argv[1])))
-print(time() - starttime)
-
-
-
-
-
-
 
 
 
