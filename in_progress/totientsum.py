@@ -305,18 +305,32 @@ def totientsum_1(x):
     
     # Now that we have Mobius values up to xr stored in mobs, and some Mertens values up to y
     # stored in M, we compute the rest of the needed Mertens values up to x with the formula
-    # M(v) == 1 - sum(mu(n) * (v//n)) - sum(M(v//n)) + isqrt(v) * M(sqrt(v)),
-    # where the first sum runs over n <= sqrt(v) and the second is over 2 <= n <= sqrt(v).
+    # M(v) == 1 - v - sum(mu(n) * (v//n) + M(v//n)) + isqrt(v) * M(sqrt(v)),
+    # where the first sum runs over 1 <= n <= sqrt(v) and the second is over 2 <= n <= sqrt(v).
     for v in ((x//n) for n in range(xr-1, 0, -1)):
         if v <= y: continue
-        muV = 1
+        Mv = 1 - v
         vr = isqrt(v)
-        for i in range(1, vr+1):
+        for i in range(2, vr+1):
             vi = v // i
-            muV -= mobs[i] * vi
-            muV -= 0 if vi <= 0 else (M[vi-1] if vi <= xr else M[-(x//vi)])
-        muV += (0 if vr <= 0 else (M[vr-1] if vr <= xr else M[-(x//vr)])) * vr
-        M[(v-1) if v <= xr else -(x//v)] = muV
+            Mv -= mobs[i] * vi
+            # We need to extract Mertens(vi) from M, and then subtract it from Mv.  The general formula for this is
+            #     Mv -= 0 if vi <= 0 else (M[vi-1] if vi <= xr else M[-(x//vi)])
+            # In this case, however, we have vi = v//i, and i <= sqrt(v), so v//i != 0.  We can therefore use
+            #     Mv -= M[vi-1] if vi <= xr else M[-(x//vi)]
+            Mv -= M[vi-1] if vi <= xr else M[-(x//vi)]
+        # Now we need to extract Mertens(sqrt(v)) from M, multiply it by vr, and add it to Mv.  The general formula for this is
+        #     Mv += (0 if vr <= 0 else (M[vr-1] if vr <= xr else M[-(x//vr)])) * vr
+        # But vr can never be 0, so we can therefore use
+        #     Mv += (M[vr-1] if vr <= xr else M[-(x//vr)]) * vr
+        # Furthermore, v <= x, so vr <= xr, so we can use
+        #     Mv += M[vr-1] * vr
+        Mv += M[vr-1] * vr
+        # We now have Mv = Mertens(v).  We need to store it in M.  The general formula for this is
+        #     M[(v-1) if v <= xr else -(x//v)] = Mv
+        # In this case, we have v > y, and y > xr, so we can use
+        #     M[-(x//v)] = Mv
+        M[-(x//v)] = Mv
     
     print(time() - z)
     z = time()
@@ -328,7 +342,11 @@ def totientsum_1(x):
     for n in range(1, xr+1):
         v = x // n
         result += mobs[n] * (v * (v+1) // 2)
-        result += n * (0 if v <= 0 else (M[v-1] if v <= xr else M[-(x//v)]))    # result += n * M[x//n]
+        # We need to extract Mertens(v)), multiply it by n, and add it to the result.  The general formula for this is
+        #     result += n * (0 if v <= 0 else (M[v-1] if v <= xr else M[-(x//v)]))
+        # In this case, v > xr, so we can use
+        #     result += n * M[-(x//v)]
+        result += n * M[-(x//v)]
     
     print(time() - z)
     
@@ -340,11 +358,9 @@ def totientsum_1(x):
 
 
 
-#z = time()
-#print(totientsum(int(argv[1])))
-#print(time() - z)
-
-totientsum_1(10**11)
+z = time()
+print(totientsum(int(argv[1])))
+print(time() - z)
 print()
 
 z = time()
