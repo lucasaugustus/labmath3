@@ -4,7 +4,7 @@ from sys import argv
 from labmath3 import *
 from time import process_time, time
 
-from mertens import mertens
+#from mertens import mertens
 
 def totientsum_brute(x): return sum(totient(n) for n in range(1, x+1))
 
@@ -251,8 +251,6 @@ def totientsum_2(x):
 
 
 
-def sumN(x): return x * (x + 1) // 2
-
 def totientsum_1(x):
     
     z = time()
@@ -358,15 +356,97 @@ def totientsum_1(x):
 
 
 
+
+def totientsum_2(x):
+    
+    z = time()
+    
+    # Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    # and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
+    xr = isqrt(x)
+    M     = [0] * (xr + 1)  # M[n]        will store Mertens(n) for small n.
+    Mover = [0] * (xr + 1)  # Mover[x//n] will store Mertens(n) for large n.
+    y = introot(int(x * 1.0)**2, 3)                                        # TODO: The 1.0 is a tunable parameter.
+    #print(y)
+    mobs = [0] * (xr+1)
+    mert = 0
+    
+    # We need to fill M and Mover with a bunch of Mertens values.
+    # First, we sieve the Mobius function up to y.
+    # Along the way, we compute the corresponding Mertens values and store those that go in M and Mover.
+    
+    n = xr - (xr == x//xr)
+    nextMkey = x // n
+    for (k, mu) in enumerate(mobiussieve(y+1), start=1):
+        mert += mu
+        
+        if k <= xr:
+            mobs[k] = mu
+            M[k] = mert
+        
+        elif k == nextMkey:
+            Mover[x//k] = mert
+            n -= 1
+            nextMkey = x // n
+    
+    print(time() - z)
+    z = time()
+    
+    # Now that we have Mobius values up to xr stored in mobs, and some Mertens values up to y
+    # stored in M and Mover, we compute the rest of the needed Mertens values up to x with the formula
+    # M(v) == 1 - v - sum(mu(n) * (v//n) + M(v//n)) + isqrt(v) * M(sqrt(v)),
+    # where the sum runs over 2 <= n <= sqrt(v).
+    
+    for v in ((x//n) for n in range(xr-1, 0, -1)):
+        if v <= y: continue
+        Mv = 1 - v
+        vr = isqrt(v)
+        for i in range(2, vr+1):
+            vi = v // i
+            Mv -= mobs[i] * vi
+            Mv -= M[vi] if vi <= xr else Mover[x//vi]
+        Mv += M[vr] * vr
+        # Mv is now Mertens(v).
+        Mover[x//v] = Mv
+    
+    print(time() - z)
+    z = time()
+    
+    # Now we can compute the totient sum.  We use the formula
+    # totientsum(n) == 1/2 * sum(mu(k) * (n//k) * (1 + n//k)), where 1 <= k <= n.
+    # We exploit the fact that n//k takes many repeated values when sqrt(n) <= k <= n.
+    
+    result = -M[xr] * (xr * (xr+1) // 2)
+    for n in range(1, xr+1):
+        v = x // n
+        result += mobs[n] * (v * (v+1) // 2)
+        result += n * Mover[x//v]
+    
+    print(time() - z)
+    
+    return result
+
+
+
+
+
+
+
 z = time()
-print(totientsum(int(argv[1])))
+print("\t", totientsum(int(argv[1])))
 print(time() - z)
+
 print()
 
 z = time()
-print(totientsum_1(int(argv[1])))
+print("\t", totientsum_1(int(argv[1])))
 print(time() - z)
 
+print()
+
+z = time()
+print("\t", totientsum_2(int(argv[1])))
+print(time() - z)
 
 
 
