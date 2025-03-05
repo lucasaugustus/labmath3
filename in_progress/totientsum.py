@@ -254,6 +254,9 @@ def totientsum_2(x):
 def sumN(x): return x * (x + 1) // 2
 
 def totientsum_1(x):
+    
+    z = time()
+    
     # Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
     # and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
     xr = isqrt(x)
@@ -266,44 +269,70 @@ def totientsum_1(x):
     # 0 if v <= 0 else (M[v-1] if v <= xr else M[-(x//v)])
     # setting: M[v] = z
     # M[(v-1) if v <= xr else -(x//v)] = z
-    y = introot(int(x * 1.0)**2, 3)
+    y = introot(int(x * 1.0)**2, 3)                                                      # TODO: The 1.0 is a tunable parameter.
+    #print(y)
+    # We will compute the Mertens function by sieving up to y.
+    # We do not need to sieve all the way up to y; we only need to sieve up to the last M-key <= y.
+    # We can therefore save a tiny amount of time by reducing y to this point.
+    #y = max((x//n) for n in range(xr - (xr == x//xr), 0, -1) if x//n <= y)
+    #for n in range(1, xr - (xr == x//xr) + 1):
+    #    if x // n <= y: break
+    #y = x // n
+    # TODO: Figure out a better way of computing that reduced y-value.
+    #print(y)
+    #print(time() - z)
     mobs = [0] * (xr+1)
     mert = 0
-    Mkeygen = chain(range(1, xr+1), \
-                    (x//xr,) if xr != x//xr else (), \
-                    ((x//n) for n in range(xr-1, 0, -1)))
     # We need to fill M with a bunch of Mertens values.
     # First, we sieve the Mobius function up to y.
-    nextMkey = next(Mkeygen)    # This goes all the way up to x; we do not need to worry about running out.
+    # Along the way, we compute the corresponding Mertens values and store those that go in M.
+    
+    Mkeygen = ((x//n) for n in range(xr - (xr == x//xr), 0, -1))
+    nextMkey = next(Mkeygen)    # This goes all the way up to x; we do not need to worry about running out in this loop.
     for (k, mu) in enumerate(mobiussieve(y+1), start=1):
         mert += mu
-        if k <= xr: mobs[k] = mu
-        if k == nextMkey:
-            M[(k-1) if k <= xr else -(x//k)] = mert
+        
+        if k <= xr:
+            mobs[k] = mu
+            M[k-1] = mert
+        
+        elif k == nextMkey:
+            M[-(x//k)] = mert
             nextMkey = next(Mkeygen)
-    # Now that we have Mobius values up to y stored in mobs, we compute the rest with the formula
+    
+    print(time() - z)
+    z = time()
+    
+    # Now that we have Mobius values up to xr stored in mobs, and some Mertens values up to y
+    # stored in M, we compute the rest of the needed Mertens values up to x with the formula
     # M(v) == 1 - sum(mu(n) * (v//n)) - sum(M(v//n)) + isqrt(v) * M(sqrt(v)),
     # where the first sum runs over n <= sqrt(v) and the second is over 2 <= n <= sqrt(v).
     for v in ((x//n) for n in range(xr-1, 0, -1)):
         if v <= y: continue
         muV = 1
-        vsqrt = isqrt(v)
-        for i in range(1, vsqrt+1):
+        vr = isqrt(v)
+        for i in range(1, vr+1):
             vi = v // i
-            muV -= mobs[i] * (vi)
+            muV -= mobs[i] * vi
             muV -= 0 if vi <= 0 else (M[vi-1] if vi <= xr else M[-(x//vi)])
-        muV += (0 if vsqrt <= 0 else (M[vsqrt-1] if vsqrt <= xr else M[-(x//vsqrt)])) * vsqrt
+        muV += (0 if vr <= 0 else (M[vr-1] if vr <= xr else M[-(x//vr)])) * vr
         M[(v-1) if v <= xr else -(x//v)] = muV
+    
+    print(time() - z)
+    z = time()
+    
     # Now we can compute the totient sum.  We use the formula
     # totientsum(n) == 1/2 * sum(mu(k) * (n//k) * (1 + n//k)), where 1 <= k <= n.
     # We exploit the fact that n//k takes many repeated values when sqrt(n) <= k <= n.
     result = 0
     for n in range(1, xr+1):
-        result += mobs[n] * sumN(x // n)
         v = x // n
+        result += mobs[n] * (v * (v+1) // 2)
         result += n * (0 if v <= 0 else (M[v-1] if v <= xr else M[-(x//v)]))    # result += n * M[x//n]
-    result -= sumN(xr) * M[xr-1]
-    return result
+    
+    print(time() - z)
+    
+    return result - (xr * (xr+1) // 2) * M[xr-1]
 
 
 
@@ -311,9 +340,12 @@ def totientsum_1(x):
 
 
 
-z = time()
-print(totientsum(int(argv[1])))
-print(time() - z)
+#z = time()
+#print(totientsum(int(argv[1])))
+#print(time() - z)
+
+totientsum_1(10**11)
+print()
 
 z = time()
 print(totientsum_1(int(argv[1])))
