@@ -306,7 +306,7 @@ def totientsum_1(x):
     # Now that we have Mobius values up to xr stored in mobs, and some Mertens values up to y
     # stored in M, we compute the rest of the needed Mertens values up to x with the formula
     # M(v) == 1 - v - sum(mu(n) * (v//n) + M(v//n)) + isqrt(v) * M(sqrt(v)),
-    # where the first sum runs over 1 <= n <= sqrt(v) and the second is over 2 <= n <= sqrt(v).
+    # where the sum runs over 2 <= n <= sqrt(v).
     for v in ((x//n) for n in range(xr-1, 0, -1)):
         if v <= y: continue
         Mv = 1 - v
