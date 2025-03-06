@@ -175,7 +175,7 @@ def totientsum5(x):
             M[-(x//k)] = mert
             nextMkey = next(Mkeygen)
     
-    print(time() - z)
+    print("%f" % (time() - z))
     z = time()
     
     # Now that we have Mobius values up to xr stored in mobs, and some Mertens values up to y
@@ -207,7 +207,7 @@ def totientsum5(x):
         #     M[-(x//v)] = Mv
         M[-(x//v)] = Mv
     
-    print(time() - z)
+    print("%f" % (time() - z))
     z = time()
     
     # Now we can compute the totient sum.  We use the formula
@@ -223,7 +223,7 @@ def totientsum5(x):
         #     result += n * M[-(x//v)]
         result += n * M[-(x//v)]
     
-    print(time() - z)
+    print("%f" % (time() - z))
     
     return result - (xr * (xr+1) // 2) * M[xr-1]
 
@@ -241,8 +241,8 @@ def totientsum6(x):
     # Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
     # and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
     xr = isqrt(x)
-    M     = [0] * (xr + 1)  # M[n]        will store Mertens(n) for small n.
-    Mover = [0] * (xr + 1)  # Mover[x//n] will store Mertens(n) for large n.
+    M     = [0] * (   xr + 1)  # M[n]        will store Mertens(n) for small n.
+    Mover = [0] * (x//xr + 1)  # Mover[x//n] will store Mertens(n) for large n.
     y = introot(int(x * 1.0)**2, 3)                                        # TODO: The 1.0 is a tunable parameter.
     #print(y)
     mobs = [0] * (xr+1)
@@ -268,7 +268,7 @@ def totientsum6(x):
     
     Mover[x//xr] = M[xr]
     
-    print(time() - z)
+    print("%f" % (time() - z))
     z = time()
     
     # Now that we have Mobius values up to xr stored in mobs, and some Mertens values up to y
@@ -288,7 +288,7 @@ def totientsum6(x):
         # Mv is now Mertens(v).
         Mover[x//v] = Mv
     
-    print(time() - z)
+    print("%f" % (time() - z))
     z = time()
     
     # Now we can compute the totient sum.  We use the formula
@@ -301,7 +301,7 @@ def totientsum6(x):
         result += mobs[n] * (v * (v+1) // 2)
         result += n * Mover[x//v]
     
-    print(time() - z)
+    print("%f" % (time() - z))
     
     return result
 
@@ -323,8 +323,8 @@ def totientsum7(x):
     z = time()
     
     xr = isqrt(x)
-    M     = [0] * (xr + 1)  # M[n]        will store Mertens(n) for small n.
-    Mover = [0] * (xr + 1)  # Mover[x//n] will store Mertens(n) for large n.
+    M     = [0] * (   xr + 1)  # M[n]        will store Mertens(n) for small n.
+    Mover = [0] * (x//xr + 1)  # Mover[x//n] will store Mertens(n) for large n.
     y = introot(int(x * 1.0)**2, 3)                 # TODO: The 1.0 is a tunable parameter.  Also, consider logarithmic factors.
     #print(y)
     mobs = [0] * (xr+1)
@@ -353,7 +353,7 @@ def totientsum7(x):
     
     Mover[x//xr] = M[xr]
     
-    print(time() - z)
+    print("%f" % (time() - z))
     z = time()
     
     # Now that we have Mobius values up to xr stored in mobs, and some Mertens values up to y
@@ -362,7 +362,7 @@ def totientsum7(x):
     # where the sum runs over 2 <= n <= sqrt(v).
     
     for v in ((x//n) for n in range(xr-1, 0, -1)):
-        if v <= y: continue
+        if v <= y: continue                     # TODO: Compute the first n that gets past this point, and start the loop there.
         vr = isqrt(v)
         Mv = 1 - v + M[vr] * vr
         for i in range(2, vr+1):
@@ -372,7 +372,7 @@ def totientsum7(x):
         # Mv is now Mertens(v).
         Mover[x//v] = Mv
     
-    print(time() - z)
+    print("%f" % (time() - z))
     z = time()
     
     # Now we can compute the totient sum.  We use the formula
@@ -386,7 +386,7 @@ def totientsum7(x):
         result += mobs[n] * (v * (v+1) // 2)                                                                        # (*)
         result += n * Mover[x//v]
     
-    print(time() - z)
+    print("%f" % (time() - z))
     
     return result
     
@@ -399,31 +399,122 @@ def totientsum7(x):
 
 
 
+def totientsum8(N):
+    """
+    Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
+    
+    The overall method is to use the Dirichlet hyperbola method on phi = Id * mu.
+    This yields the formula
+    totientsum(N) == X + Y - Z, where
+    a is a selectable parameter
+    b == N // a
+    X == sum(mu(x) * binomial(N//x, 2), 1 <= x <= a)
+    Y == sum(y * Mertens(N//y), 1 <= y <= b)
+    Z == Mertens(a) * binomial(b, 2)
+    This requires using an efficient way to calculate all of those Mertens values.
+    We sieve the Mobius function directly up to a, compute the Mertens function along the way, and store the results.
+    We then use the formula
+    M(v) == 1 - v - sum(mu(k) * (v//k) + M(v//k)) + isqrt(v) * M(sqrt(v)),
+    where the sum runs over 2 <= k <= sqrt(v), to compute the remaining Mertens values.
+    
+    The time  complexity is TBD; allegedly, it is O(N^(2/3))-ish.
+    The space compelxity is O(N^(1/2))-ish, dominated by the arrays that store Mobius and Mertens values.
+    """                                          # TODO: What is the time complexity?  Can the space complexity be brought down?
+    
+    z = time()
+    
+    Nr = isqrt(N)
+    M     = [0] * (   Nr + 1)  # M[n]        will store Mertens(n) for small n.
+    Mover = [0] * (N//Nr + 1)  # Mover[N//n] will store Mertens(n) for large n.
+    a = introot(int(N * 1.0)**2, 3)                 # TODO: The 1.0 is a tunable parameter.  Also, consider logarithmic factors.
+    #print(y)
+    mobs = [0] * (Nr+1)
+    mert = 0
+    X, Y, Z = 0, 0, 0
+    
+    # We need to fill M and Mover with a bunch of Mertens values.
+    # First, we sieve the Mobius function up to a.  Those below Nr get stored.
+    # Along the way, we compute the corresponding Mertens values and store those that go in M and Mover.
+    # As we go, we accumulate terms from the X-formula.
+    
+    t = Nr - (Nr == N//Nr)
+    nextMkey = N // t
+    for (k, mu) in enumerate(mobiussieve(a+1), start=1):
+        mert += mu
+        
+        if k <= Nr:
+            mobs[k] = mu
+            M[k] = mert
+            v = N // k
+            X += mu * (v * (v+1) // 2)
+        
+        elif k == nextMkey:
+            Mover[N//k] = mert
+            t -= 1
+            nextMkey = N // t
+            # We can early-exit this loop once we have reached the greatest N//n-value <= a.
+            if nextMkey > a: break
+    
+    Mover[N//Nr] = M[Nr]
+    
+    # The X-formula is now fully evaluated.
+    
+    print("%f" % (time() - z))
+    z = time()
+    
+    # Now that we have Mobius values up to Nr stored in mobs, and some Mertens values up to a
+    # stored in M and Mover, we compute the rest of the needed Mertens values with the formula
+    # M(v) == 1 - v - sum(mu(k) * (v//k) + M(v//k)) + isqrt(v) * M(sqrt(v)),
+    # where the sum runs over 2 <= k <= sqrt(v).
+    
+    for k in range(Nr-1, 0, -1):
+        v = N // k
+        if v <= a: continue                     # TODO: Compute the first k that gets past this point, and start the loop there.
+        vr = isqrt(v)
+        Mv = 1 - v + M[vr] * vr
+        for i in range(2, vr+1):
+            vi = v // i
+            Mv -= mobs[i] * vi
+            Mv -= M[vi] if vi <= Nr else Mover[i*k] # Mover[N//vi]
+        # Mv is now Mertens(v).
+        Mover[k] = Mv
+    
+    print("%f" % (time() - z))
+    z = time()
+    
+    for y in range(1, Nr+1):
+        Y += y * Mover[y]
+    
+    Z = M[Nr] * (Nr * (Nr+1) // 2)
+    
+    print("%f" % (time() - z))
+    
+    return X + Y - Z
 
 
 
-z = time()
-print("\t", A := totientsum(int(argv[1])))
-print(time() - z)
+methods = (totientsum, \
+           #totientsum0, \
+           #totientsum1, \
+           #totientsum2, \
+           #totientsum3, \
+           #totientsum4, \
+           totientsum5, \
+           totientsum6, \
+           totientsum7, \
+           totientsum8, \
+          )
+answers = []
+n = int(argv[1])
+for m in methods:
+    z = time()
+    A = m(n)
+    z = time() - z
+    print("\t", A)
+    print("%f" % z)
+    answers.append(A)
+    print()
 
-print()
-
-z = time()
-print("\t", B := totientsum5(int(argv[1])))
-print(time() - z)
-
-print()
-
-z = time()
-print("\t", C := totientsum6(int(argv[1])))
-print(time() - z)
-
-print()
-
-z = time()
-print("\t", D := totientsum7(int(argv[1])))
-print(time() - z)
-
-assert A == B == C == D
-
-
+for a in answers: print(a)
+assert len(set(answers)) == 1
