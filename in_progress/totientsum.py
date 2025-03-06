@@ -425,40 +425,44 @@ def totientsum8(N):
     z = time()
     
     Nr = isqrt(N)
+    a = introot(N**2, 3)                                                                                       # TODO: Optimize.
+    X, Y, Z = 0, 0, 0
+    #print(a)
     M     = [0] * (   Nr + 1)  # M[n]        will store Mertens(n) for small n.
     Mover = [0] * (N//Nr + 1)  # Mover[N//n] will store Mertens(n) for large n.
-    a = introot(N**2, 3)                                                                                       # TODO: Optimize.
-    #print(y)
-    mobs = [0] * (Nr+1)
-    mert = 0
-    X, Y, Z = 0, 0, 0
+    mobs  = [0] * (Nr+1)
     
     # We need to fill M and Mover with a bunch of Mertens values.
-    # First, we sieve the Mobius function up to a.  Those below Nr get stored.
+    # First, we sieve the Mobius function up to a.  Those <= Nr get stored.
     # Along the way, we compute the corresponding Mertens values and store those that go in M and Mover.
-    # As we go, we accumulate terms from the X-formula.
+    # As we go, we accumulate terms from the X- and Y-formulas.
     
     t = Nr - (Nr == N//Nr)
     nextMkey = N // t
+    mert = 0
     for (k, mu) in enumerate(mobiussieve(a+1), start=1):
         mert += mu
+        v = N // k
         
         if k <= Nr:
             mobs[k] = mu
             M[k] = mert
-            v = N // k
             X += mu * (v * (v+1) // 2)
         
         elif k == nextMkey:
-            Mover[N//k] = mert
+            Mover[v] = mert
+            Y += v * mert
             t -= 1
             nextMkey = N // t
-            # We can early-exit this loop once we have reached the greatest N//n-value <= a.
-            if nextMkey > a: break
+            # We can early-exit this loop once k has reached the greatest N//t-value <= a.
+            if nextMkey > a:
+                phase2start = t
+                break
     
+    # The X-formula is now fully evaluated, and we have the data needed to evaluate Z as well.
+    
+    Z = M[Nr] * (Nr * (Nr+1) // 2)
     Mover[N//Nr] = M[Nr]
-    
-    # The X-formula is now fully evaluated.
     
     print("%f" % (time() - z))
     z = time()
@@ -467,10 +471,10 @@ def totientsum8(N):
     # stored in M and Mover, we compute the rest of the needed Mertens values with the formula
     # M(v) == 1 - v - sum(mu(k) * (v//k) + M(v//k)) + isqrt(v) * M(sqrt(v)),
     # where the sum runs over 2 <= k <= sqrt(v).
+    # As we go, we accumulate the remaining terms from the Y-formula.
     
-    for k in range(Nr-1, 0, -1):
+    for k in range(phase2start, 0, -1):
         v = N // k
-        if v <= a: continue                     # TODO: Compute the first k that gets past this point, and start the loop there.
         vr = isqrt(v)
         Mv = 1 - v + M[vr] * vr
         for i in range(2, vr+1):
@@ -479,14 +483,7 @@ def totientsum8(N):
             Mv -= M[vi] if vi <= Nr else Mover[i*k] # Mover[N//vi]
         # Mv is now Mertens(v).
         Mover[k] = Mv
-    
-    print("%f" % (time() - z))
-    z = time()
-    
-    for y in range(1, Nr+1):
-        Y += y * Mover[y]
-    
-    Z = M[Nr] * (Nr * (Nr+1) // 2)
+        Y += k * Mv
     
     print("%f" % (time() - z))
     
@@ -502,7 +499,7 @@ methods = (totientsum, \
            #totientsum4, \
            #totientsum5, \
            #totientsum6, \
-           #totientsum7, \
+           totientsum7, \
            totientsum8, \
           )
 answers = []
