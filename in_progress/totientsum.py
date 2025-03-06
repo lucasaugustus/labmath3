@@ -128,12 +128,6 @@ def totientsum4(n):
 
 
 
-
-
-
-
-
-
 def totientsum5(x):
     
     z = time()
@@ -272,6 +266,8 @@ def totientsum6(x):
             n -= 1
             nextMkey = x // n
     
+    Mover[x//xr] = M[xr]
+    
     print(time() - z)
     z = time()
     
@@ -355,6 +351,8 @@ def totientsum7(x):
             # We can early-exit this loop once we have reached the greatest x//n-value <= y.
             if nextMkey > y: break
     
+    Mover[x//xr] = M[xr]
+    
     print(time() - z)
     z = time()
     
@@ -378,7 +376,8 @@ def totientsum7(x):
     z = time()
     
     # Now we can compute the totient sum.  We use the formula
-    # totientsum(n) == 1/2 * sum(mu(k) * (n//k) * (1 + n//k)), where 1 <= k <= n.
+    # totientsum(n) == 1/2 * sum(mu(k) * (n//k) * (1 + n//k)),
+    # where the sum runs over 1 <= k <= n.
     # We exploit the fact that n//k takes many repeated values when sqrt(n) <= k <= n.
     
     result = -M[xr] * (xr * (xr+1) // 2)
@@ -404,23 +403,27 @@ def totientsum7(x):
 
 
 z = time()
-print("\t", totientsum(int(argv[1])))
+print("\t", A := totientsum(int(argv[1])))
 print(time() - z)
 
 print()
 
 z = time()
-print("\t", totientsum6(int(argv[1])))
+print("\t", B := totientsum5(int(argv[1])))
 print(time() - z)
 
 print()
 
 z = time()
-print("\t", totientsum7(int(argv[1])))
+print("\t", C := totientsum6(int(argv[1])))
 print(time() - z)
 
+print()
 
+z = time()
+print("\t", D := totientsum7(int(argv[1])))
+print(time() - z)
 
-
+assert A == B == C == D
 
 
