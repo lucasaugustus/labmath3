@@ -2,23 +2,13 @@
 
 from sys import argv
 from labmath3 import *
+from mertens import mertens
 from time import process_time, time
 
-#from mertens import mertens
 
 def totientsum_brute(x): return sum(totient(n) for n in range(1, x+1))
 
-def totientsum0(x):
-    """
-    Computes sum(totient(n) for n in range(1, x+1)), allegedly efficiently.
-    Using the Dirichlet hyperbola method, we find that this equals
-    sum(a * M(x//a) + mobius(a) * binomial(x//a + 1, 2) for a in range(1, isqrt(x)+1)) - M(isqrt(x)) * binomial(isqrt(x) + 1, 2)
-    where M is the Mertens function.
-    """
-    xr = isqrt(x)
-    term1 = sum(a * mertens(x//a) + mu * comb(x//a + 1, 2) for (a, mu) in enumerate(mobiussieve(xr+1), start=1))
-    term2 = comb(xr + 1, 2) * mertens(xr)
-    return term1 - term2
+def totientsum_brute0(x): return sum(totientsieve(x+1))
 
 def totientsum1(n):
     # This is derived by using the Dirichlet hyperbola method on phi = Id * mu.
@@ -148,102 +138,6 @@ def totientsum4(n):
 
 
 
-"""
-
-class FIArray(object):  # https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim
-    
-    def __init__(self, x):
-        self.x = x
-        self.isqrt = isqrt(x)
-        self.L = 2 * self.isqrt
-        if self.isqrt == self.x // self.isqrt: self.L -= 1
-        self.arr = [0] * self.L
-    
-    def __getitem__(self, v):
-        if v <= 0: return 0
-        if v <= self.isqrt: return self.arr[v-1]
-        return self.arr[-(self.x//v)]
-    
-    def __setitem__(self, v, z):
-        if v <= self.isqrt: self.arr[v-1] = z
-        else: self.arr[-(self.x // v)] = z
-    
-    def indexOf(self, v):
-        if v <= self.isqrt: return v - 1
-        return self.L - (self.x // v)
-    
-    def keysInc(self):
-        for v in range(1, self.isqrt+1): yield v
-        if self.isqrt != self.x // self.isqrt: yield self.x // self.isqrt
-        for n in range(self.isqrt - 1, 0, -1): yield self.x // n
-    
-    def keysDec(self):
-        for n in range(1, self.isqrt): yield self.x // n
-        if self.isqrt != self.x // self.isqrt: yield self.x // self.isqrt
-        for v in range(self.isqrt, 0, -1): yield v
-
-
-
-def mertensFast1(x):
-    M = FIArray(x)
-    y = introot(int(x * 1.0)**2, 3)
-    x12 = isqrt(x)
-    mobs = [0] * (x12+1)
-    mert = 0
-    Mkeygen = M.keysInc()
-    nextMkey = next(Mkeygen)    # This goes all the way up to x; we do not need to worry about running out.
-    for (k, mu) in enumerate(mobiussieve(y+1), start=1):
-        mert += mu
-        if k <= x12: mobs[k] = mu
-        if k == nextMkey:
-            M[k] = mert
-            nextMkey = next(Mkeygen)
-    for v in M.keysInc():
-        if v <= y: continue
-        muV = 1
-        vsqrt = isqrt(v)
-        for i in range(1, vsqrt+1):
-            muV -= mobs[i] * (v // i)
-            muV -= M[v // i]
-        muV += M[vsqrt] * vsqrt
-        M[v] = muV
-    return M
-
-def sumN(x): return x * (x + 1) // 2
-
-def totientsum_1(x):
-    # Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html.
-    M = mertensFast1(x)
-    xsqrt = M.isqrt
-    result = 0
-    for n in range(1, xsqrt+1):
-        result += (M[n] - M[n-1]) * sumN(x // n)
-        result += n * M[x // n]
-    result -= sumN(xsqrt) * M[xsqrt]
-    return result
-
-def totientsum_2(x):
-    Phi = FIArray(x)
-    y = introot(int(x * 1.0)**2, 3)
-    smallPhi = [0] * (y+1)
-    T = 0
-    for (x,t) in enumerate(totientsieve(y+1), start=1):
-        T += t
-        smallPhi[x] = T
-    for v in Phi.keysInc():
-        if v <= y:
-            Phi[v] = smallPhi[v]
-            continue
-        phiV = sumN(v)
-        vsqrt = isqrt(v)
-        for i in range(1, vsqrt+1):
-            phiV -= (smallPhi[i] - smallPhi[i-1]) * (v // i)
-            phiV -= Phi[v // i]
-        phiV += Phi[vsqrt] * vsqrt
-        Phi[v] = phiV
-    return phiV
-
-"""
 
 
 
@@ -433,11 +327,16 @@ def totientsum_2(x):
 
 
 def totientsum_3(x):
+    """
+    Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
+    
+    The time  complexity is TBD; allegedly, O(n^(2/3))-ish.
+    The space compelxity is O(n^(1/2))-ish, dominated by the arrays that store Mobius and Mertens values.
+    """         # TODO: What is the time complexity?  Can the space complexity be brought down?
     
     z = time()
     
-    # Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
-    # and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
     xr = isqrt(x)
     M     = [0] * (xr + 1)  # M[n]        will store Mertens(n) for small n.
     Mover = [0] * (xr + 1)  # Mover[x//n] will store Mertens(n) for large n.
@@ -477,13 +376,12 @@ def totientsum_3(x):
     
     for v in ((x//n) for n in range(xr-1, 0, -1)):
         if v <= y: continue
-        Mv = 1 - v
         vr = isqrt(v)
+        Mv = 1 - v + M[vr] * vr
         for i in range(2, vr+1):
             vi = v // i
             Mv -= mobs[i] * vi
             Mv -= M[vi] if vi <= xr else Mover[x//vi]
-        Mv += M[vr] * vr
         # Mv is now Mertens(v).
         Mover[x//v] = Mv
     
@@ -497,12 +395,18 @@ def totientsum_3(x):
     result = -M[xr] * (xr * (xr+1) // 2)
     for n in range(1, xr+1):
         v = x // n
-        result += mobs[n] * (v * (v+1) // 2)
+        result += mobs[n] * (v * (v+1) // 2)                                                                        # (*)
         result += n * Mover[x//v]
     
     print(time() - z)
     
     return result
+    
+    """
+    Line (*) can be integrated into the Mobius-sieving stage.
+    This would let us delete mobs when the Mover-completing stage is done.
+    We would still have O(x^(1/2)) storage thanks to M, Mover, and keeping mobs until stage 2 finishes.
+    """
 
 
 
