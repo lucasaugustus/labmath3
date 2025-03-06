@@ -5,9 +5,7 @@ from labmath3 import *
 from mertens import mertens
 from time import process_time, time
 
-def totientsum_brute(x): return sum(totient(n) for n in range(1, x+1))
-
-def totientsum_brute0(x): return sum(totientsieve(x+1))
+def totientsum0(x): return sum(totientsieve(x+1))
 
 def totientsum1(n):
     # This is derived by using the Dirichlet hyperbola method on phi = Id * mu.
@@ -102,14 +100,6 @@ def totientsum3(N, bcache=[], rcache={}):
     rcache[N] = answer
     return answer
 
-#for x in chain(range(10), (100, 1000, 10000)):
-#    print(totientsum_brute(x), totientsum(x), totientsum0(x), totientsum1(x), totientsum2(x), totientsum3(x))
-
-
-#import cProfile; cProfile.run("print(totientsum0(10**9))", sort="tottime")
-
-
-
 def totientsum4(n):
     z = time()
     HI = introot(n**2, 3)
@@ -144,7 +134,7 @@ def totientsum4(n):
 
 
 
-def totientsum_1(x):
+def totientsum5(x):
     
     z = time()
     
@@ -250,7 +240,7 @@ def totientsum_1(x):
 
 
 
-def totientsum_2(x):
+def totientsum6(x):
     
     z = time()
     
@@ -325,7 +315,7 @@ def totientsum_2(x):
 
 
 
-def totientsum_3(x):
+def totientsum7(x):
     """
     Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
     and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
@@ -420,13 +410,13 @@ print(time() - z)
 print()
 
 z = time()
-print("\t", totientsum_2(int(argv[1])))
+print("\t", totientsum6(int(argv[1])))
 print(time() - z)
 
 print()
 
 z = time()
-print("\t", totientsum_3(int(argv[1])))
+print("\t", totientsum7(int(argv[1])))
 print(time() - z)
 
 
