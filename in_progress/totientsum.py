@@ -5,7 +5,6 @@ from labmath3 import *
 from mertens import mertens
 from time import process_time, time
 
-
 def totientsum_brute(x): return sum(totient(n) for n in range(1, x+1))
 
 def totientsum_brute0(x): return sum(totientsieve(x+1))
