@@ -430,7 +430,7 @@ def totientsum8(N):
     #print(a)
     M     = [0] * (   Nr + 1)  # M[n]        will store Mertens(n) for small n.
     Mover = [0] * (N//Nr + 1)  # Mover[N//n] will store Mertens(n) for large n.
-    mobs  = [0] * (Nr+1)
+    mobs  = [0] * (   Nr + 1)
     
     # We need to fill M and Mover with a bunch of Mertens values.
     # First, we sieve the Mobius function up to a.  Those <= Nr get stored.
