@@ -404,18 +404,18 @@ def totientsum8(N):
     Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
     and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
     
-    The overall method is to use the Dirichlet hyperbola method on phi = Id * mu.
-    This yields the formula
-    totientsum(N) == X + Y - Z, where
-    a is a selectable parameter
-    b == N // a
-    X == sum(mu(x) * binomial(N//x, 2), 1 <= x <= a)
-    Y == sum(y * Mertens(N//y), 1 <= y <= b)
-    Z == Mertens(a) * binomial(b, 2)
+    The overall method is to use the Dirichlet hyperbola method on phi = Id * mu.  This yields the formula
+        totientsum(N) == X + Y - Z,
+    where
+        a is a selectable parameter
+        b == N // a
+        X == sum(mu(x) * binomial(N//x, 2), 1 <= x <= a)
+        Y == sum(y * Mertens(N//y), 1 <= y <= b)
+        Z == Mertens(a) * binomial(b, 2)
     This requires using an efficient way to calculate all of those Mertens values.
     We sieve the Mobius function directly up to a, compute the Mertens function along the way, and store the results.
     We then use the formula
-    M(v) == 1 - v - sum(mu(k) * (v//k) + M(v//k)) + isqrt(v) * M(sqrt(v)),
+        M(v) == 1 - v - sum(mu(k) * (v//k) + M(v//k)) + isqrt(v) * M(sqrt(v)),
     where the sum runs over 2 <= k <= sqrt(v), to compute the remaining Mertens values.
     
     The time  complexity is TBD; allegedly, it is O(N^(2/3))-ish.
@@ -427,7 +427,7 @@ def totientsum8(N):
     Nr = isqrt(N)
     M     = [0] * (   Nr + 1)  # M[n]        will store Mertens(n) for small n.
     Mover = [0] * (N//Nr + 1)  # Mover[N//n] will store Mertens(n) for large n.
-    a = introot(int(N * 1.0)**2, 3)                 # TODO: The 1.0 is a tunable parameter.  Also, consider logarithmic factors.
+    a = introot(N**2, 3)                                                                                       # TODO: Optimize.
     #print(y)
     mobs = [0] * (Nr+1)
     mert = 0
@@ -500,9 +500,9 @@ methods = (totientsum, \
            #totientsum2, \
            #totientsum3, \
            #totientsum4, \
-           totientsum5, \
-           totientsum6, \
-           totientsum7, \
+           #totientsum5, \
+           #totientsum6, \
+           #totientsum7, \
            totientsum8, \
           )
 answers = []
