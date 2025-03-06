@@ -320,7 +320,7 @@ def totientsum7(x):
     Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
     and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
     
-    The time  complexity is TBD; allegedly, O(n^(2/3))-ish.
+    The time  complexity is TBD; allegedly, it is O(n^(2/3))-ish.
     The space compelxity is O(n^(1/2))-ish, dominated by the arrays that store Mobius and Mertens values.
     """         # TODO: What is the time complexity?  Can the space complexity be brought down?
     
@@ -329,7 +329,7 @@ def totientsum7(x):
     xr = isqrt(x)
     M     = [0] * (xr + 1)  # M[n]        will store Mertens(n) for small n.
     Mover = [0] * (xr + 1)  # Mover[x//n] will store Mertens(n) for large n.
-    y = introot(int(x * 1.0)**2, 3)                                        # TODO: The 1.0 is a tunable parameter.
+    y = introot(int(x * 1.0)**2, 3)                 # TODO: The 1.0 is a tunable parameter.  Also, consider logarithmic factors.
     #print(y)
     mobs = [0] * (xr+1)
     mert = 0
