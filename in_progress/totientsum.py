@@ -529,7 +529,7 @@ def totientsum9(N):
     and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
     
     By using the Dirichlet hyperbola method on phi = Id * mu, we obtain
-        totientsum(N) == X + y - Z,
+        totientsum(N) == X + Y - Z,
     where
         X == sum(mu(x) * binomial(N//x + 1, 2), 1 <= x <= Nr)
         Y == sum(y * Mertens(N//y), 1 <= y <= Nr)
@@ -544,7 +544,7 @@ def totientsum9(N):
     THe optimal choice for a turns out to be about (N / log(log(n))) ^ (2/3).
     
     The time  complexity is O(N^(2/3) * log(log(N))^(1/3)).
-    The space compelxity is O(N^(1/2))-ish, dominated by the arrays that store Mobius and Mertens values.
+    The space compelxity is O(N^(1/2))-ish, dominated by the arrays that store Mertens values.
     """                                             # TODO: Can the space complexity be brought down without breaking the clock?
     
     z = time()
@@ -554,7 +554,7 @@ def totientsum9(N):
     Nr = isqrt(N)
     print("Nr  :", Nr)
     print("N/Nr:", N//Nr)
-    a = introot(N**2, 3)
+    print("N23 :", introot(N**2, 3))
     a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
     print("a   :", a)
     M     = [0] * (   Nr + 1)  # M[n]        will store Mertens(n) for small n.
@@ -570,14 +570,22 @@ def totientsum9(N):
     Mkey1 = nextMkey = N // s
     print("1mk :", nextMkey)
     mert = 0
-    for (k, mu) in enumerate(mobiussieve(a+1), start=1):
+    Na1 = N // (a+1)
+    mobsieve = mobiussieve(a+1)
+    # Unroll the first iteration of the phase 1 loop,
+    # so that the bit of phase 2 that happens in phase 1 does not have to have an "if k > 1" guarding it:
+    mu = next(mobsieve)
+    mert = 1
+    M[1] = mert
+    X += N * (N+1) // 2
+    for (k, mu) in enumerate(mobsieve, start=2):
         mert += mu
         v = N // k
         
         if k <= Nr:
-            if k > 1:   # We do some of phase 2's work here so that we do not have to store the Mobius values.
-                for t in range(1, min(N//(k*k), N//(a+1)) + 1):
-                    Mover[t] -= mu * ((N//t)//k)
+            for t in range(1, min(v//k, Na1) + 1):
+                # We do some of phase 2's work here so that we do not have to store the Mobius values.
+                Mover[t] -= mu * (v//t)
             M[k] = mert
             X += mu * (v * (v+1) // 2)
         
@@ -606,8 +614,7 @@ def totientsum9(N):
     print("%f" % (time() - z))
     z = time()
     
-    # Now that we have Mobius values up to Nr stored in mobs, and some Mertens values up to a
-    # stored in M and Mover, we compute the rest of the needed Mertens values up to N with the formula
+    # We now compute the rest of the needed Mertens values up to N with the formula
     # M(v) == 1 - v + isqrt(v) * M(sqrt(v)) - sum(mu(k) * (v//k) + M(v//k), 2 <= k <= sqrt(v)).
     
     for t in range(phase2start, 0, -1):
@@ -618,8 +625,8 @@ def totientsum9(N):
             vk = v // k
             #Mv -= mobs[k] * vk     # This bit is handled in phase 1.
             Mv -= M[vk] if vk <= Nr else Mover[k*t] # Mover[N//vk]
-        # Mv is now Mertens(v).
         Mover[t] += Mv
+        # Mover[t] is now Mertens(v).
         Y += t * Mover[t]
     
     print("%f" % (time() - z))
@@ -646,7 +653,7 @@ for n in chain(randos, numbers):
                #totientsum5, \
                #totientsum6, \
                #totientsum7, \
-               #totientsum8, \
+               totientsum8, \
                totientsum9, \
               )
     answers = []
