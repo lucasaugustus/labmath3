@@ -641,7 +641,7 @@ def totientsum9(N):
 
 
 numbers = (2**30, 2**33, 2**34, 2**33 * 3, 10**10, 10**11)
-randos = [randrange(10**9, 10**11) for _ in range(5)]
+randos = []#[randrange(10**9, 10**11) for _ in range(5)]
 for n in chain(randos, numbers):
     print()
     print()
