@@ -550,6 +550,7 @@ def totientsum9(N):
     z = time()
     
     print("N   :", N)
+    print("l10 :", log10(N))
     Nr = isqrt(N)
     print("Nr  :", Nr)
     print("N/Nr:", N//Nr)
@@ -558,7 +559,6 @@ def totientsum9(N):
     print("a   :", a)
     M     = [0] * (   Nr + 1)  # M[n]        will store Mertens(n) for small n.
     Mover = [0] * (N//Nr + 1)  # Mover[N//n] will store Mertens(n) for large n.
-    mobs  = [0] * (   Nr + 1)
     X, Y, Z = 0, 0, 0
     
     # We need to fill M and Mover with a bunch of Mertens values.
@@ -575,9 +575,11 @@ def totientsum9(N):
         v = N // k
         
         if k <= Nr:
-            mobs[k] = mu
+            if k > 1:   # We do some of phase 2's work here so that we do not have to store the Mobius values.
+                for t in range(1, min(N//(k*k), N//(a+1)) + 1):
+                    Mover[t] -= mu * ((N//t)//k)
             M[k] = mert
-            X += mobs[k] * (v * (v+1) // 2)
+            X += mu * (v * (v+1) // 2)
         
         elif k == nextMkey:
             Mover[v] = mert
@@ -614,34 +616,20 @@ def totientsum9(N):
         Mv = 1 - v + M[vr] * vr
         for k in range(2, vr+1):
             vk = v // k
-            Mv -= mobs[k] * vk
+            #Mv -= mobs[k] * vk     # This bit is handled in phase 1.
             Mv -= M[vk] if vk <= Nr else Mover[k*t] # Mover[N//vk]
         # Mv is now Mertens(v).
-        Mover[t] = Mv
-        Y += t * Mv
-    
-    """
-    For each (k,t) pair, with 1 <= t <= phase2start and 2 <= k <= isqrt(N//t),
-    phase 2 subtracts mobs[k] * (N//t//k) from Mover[t].
-    The maximum k happens at the minimum t.
-    The minimum t is 1, so the maximum k is isqrt(N).
-    For each k, the range of t-values that touch it is
-    
-    k <= isqrt(N//t)
-    k < sqrt(N//t)
-    k < sqrt(N/t)
-    k^2 < N/t
-    t < N/k^2
-    t <= N // k^2
-    """
+        Mover[t] += Mv
+        Y += t * Mover[t]
     
     print("%f" % (time() - z))
     
     return X + Y - Z
 
 
+from math import log10
 numbers = (2**30, 2**33, 2**34, 2**33 * 3, 10**10, 10**11)
-randos = []#[randrange(10**9, 10**11) for _ in range(5)]
+randos = [randrange(10**9, 10**11) for _ in range(5)]
 for n in chain(randos, numbers):
     print()
     print()
@@ -649,7 +637,7 @@ for n in chain(randos, numbers):
     print(n)
     print()
     print()
-    methods = (totientsum, \
+    methods = (#totientsum, \
                #totientsum0, \
                #totientsum1, \
                #totientsum2, \
