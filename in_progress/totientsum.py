@@ -491,7 +491,110 @@ def totientsum8(N):
 
 
 
-methods = (totientsum, \
+
+
+
+
+
+
+def totientsum9(N):
+    """
+    Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
+    
+    The overall method is to use the Dirichlet hyperbola method on phi = Id * mu.  This yields the formula
+        totientsum(N) == X + Y - Z,
+    where
+        a is a selectable parameter
+        b == N // a
+        X == sum(mu(x) * binomial(N//x, 2), 1 <= x <= a)
+        Y == sum(y * Mertens(N//y), 1 <= y <= b)
+        Z == Mertens(a) * binomial(b, 2)
+    This requires using an efficient way to calculate all of those Mertens values.
+    We sieve the Mobius function directly up to a, compute the Mertens function along the way, and store the results.
+    We then use the formula
+        M(v) == 1 - v + isqrt(v) * M(sqrt(v)) - sum(mu(k) * (v//k) + M(v//k), 2 <= k <= sqrt(v))
+    to compute the remaining Mertens values.
+    
+    The time  complexity is O(N^(2/3) * log(log(N))^(-2/3)).
+    The space compelxity is O(N^(1/2))-ish, dominated by the arrays that store Mobius and Mertens values.
+    """    # TODO: Make the space-complexity statement more precise.  Also, can that be brought down without breaking the clock?
+    
+    z = time()
+    
+    Nr = isqrt(N)
+     a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
+    #print(a)
+    X, Y, Z = 0, 0, 0
+    M     = [0] * (   Nr + 1)  # M[n]        will store Mertens(n) for small n.
+    Mover = [0] * (N//Nr + 1)  # Mover[N//n] will store Mertens(n) for large n.
+    mobs  = [0] * (   Nr + 1)
+    
+    # We need to fill M and Mover with a bunch of Mertens values.
+    # First, we sieve the Mobius function up to a.  Those <= Nr get stored.
+    # Along the way, we compute the corresponding Mertens values and store those that go in M and Mover.
+    # As we go, we accumulate terms from the X- and Y-formulas.
+    
+    t = Nr - (Nr == N//Nr)
+    nextMkey = N // t
+    mert = 0
+    for (k, mu) in enumerate(mobiussieve(a+1), start=1):
+        mert += mu
+        v = N // k
+        
+        if k <= Nr:
+            mobs[k] = mu
+            M[k] = mert
+            X += mu * (v * (v+1) // 2)
+        
+        elif k == nextMkey:
+            Mover[v] = mert
+            Y += v * mert
+            t -= 1
+            nextMkey = N // t
+            # We can early-exit this loop once k has reached the greatest N//t-value <= a.
+            if nextMkey > a:
+                phase2start = t
+                break
+    
+    # phase2start is the greatest integer t such that a < N // t.
+    assert N // (phase2start + 1) <= a < N // phase2start
+    assert phase2start == N // (a+1)
+    
+    # The X-formula is now fully evaluated, and we have the data needed to evaluate Z as well.
+    
+    Z = M[Nr] * (Nr * (Nr+1) // 2)
+    Mover[N//Nr] = M[Nr]
+    
+    print("%f" % (time() - z))
+    z = time()
+    
+    # Now that we have Mobius values up to Nr stored in mobs, and some Mertens values up to a
+    # stored in M and Mover, we compute the rest of the needed Mertens values with the formula
+    # M(v) == 1 - v - sum(mu(k) * (v//k) + M(v//k)) + isqrt(v) * M(sqrt(v)),
+    # where the sum runs over 2 <= k <= sqrt(v).
+    # As we go, we accumulate the remaining terms from the Y-formula.
+    
+    for k in range(phase2start, 0, -1):
+        v = N // k
+        vr = isqrt(v)
+        Mv = 1 - v + M[vr] * vr
+        for i in range(2, vr+1):
+            vi = v // i
+            Mv -= mobs[i] * vi
+            Mv -= M[vi] if vi <= Nr else Mover[i*k] # Mover[N//vi]
+        # Mv is now Mertens(v).
+        Mover[k] = Mv
+        Y += k * Mv
+    
+    print("%f" % (time() - z))
+    
+    return X + Y - Z
+
+
+
+
+methods = (#totientsum, \
            #totientsum0, \
            #totientsum1, \
            #totientsum2, \
@@ -499,8 +602,9 @@ methods = (totientsum, \
            #totientsum4, \
            #totientsum5, \
            #totientsum6, \
-           totientsum7, \
-           totientsum8, \
+           #totientsum7, \
+           #totientsum8, \
+           totientsum9, \
           )
 answers = []
 n = int(argv[1])
