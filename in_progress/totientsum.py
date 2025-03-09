@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
 from sys import argv
+from time import time
+from math import log10
 from labmath3 import *
 from mertens import mertens
-from time import process_time, time
 
 def totientsum0(x): return sum(totientsieve(x+1))
 
@@ -55,8 +56,6 @@ def totientsum2(n):
         d += 1
         print(d)
     
-    #print(process_time())
-    
     # We now know that n//d and below have not had their Mertens contributions accounted for yet.
     dmin = d
     #"""
@@ -77,8 +76,6 @@ def totientsum2(n):
         # So we need to add to answer d * M for all b < d <= t.
         answer += M * ((t * (t+1) - b * (b+1)) // 2)
     
-    #print(process_time())
-    
     return answer
 
 def totientsum3(N, bcache=[], rcache={}):
@@ -91,7 +88,6 @@ def totientsum3(N, bcache=[], rcache={}):
         for (x,t) in enumerate(totientsieve(k+1), start=1):
             T += t
             bcache[x] = T
-        print(process_time())
     if N <= len(bcache): return bcache[N]
     answer = N * (N+1) // 2
     for k in range(1, isqrt(N)+1):
@@ -544,7 +540,7 @@ def totientsum9(N):
     THe optimal choice for a turns out to be about (N / log(log(n))) ^ (2/3).
     
     The time  complexity is O(N^(2/3) * log(log(N))^(1/3)).
-    The space compelxity is O(N^(1/2))-ish, dominated by the arrays that store Mertens values.
+    The space compelxity is O(N^(1/2)), dominated by the arrays that store Mertens values.
     """                                             # TODO: Can the space complexity be brought down without breaking the clock?
     
     z = time()
@@ -634,10 +630,9 @@ def totientsum9(N):
     return X + Y - Z
 
 
-from math import log10
 numbers = (2**30, 2**33, 2**34, 2**33 * 3, 10**10, 10**11)
 randos = [randrange(10**9, 10**11) for _ in range(5)]
-for n in chain(randos, numbers):
+for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
     print()
     print()
     print()
