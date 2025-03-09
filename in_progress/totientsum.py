@@ -568,7 +568,7 @@ def totientsum9(N):
     mert = 0
     Na1 = N // (a+1)
     mobsieve = mobiussieve(a+1)
-    # Unroll the first iteration of the phase 1 loop,
+    # We unroll the first iteration of the phase 1 loop,
     # so that the bit of phase 2 that happens in phase 1 does not have to have an "if k > 1" guarding it:
     mu = next(mobsieve)
     mert = 1
@@ -630,6 +630,142 @@ def totientsum9(N):
     return X + Y - Z
 
 
+
+
+
+
+
+
+
+
+
+def totientsum10(N):
+    """
+    Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
+    
+    By using the Dirichlet hyperbola method on phi = Id * mu, we obtain
+        totientsum(N) == X + Y - Z,
+    where
+        X == sum(mu(x) * binomial(N//x + 1, 2), 1 <= x <= Nr)
+        Y == sum(y * Mertens(N//y), 1 <= y <= Nr)
+        Z == Mertens(Nr) * binomial(Nr + 1, 2)
+        Nr == isqrt(N)
+    This calls for an efficient way to compute all those Mertens values.
+    We select a parameter a, sieve the Mobius function up to a, accumulate it into the needed Mertens values,
+    and store the Mertens values.  We also store the Mobius values up to Nr.  We then use the formula
+        M(v) == 1 - v + isqrt(v) * M(sqrt(v)) - sum(mu(k) * (v//k) + M(v//k), 2 <= k <= sqrt(v))
+    to compute the remaining Mertens values.
+    
+    THe optimal choice for a turns out to be about (N / log(log(n))) ^ (2/3).
+    
+    The time  complexity is O(N^(2/3) * log(log(N))^(1/3)).
+    The space compelxity is O(N^(1/2)), dominated by the arrays that store Mertens values.
+    """                                             # TODO: Can the space complexity be brought down without breaking the clock?
+    
+    z = time()
+    
+    print("           N:", N)
+    print("    log10(N):", log10(N))
+    Nr = isqrt(N)
+    print("    isqrt(N):", Nr)
+    print(" N//isqrt(N):", N//Nr)
+    print("int(N^(2/3)):", introot(N**2, 3))
+    print(" log(log(N)):", log(log(N)))
+    a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
+    print("           a:", a)
+    M     = [0] * (   Nr + 1)  # For small n, Mertens(n) will be stored as M    [   n].
+    Mover = [0] * (N//Nr + 1)  # For large n. Mertens(n) will be stored as Mover[N//n].
+    X, Y, Z = 0, 0, 0
+    
+    # We need to fill M and Mover with a bunch of Mertens values.
+    # First, we sieve the Mobius function up to a.
+    # Along the way, we compute the corresponding Mertens values and store those that go in M and Mover.
+    # We also need to store the Mobius values up to Nr.
+    
+    s = Nr - (Nr == N//Nr)
+    Mkey1 = nextMkey = N // s
+    print(" Mover start:", nextMkey)
+    mert = 0
+    Na1 = N // (a+1)
+    mobsieve = mobiussieve(a+1)
+    # We unroll the first iteration of the phase 1 loop,
+    # so that the bit of phase 2 that happens in phase 1 does not have to have an "if k > 1" guarding it:
+    mu = next(mobsieve)
+    mert = 1
+    M[1] = mert
+    X += N * (N+1) // 2
+    for (k, mu) in enumerate(mobsieve, start=2):
+        mert += mu
+        v = N // k
+        
+        if k <= Nr:
+            
+            # This next line is a phase-2 bit, but doing it here lets us avoid storing an array of Mobius values.
+            for t in range(1, min(v//k, Na1) + 1): Mover[t] -= mu * (v//t)
+                
+            M[k] = mert
+            X += mu * (v * (v+1) // 2)
+        
+        elif k == nextMkey:
+            Mover[v] = mert
+            Y += v * mert
+            s -= 1
+            nextMkey = N // s
+            # We can early-exit this loop once we have reached the greatest N//s-value <= a.
+            if nextMkey > a:
+                phase2start = s
+                break
+    
+    # phase2start is the greatest integer s such that a < N // s.
+    assert N // (phase2start + 1) <= a < N // phase2start
+    assert phase2start == Na1
+    
+    # The X-formula is now fully evaluated, and we have the data needed to evaluate Z as well.
+    # Furthermore, Mertens(Nr) needs to be recorded in both M and Mover,
+    # and the term Nr * Mover[Nr] from Y is sometimes not caught in phase 1.
+    
+    Mover[N//Nr] = M[Nr]
+    if N // Nr != Mkey1: Y += Nr * Mover[Nr]
+    Z = M[Nr] * (Nr * (Nr + 1) // 2)
+    
+    print("%f" % (time() - z))
+    z = time()
+    
+    # We now compute the rest of the needed Mertens values up to N with the formula
+    # M(v) == 1 - v + isqrt(v) * M(sqrt(v)) - sum(mu(k) * (v//k) + M(v//k), 2 <= k <= sqrt(v)).
+    
+    for t in range(phase2start, 0, -1):
+        v = N // t
+        vr = isqrt(v)
+        Mv = 1 - v + M[vr] * vr
+        for k in range(2, vr+1):
+            vk = v // k
+            #Mv -= mobs[k] * vk     # This bit is handled in phase 1.
+            Mv -= M[vk] if vk <= Nr else Mover[k*t] # Mover[N//vk]
+        Mover[t] += Mv
+        # Mover[t] is now Mertens(v).
+        Y += t * Mover[t]
+    
+    print("%f" % (time() - z))
+    
+    return X + Y - Z
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 numbers = (2**30, 2**33, 2**34, 2**33 * 3, 10**10, 10**11)
 randos = [randrange(10**9, 10**11) for _ in range(5)]
 for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
@@ -648,8 +784,9 @@ for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
                #totientsum5, \
                #totientsum6, \
                #totientsum7, \
-               totientsum8, \
+               #totientsum8, \
                totientsum9, \
+               totientsum10, \
               )
     answers = []
     for m in methods:
@@ -663,3 +800,4 @@ for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
 
     for a in answers: print(a)
     assert len(set(answers)) == 1
+
