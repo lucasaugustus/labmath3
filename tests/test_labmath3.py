@@ -775,6 +775,17 @@ def test_polyrootsmod():
 def test_totientsum():
     assert [totientsum(n) for n in range(10)] == [0, 1, 2, 4, 6, 10, 12, 18, 22, 28]
     assert [totientsum(n) for n in (100, 1000, 10000000)] == [3044, 304192, 30396356427242]
+    assert totientsum(49582708483) == 747277666055873175604
+    assert totientsum(37320488696) == 423366171507556395550
+    assert totientsum(5366589427) == 8754236010207747962
+    assert totientsum(46216318265) == 649250361180422893698
+    assert totientsum(27801976978) == 234948603557872177432
+    assert totientsum(1073741824) == 350446114666323042
+    assert totientsum(8589934592) == 22428551329120979416
+    assert totientsum(17179869184) == 89714205311070942956
+    assert totientsum(25769803776) == 201856961942060258336
+    assert totientsum(10000000000) == 30396355092886216366
+    assert totientsum(100000000000) == 3039635509283386211140
 
 def test_carmichael(): assert [carmichael(n) for n in range(1, 23)] == [1,1,2,2,4,2,6,2,6,4,10,2,12,6,4,4,16,6,18,4,6,10]
 def test_ispractical(): assert [x for x in range(1, 55) if ispractical(x)] == [1,2,4,6,8,12,16,18,20,24,28,30,32,36,40,42,48,54]
