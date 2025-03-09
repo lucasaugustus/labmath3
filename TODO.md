@@ -1,5 +1,6 @@
 # Before the next release:
 * Integrate the completed in-progress stuff.
+  * [totientsum.py](/in_progress/totientsum.py) has a function that is good enough to replace the current `totientsum` function; ideally, I would first figure out how to reduce its memory usage still further.
   * [sqfrcount.py](/in_progress/sqfrcount.py) now has the segmented Pawlewicz algorithm.
   * [mertens.py](/in_progress/mertens.py) now has the segmented Deleglise-Rivat algorithm.
 
