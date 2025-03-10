@@ -822,14 +822,17 @@ def totientsum11(N):
         
         if k <= Nr:
             
-            # This next line is a phase-2 bit, but doing it here lets us avoid storing an array of Mobius values.
-            for t in range(1, min(v//k, Na1) + 1): Mover[t] -= mu * (v//t)
-            
-            # This next line is a phase-2 bit, but doing it here lets us avoid storing Mertens(n) for n <= sqrt(N).
-            for t in range(N//(k+1)**2 + 1, min(Na1, N//k**2) + 1): Mover[t] += 1 - (N//t) + mert * k
-                
             M[k] = mert
             X += mu * (v * (v+1) // 2)
+            
+            # The rest of this if-true-block morally belongs in phase 2,
+            # but doing it here lets us avoid storing an array of Mobius values.
+            
+            for t in range(1, min(v//k, Na1) + 1): Mover[t] -= mu * (v//t)
+            
+            for t in range(N//(k+1)**2 + 1, min(Na1, N//k**2) + 1): Mover[t] += 1 - (N//t) + mert * k
+            
+            if k > 1: pass
         
         elif k == nextMkey:
             Mover[v] = mert
@@ -862,11 +865,18 @@ def totientsum11(N):
     for t in range(phase2start, 0, -1):
         v = N // t
         vr = isqrt(v)
-        Mv = 0#1 - v + M[vr] * vr   # This bit is handled in phase 1.
-        for k in range(2, vr+1):
-            vk = v // k
-            #Mv -= mobs[k] * vk     # This bit is handled in phase 1.
-            Mv -= M[vk] if vk <= Nr else Mover[k*t] # Mover[N//vk]      # TODO: Put the M[vk] bit in phase 1.
+        Mv = 0
+        
+        #Mv += 1 - v + M[vr] * vr   # This bit is handled in phase 1.
+        
+        #for k in range(2, vr+1):   # This bit is handled in phase 1.
+        #    vk = v // k
+        #    Mv -= mobs[k] * vk
+        
+        for l in range(2, vr+1):
+            k = v // l
+            Mv -= M[k] if k <= Nr else Mover[l*t]   # Mover[N//k]       # TODO: Put the M[k] bit in phase 1.
+        
         Mover[t] += Mv
         # Mover[t] is now Mertens(v).
         Y += t * Mover[t]
@@ -907,7 +917,7 @@ for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
     print(n)
     print()
     print()
-    methods = (#totientsum, \
+    methods = (totientsum, \
                #totientsum0, \
                #totientsum1, \
                #totientsum2, \
@@ -917,8 +927,9 @@ for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
                #totientsum6, \
                #totientsum7, \
                #totientsum8, \
-               totientsum9, \
-               totientsum10, \
+               #totientsum9, \
+               #totientsum10, \
+               totientsum11, \
               )
     answers = []
     for m in methods:
@@ -928,6 +939,7 @@ for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
         print("\t", A)
         print("%f" % z)
         answers.append(A)
+        print()
         print()
 
     for a in answers: print(a)
