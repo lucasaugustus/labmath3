@@ -773,11 +773,18 @@ def totientsum11(N):
         Y == sum(y * Mertens(N//y), 1 <= y <= Nr)
         Z == Mertens(Nr) * binomial(Nr + 1, 2)
         Nr == isqrt(N)
-    This calls for an efficient way to compute all those Mertens values.
-    We select a parameter a, sieve the Mobius function up to a, accumulate it into the needed Mertens values,
-    and store the Mertens values.  We also store the Mobius values up to Nr.  We then use the formula
+    This calls for an efficient way to compute all those Mertens values.  Note that we need only O(sqrt(n)) of those:
+    we need Mertens(k) and Mertens(N/k) for 1 <= k <= Nr.  To compute the low-argument values, we sieve the Mobius function
+    and accumulate the results into an array M.  For the high-argument values, we use the formula
         M(v) == 1 - v + isqrt(v) * M(sqrt(v)) - sum(mu(k) * (v//k) + M(v//k), 2 <= k <= sqrt(v))
-    to compute the remaining Mertens values.
+    
+    For Mertens(k) where Nr <= k < a, for some suitable parameter a, it is more efficient to continue the sieve than to use
+    the formula.
+    
+    Using the formula as-is calls for storing the Mobius values in their own array, which uses O(sqrt(N)) space.
+    This can be avoided by computing mu(n) == M(n) - M(n-1), but we instead move the relevant terms into phase 1.
+    
+    We can also get away with not storing the low-argument Mertens values by moving their terms into phase 1 as well.
     
     THe optimal choice for a turns out to be about (N / log(log(n))) ^ (2/3).
     
@@ -809,14 +816,7 @@ def totientsum11(N):
     print(" Mover start:", nextMkey)
     mert = 0
     Na1 = N // (a+1)
-    mobsieve = mobiussieve(a+1)
-    # We unroll the first iteration of the phase 1 loop,
-    # so that the bit of phase 2 that happens in phase 1 does not have to have an "if k > 1" guarding it:
-    mu = next(mobsieve)
-    mert = 1
-    M[1] = mert
-    X += N * (N+1) // 2
-    for (k, mu) in enumerate(mobsieve, start=2):
+    for (k, mu) in enumerate(mobiussieve(a+1), start=1):
         mert += mu
         v = N // k
         
@@ -828,11 +828,12 @@ def totientsum11(N):
             # The rest of this if-true-block morally belongs in phase 2,
             # but doing it here lets us avoid storing an array of Mobius values.
             
-            for t in range(1, min(v//k, Na1) + 1): Mover[t] -= mu * (v//t)
+            if k > 1:
+                for t in range(1, min(v//k, Na1) + 1):
+                    Mover[t] -= mu * (v//t)
             
-            for t in range(N//(k+1)**2 + 1, min(Na1, N//k**2) + 1): Mover[t] += 1 - (N//t) + mert * k
-            
-            if k > 1: pass
+            for t in range(N//(k+1)**2 + 1, min(Na1, N//k**2) + 1):
+                Mover[t] += 1 - (N//t) + mert * k
         
         elif k == nextMkey:
             Mover[v] = mert
