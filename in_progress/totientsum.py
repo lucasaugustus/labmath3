@@ -9,10 +9,17 @@ from mertens import mertens
 def totientsum0(x): return sum(totientsieve(x+1))
 
 def totientsum1(n):
-    # This is derived by using the Dirichlet hyperbola method on phi = Id * mu.
-    # The time complexity is O(n^(3/4))-ish.
-    # The overall space complexity is O(n^(3/8))-ish, due to the segmented Mobius sieve in stage X.
-    # Space usage from the Mertens calls is O(n^(1/3))-ish.
+    """
+    This algorithm is derived by using the Dirichlet hyperbola method on phi = Id * mu.
+    The time complexity is O(n^(3/4))-ish: This is due to our use of the Deleglise-Rivat algorithm for computing the
+    Mertens function; its O(n^(2/3)) time-complexity makes the optimal choice of parameter a O(n^(3/4)).
+    The overall space complexity is O(n^(3/8))-ish, due to the segmented Mobius sieve in stage X.
+    Space usage from the Mertens calls is O(n^(1/3))-ish.
+    
+    Using the Helfgott-Thompson algorithm for the Mertens calls would bring the time complexity down to O(n^(5/7)),
+    and the space complexity would be brought down to O(n^(5/14)) == O(n^(0.3571428...)).
+    The space complexity from the Mertens calls would then be O(n^0.3).
+    """
     if n < 3: return 0 if n < 0 else (0, 1, 2)[n]
     a = introot(n**3, 4)
     b = n // a
@@ -983,7 +990,11 @@ def totientsum12(N):
             # To avoid breaking the target memory usage of O(N^(1/3))-ish, we use blocks of that size.
             MertensBlock.append(mert)
             if len(MertensBlock) >= MertensBlockSize or k == Nr:
-                if k == Nr: M_Nr = mert
+                
+                if k == Nr:
+                    Mover[N//Nr] = mert
+                    Z = mert * (Nr * (Nr + 1) // 2)
+                
                 for t in range(1, Na1 + 1):
                     A = MertensBlockStart
                     B = MertensBlockStart + len(MertensBlock)
@@ -1011,13 +1022,10 @@ def totientsum12(N):
     assert N // (phase2start + 1) <= a < N // phase2start
     assert phase2start == Na1
     
-    # The X-formula is now fully evaluated, and we have the data needed to evaluate Z as well.
-    # Furthermore, Mertens(Nr) needs to be recorded in both M and Mover,
-    # and the term Nr * Mover[Nr] from Y is sometimes not caught in phase 1.
+    # The X- and Z-formulas are now fully evaluated.
     
-    Mover[N//Nr] = M_Nr
+    # The term Nr * Mover[Nr] from Y is sometimes not caught in phase 1.
     if N // Nr != Mkey1: Y += Nr * Mover[Nr]
-    Z = M_Nr * (Nr * (Nr + 1) // 2)
     
     print("%f" % (time() - z))
     z = time()
