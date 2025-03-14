@@ -988,9 +988,9 @@ def totientsum12(N):
             # Doing this one k at a time takes O(N^(1/3)) time per k, which makes the whole algorithm O(N^(5/6))-ish.
             # To avoid breaking the clock, we accumulate a block of consecutive Mertens values and process them all at once.
             # To avoid breaking the target memory usage of O(N^(1/3))-ish, we use blocks of that size.
+            # TODO: Rewrite this bit to do less (re)allocation of MertensBlock.
             MertensBlock.append(mert)
             if len(MertensBlock) >= MertensBlockSize or k == Nr:
-                
                 if k == Nr:
                     Mover[N//Nr] = mert
                     Z = mert * (Nr * (Nr + 1) // 2)
@@ -999,7 +999,8 @@ def totientsum12(N):
                     A = MertensBlockStart
                     B = MertensBlockStart + len(MertensBlock)
                     lmin = max(1, N // (B*t))
-                    lmax = min(isqrt(N//t), N // (A*t))
+                    #lmax = min(isqrt(N//t), N // (A*t))
+                    lmax = min(sqrtN[t], N // (A*t))
                     for l in range(lmin+1, lmax+1):
                         k = N // (t*l)
                         if A <= k < B:
@@ -1035,7 +1036,7 @@ def totientsum12(N):
     
     for t in range(phase2start, 0, -1):
         v = N // t
-        vr = isqrt(v)
+        vr = sqrtN[t] #isqrt(v)
         Mv = 0
         
         #Mv += 1 - v + M[vr] * vr   # This bit is handled in phase 1.
@@ -1125,7 +1126,7 @@ for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
                #totientsum8, \
                #totientsum9, \
                #totientsum10, \
-               totientsum11, \
+               #totientsum11, \
                totientsum12, \
               )
     answers = []
