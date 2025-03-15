@@ -1406,31 +1406,6 @@ def totientsum14(N):
                 
         
         if k == nextMkey:
-            """
-            For each (t,l) pair with 1 <= t <= Na1 and 2 <= l <= isqrt(N//t),
-            we subtract Mover[l*t] from Mover[t].  Therefore, for each relevant k,
-            we must find each (t,l) pair with those bounds and l*t == k.
-            
-            2 <= l <= sqrt(N/t)
-            4 <= l^2 <= N/t
-            4 <= l * (l*t) <= N
-            4 <= l * k <= N
-            4/k <= l <= N/k
-            1 <= l <= N/k
-            2 <= l <= N/k
-            
-            k: N^(1/2) ... N^(2/3)
-            
-            lmax: N^(1/2) ... N^(1/3)
-            
-            t <= N / l^2
-            
-            tmax: N^(0) ... N^(1/3)
-            
-            For a given k, the only contributing (t,l) pairs are those arising from its factorization.
-            
-            
-            """
             Mover[v] = mert
             Y += v * mert
             s -= 1
@@ -1466,13 +1441,6 @@ def totientsum14(N):
         for l in range(2, vr+1):
             k = v // l                      # N // (t * l)
             if k > Nr: Mv -= Mover[l*t]     # Mover[N//k]; Mertens(k)   # TODO: Put this bit in phase 1.
-            """
-            Mv -= Mertens(N//(l*t))
-            Mover[t] -= Mertens(N//(l*t))
-            k == N // (t * l)
-            t * l == N // k
-            t == N // (k * l)
-            """
             #else: Mv -= M[k]               # This bit is handled in phase 1.
         
         Mover[t] += Mv
