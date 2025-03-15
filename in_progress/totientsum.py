@@ -1268,6 +1268,218 @@ def totientsum13(N):
 
 
 
+def totientsum14(N):
+    """
+    Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
+    
+    By using the Dirichlet hyperbola method on phi = Id * mu, we obtain
+        totientsum(N) == X + Y - Z,
+    where
+        X == sum(mu(x) * binomial(N//x + 1, 2), 1 <= x <= Nr)
+        Y == sum(y * Mertens(N//y), 1 <= y <= Nr)
+        Z == Mertens(Nr) * binomial(Nr + 1, 2)
+        Nr == isqrt(N)
+    This calls for an efficient way to compute all those Mertens values.
+    
+    Mertens(n) gets computed for n in three intervals: 1 <= n <= Nr, Nr < n < a, and a <= n <= N.
+    We call these the low-argument, medium-argument, and high-argument intervals, respectively.
+    
+    Note that we need only O(sqrt(n)) Mertens values: we need Mertens(i) and Mertens(N/i) for 1 <= i <= Nr.
+    
+    To compute the low-argument values, we sieve the Mobius function and accumulate the results into an array M.
+    To compute the medium-argument values, we continue the sieve, but only store those Mertens values whose arguments are of
+    the form N/i for some integer i.
+    For the high-argument values, we use the formula
+        M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(i) * (j//i) + M(j//i), 2 <= i <= sqrt(j))
+    The medium- and high-argument Mertens values get stored in an array Mover, in which Mertens(n) is stored as Mover[N//n].
+    
+    The basic way to proceed is to  initialize at the start three arrays: one for Mobius values (which are only needed up to
+    argument Nr), one for low-argument Mertens values, and one for medium- and high-argument Mertens values.  Each array stores
+    about sqrt(N) integers.  Once all the Mertens values are computed, we can then evaluate the X-, Y-, and Z-formulas.
+    
+    The first modification to this procedure is to evaluate X while we sieve: we initialize X = 0 at the start of the procedure,
+    and then as soon as mu(x) is computed, we add mu(x) * binomial(N//x + 1, 2) to X until all terms of the formula are done.
+    
+    The second modification is to evaluate Z once the sieve reaches index Nr.
+    
+    At this point, we still need to store the Mobius values for use in evaluating Y: for each j, the formula for Mertens(j)
+    requires mu(i) for all 2 <= i <= sqrt(j).  This can be handled during the low-argument sieving phase by, once the sieve has
+    produced mu(i), subtracting mu(i) * ((N//i)//t) from Mover[t] for each high-argument t.
+    
+    At this point, we no longer need to store the array of Mobius values.  We still have both of the arrays of Mertens values.
+    
+    We can also get away with not storing the low-argument Mertens values by handling them during the low-argument sieving phase
+    as well: as soon as a low-argument Mertens value is computed by the sieve, we apply it to all high-argument Mertens values
+    that require it.  For the "1 - j + isqrt(j) * M(sqrt(j))" part, this is trivial.  The "sum(M(j//i))" part requires some
+    additional care; doing it naively breaks the clock by slowing the algorithm down to O(N^(5/6)), but assembling a batch of
+    O(N^(1/3)) contiguous Mertens values and then processing them all at once fixes this.
+    
+    We have now brought the memory requirements for the low-argument phase down to O(N^(1/3)).  It remains to reduce the memory
+    requirements for the medium- and high-argument phases.
+    
+     applying them to the high-argument Mertens values
+    that require them, as soon as they are computed.  
+     moving their terms into phase 1 as well.
+    
+    THe optimal choice for a turns out to be about (N / log(log(n))) ^ (2/3).
+    
+    The time  complexity is O(N^(2/3) * log(log(N))^(1/3)).
+    The space compelxity is O(N^(1/2)), dominated by the arrays that store Mertens values.
+    """                                             # TODO: Can the space complexity be brought down without breaking the clock?
+    
+    z = time()
+    
+    print("           N:", N)
+    print("    log10(N):", log10(N))
+    Nr = isqrt(N)
+    print("    isqrt(N):", Nr)
+    print(" N//isqrt(N):", N//Nr)
+    print("int(N^(2/3)):", introot(N**2, 3))
+    print(" log(log(N)):", log(log(N)))
+    a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
+    print("           a:", a)
+    Mover = [0] * (N//Nr + 1)  # For large n. Mertens(n) will be stored as Mover[N//n].
+    X, Y, Z = 0, 0, 0
+    
+    # We need to fill M and Mover with a bunch of Mertens values.
+    # First, we sieve the Mobius function up to a.
+    # Along the way, we compute the corresponding Mertens values and store those that go in M and Mover.
+    
+    s = Nr
+    Mkey1 = nextMkey = N // s
+    print(" Mover start:", nextMkey)
+    mert = 0
+    Na1 = N // (a+1)
+    
+    sqrtN = [0] + [isqrt(N//t) for t in range(1, Na1+1)]
+    
+    MertensBlock = []
+    MertensBlockStart = 1
+    MertensBlockSize = Na1  # TODO: Optimize.
+    
+    for (k, mu) in enumerate(mobiussieve(a+1), start=1):
+        mert += mu
+        v = N // k
+        
+        if k <= Nr:
+            
+            X += mu * (v * (v+1) // 2)
+            
+            # This bit morally belongs in phase 2, but doing it here lets us avoid storing an array of Mobius values.
+            if k > 1:
+                for t in range(1, min(v//k, Na1) + 1):
+                    Mover[t] -= mu * (v//t)
+            
+            # This bit also morally belongs in phase 2, but doing it here
+            # helps us avoid storing the array of low-argument Mertens values.
+            for t in range(N//(k+1)**2 + 1, min(Na1, N//k**2) + 1):
+                Mover[t] += 1 - (N//t) + mert * k
+            
+            # This bit also morally belongs in phase 2, but doing it here
+            # does the rest of the work to avoid storing the array of low-argument Mertens values.
+            # This is the "sum(M(j//i), 2 <= i <= sqrt(j))" part of the formula for M(j), for j//i <= Nr.
+            # For each 1 <= k <= Nr, we need to find all pairs (t,l) such that
+            # 1 <= t <= Na1    and    2 <= l <= isqrt(N//t)    and    k == N // (t*l).
+            # Doing this one k at a time takes O(N^(1/3)) time per k, which makes the whole algorithm O(N^(5/6))-ish.
+            # To avoid breaking the clock, we accumulate a block of consecutive Mertens values and process them all at once.
+            # To avoid breaking the target memory usage of O(N^(1/3))-ish, we use blocks of that size.
+            # TODO: Rewrite this bit to do less (re)allocation of MertensBlock.
+            MertensBlock.append(mert)
+            if len(MertensBlock) >= MertensBlockSize or k == Nr:
+                if k == Nr:
+                    Mover[N//Nr] = mert
+                    Z = mert * (Nr * (Nr + 1) // 2)
+                
+                for t in range(1, Na1 + 1):
+                    A = MertensBlockStart
+                    B = MertensBlockStart + len(MertensBlock)
+                    lmin = max(1, N // (B*t))
+                    #lmax = min(isqrt(N//t), N // (A*t))
+                    lmax = min(sqrtN[t], N // (A*t))
+                    for l in range(lmin+1, lmax+1):
+                        Ntl = N // (t*l)
+                        if A <= Ntl < B:
+                            Mover[t] -= MertensBlock[Ntl - MertensBlockStart]
+                MertensBlockStart += len(MertensBlock)
+                MertensBlock = []
+                
+        
+        if k == nextMkey:
+            """
+            For each (t,l) pair with 1 <= t <= Na1 and 2 <= l <= isqrt(N//t),
+            we subtract Mover[l*t] from Mover[t].  Therefore, for each relevant k,
+            we must find each (t,l) pair with those bounds.
+            
+            2 <= l <= sqrt(N/t)
+            4 <= l^2 <= N/t
+            4 <= l * (l*t) <= N
+            4 <= l * k <= N
+            4/k <= l <= N/k
+            1 <= l <= N/k
+            """
+            Mover[v] = mert
+            Y += v * mert
+            s -= 1
+            nextMkey = N // s
+            # We can early-exit this loop once we have reached the greatest N//s-value <= a.
+            if nextMkey > a:
+                phase2start = s
+                break
+    
+    # phase2start is the greatest integer s such that a < N // s.
+    assert N // (phase2start + 1) <= a < N // phase2start
+    assert phase2start == Na1
+    
+    # The X- and Z-formulas are now fully evaluated.
+    
+    print("%f" % (time() - z))
+    z = time()
+    
+    # We now compute the rest of the needed Mertens values up to N with the formula
+    # M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(i) * (j//i) + M(j//i), 2 <= i <= sqrt(j)).
+    
+    for t in range(phase2start, 0, -1):
+        v = N // t
+        vr = sqrtN[t] # isqrt(v)
+        Mv = 0
+        
+        #Mv += 1 - v + M[vr] * vr   # This bit is handled in phase 1.
+        
+        #for k in range(2, vr+1):   # This bit is handled in phase 1.
+        #    vk = v // k
+        #    Mv -= mobs[k] * vk
+        
+        for l in range(2, vr+1):
+            k = v // l                      # N // (t * l)
+            if k > Nr: Mv -= Mover[l*t]     # Mover[N//k]; Mertens(k)   # TODO: Put this bit in phase 1.
+            """
+            Mv -= Mertens(N//(l*t))
+            Mover[t] -= Mertens(N//(l*t))
+            k == N // (t * l)
+            t * l == N // k
+            t == N // (k * l)
+            """
+            #else: Mv -= M[k]               # This bit is handled in phase 1.
+        
+        Mover[t] += Mv
+        # Mover[t] is now Mertens(v).
+        Y += t * Mover[t]
+    
+    print("%f" % (time() - z))
+    
+    return X + Y - Z
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1314,8 +1526,9 @@ for n in chain(randos, numbers) if len(argv) == 1 else [int(argv[1])]:
                #totientsum9, \
                #totientsum10, \
                #totientsum11, \
-               totientsum12, \
+               #totientsum12, \
                totientsum13, \
+               totientsum14, \
               )
     answers = []
     for m in methods:
