@@ -1412,10 +1412,12 @@ def totientsum14(N):
             we must find each (t,l) pair with those bounds and l*t == k.
             
             2 <= l <= sqrt(N/t)
-            2 <= l <= sqrt(N/(k/l))
-            2 <= l <= sqrt(N*l/k)
-            4 <= l^2 <= N*l/k
-            4 <= l <= N/k
+            4 <= l^2 <= N/t
+            4 <= l * (l*t) <= N
+            4 <= l * k <= N
+            4/k <= l <= N/k
+            1 <= l <= N/k
+            2 <= l <= N/k
             """
             Mover[v] = mert
             Y += v * mert
