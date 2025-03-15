@@ -1418,6 +1418,18 @@ def totientsum14(N):
             4/k <= l <= N/k
             1 <= l <= N/k
             2 <= l <= N/k
+            
+            k: N^(1/2) ... N^(2/3)
+            
+            lmax: N^(1/2) ... N^(1/3)
+            
+            t <= N / l^2
+            
+            tmax: N^(0) ... N^(1/3)
+            
+            For a given k, the only contributing (t,l) pairs are those arising from its factorization.
+            
+            
             """
             Mover[v] = mert
             Y += v * mert
