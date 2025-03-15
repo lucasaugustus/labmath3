@@ -1083,13 +1083,13 @@ def totientsum13(N):
     Mertens(n) gets computed for n in three intervals: 1 <= n <= Nr, Nr < n < a, and a <= n <= N.
     We call these the low-argument, medium-argument, and high-argument intervals, respectively.
     
-    Note that we need only O(sqrt(n)) Mertens values: we need Mertens(k) and Mertens(N/k) for 1 <= k <= Nr.
+    Note that we need only O(sqrt(n)) Mertens values: we need Mertens(i) and Mertens(N/i) for 1 <= i <= Nr.
     
     To compute the low-argument values, we sieve the Mobius function and accumulate the results into an array M.
     To compute the medium-argument values, we continue the sieve, but only store those Mertens values whose arguments are of
-    the form N/k for some integer k.
+    the form N/i for some integer i.
     For the high-argument values, we use the formula
-        M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(k) * (j//k) + M(j//k), 2 <= k <= sqrt(j))
+        M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(i) * (j//i) + M(j//i), 2 <= i <= sqrt(j))
     The medium- and high-argument Mertens values get stored in an array Mover, in which Mertens(n) is stored as Mover[N//n].
     
     The basic way to proceed is to  initialize at the start three arrays: one for Mobius values (which are only needed up to
@@ -1102,14 +1102,14 @@ def totientsum13(N):
     The second modification is to evaluate Z once the sieve reaches index Nr.
     
     At this point, we still need to store the Mobius values for use in evaluating Y: for each j, the formula for Mertens(j)
-    requires mu(k) for all 2 <= k <= sqrt(j).  This can be handled during the low-argument sieving phase by, once the sieve has
-    produced mu(k), subtracting mu(k) * ((N//k)//t) from Mover[t] for each high-argument t.
+    requires mu(i) for all 2 <= i <= sqrt(j).  This can be handled during the low-argument sieving phase by, once the sieve has
+    produced mu(i), subtracting mu(i) * ((N//i)//t) from Mover[t] for each high-argument t.
     
     At this point, we no longer need to store the array of Mobius values.  We still have both of the arrays of Mertens values.
     
     We can also get away with not storing the low-argument Mertens values by handling them during the low-argument sieving phase
     as well: as soon as a low-argument Mertens value is computed by the sieve, we apply it to all high-argument Mertens values
-    that require it.  For the "1 - j + isqrt(j) * M(sqrt(j))" part, this is trivial.  The "sum(M(j//k))" part requires some
+    that require it.  For the "1 - j + isqrt(j) * M(sqrt(j))" part, this is trivial.  The "sum(M(j//i))" part requires some
     additional care; doing it naively breaks the clock by slowing the algorithm down to O(N^(5/6)), but assembling a batch of
     O(N^(1/3)) contiguous Mertens values and then processing them all at once fixes this.
     
@@ -1177,7 +1177,7 @@ def totientsum13(N):
             
             # This bit also morally belongs in phase 2, but doing it here
             # does the rest of the work to avoid storing the array of low-argument Mertens values.
-            # This is the "sum(M(j//k), 2 <= k <= sqrt(j))" part of the formula for M(j), for j//k <= Nr.
+            # This is the "sum(M(j//i), 2 <= i <= sqrt(j))" part of the formula for M(j), for j//i <= Nr.
             # For each 1 <= k <= Nr, we need to find all pairs (t,l) such that
             # 1 <= t <= Na1    and    2 <= l <= isqrt(N//t)    and    k == N // (t*l).
             # Doing this one k at a time takes O(N^(1/3)) time per k, which makes the whole algorithm O(N^(5/6))-ish.
@@ -1205,9 +1205,9 @@ def totientsum13(N):
                 
         
         elif k == nextMkey:
-            # This is the "sum(M(j//k), 2 <= k <= sqrt(j))" part of the formula for M(j), for Nr < j//k < a.        TODO
-            # M( j  ) -= sum( M(   j//k   ), 2 <= k <= sqrt( j  ))
-            # M(N//t) -= sum( M( N//(t*k) ), 2 <= k <= sqrt(N//t))
+            # This is the "sum(M(j//i), 2 <= i <= sqrt(j))" part of the formula for M(j), for Nr < j//i < a.        TODO
+            # M( j  ) -= sum( M(   j//i   ), 2 <= i <= sqrt( j  ))
+            # M(N//t) -= sum( M( N//(t*i) ), 2 <= i <= sqrt(N//t))
             Mover[v] = mert
             Y += v * mert
             s -= 1
@@ -1230,7 +1230,7 @@ def totientsum13(N):
     z = time()
     
     # We now compute the rest of the needed Mertens values up to N with the formula
-    # M(v) == 1 - v + isqrt(v) * M(sqrt(v)) - sum(mu(k) * (v//k) + M(v//k), 2 <= k <= sqrt(v)).
+    # M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(i) * (j//i) + M(j//i), 2 <= i <= sqrt(j)).
     
     for t in range(phase2start, 0, -1):
         v = N // t
