@@ -1205,9 +1205,6 @@ def totientsum13(N):
                 
         
         elif k == nextMkey:
-            # This is the "sum(M(j//i), 2 <= i <= sqrt(j))" part of the formula for M(j), for Nr < j//i < a.        TODO
-            # M( j  ) -= sum( M(   j//i   ), 2 <= i <= sqrt( j  ))
-            # M(N//t) -= sum( M( N//(t*i) ), 2 <= i <= sqrt(N//t))
             Mover[v] = mert
             Y += v * mert
             s -= 1
