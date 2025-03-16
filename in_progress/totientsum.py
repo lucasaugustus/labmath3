@@ -1627,8 +1627,10 @@ def totientsum15(N):
         vr = sqrtN[t] # isqrt(v)
         Mv = 0
         
-        for l in range(max(2, phase2start//t+1), vr+1):
-            if v//l > Nr: Mv -= Mover[l*t]
+        for l in range(2, vr+1):
+            if l*t > phase2start:
+                if v//l > Nr:
+                    Mv -= Mover[l*t]
         
         Mover[t] += Mv
     
@@ -1640,9 +1642,10 @@ def totientsum15(N):
         vr = sqrtN[t] # isqrt(v)
         Mv = 0
         
-        for l in range(2, min(vr, phase2start//t) +1):
-            #k = v // l                      # N // (t * l)
-            if v//l > Nr: Mv -= Mover[l*t]     # Mover[N//k]; Mertens(k)
+        for l in range(2, vr+1):
+            if l*t <= phase2start:
+                if v//l > Nr:
+                    Mv -= Mover[l*t]
         
         Mover[t] += Mv
         # Mover[t] is now Mertens(v).
