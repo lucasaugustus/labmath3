@@ -1128,15 +1128,17 @@ def totientsum13(N):
     
     z = time()
     
-    print("           N:", N)
-    print("    log10(N):", log10(N))
+    if verbose: print("           N:", N)
+    if verbose: print("      log(N):", log(N))
+    if verbose: print("     log2(N):", log2(N))
+    if verbose: print("    log10(N):", log10(N))
     Nr = isqrt(N)
-    print("    isqrt(N):", Nr)
-    print(" N//isqrt(N):", N//Nr)
-    print("int(N^(2/3)):", introot(N**2, 3))
-    print(" log(log(N)):", log(log(N)))
+    if verbose: print("    isqrt(N):", Nr)
+    if verbose: print(" N//isqrt(N):", N//Nr)
+    if verbose: print("int(N^(2/3)):", introot(N**2, 3))
+    if verbose: print(" log(log(N)):", log(log(N)))
     a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
-    print("           a:", a)
+    if verbose: print("           a:", a)
     Mover = [0] * (N//Nr + 1)  # For large n. Mertens(n) will be stored as Mover[N//n].
     X, Y, Z = 0, 0, 0
     
@@ -1146,7 +1148,7 @@ def totientsum13(N):
     
     s = Nr - (Nr == N//Nr)
     Mkey1 = nextMkey = N // s
-    print(" Mover start:", nextMkey)
+    if verbose: print(" Mover start:", nextMkey)
     mert = 0
     Na1 = N // (a+1)
     
@@ -1223,8 +1225,9 @@ def totientsum13(N):
     # The term Nr * Mover[Nr] from Y is sometimes not caught in phase 1.
     if N // Nr != Mkey1: Y += Nr * Mover[Nr]
     
-    print("%f" % (time() - z))
-    z = time()
+    if verbose:
+        print("%f" % (time() - z))
+        z = time()
     
     # We now compute the rest of the needed Mertens values up to N with the formula
     # M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(i) * (j//i) + M(j//i), 2 <= i <= sqrt(j)).
@@ -1256,7 +1259,8 @@ def totientsum13(N):
         # Mover[t] is now Mertens(v).
         Y += t * Mover[t]
     
-    print("%f" % (time() - z))
+    if verbose:
+        print("%f" % (time() - z))
     
     return X + Y - Z
 
@@ -1330,15 +1334,17 @@ def totientsum14(N):
     
     z = time()
     
-    print("           N:", N)
-    print("    log10(N):", log10(N))
+    if verbose: print("           N:", N)
+    if verbose: print("      log(N):", log(N))
+    if verbose: print("     log2(N):", log2(N))
+    if verbose: print("    log10(N):", log10(N))
     Nr = isqrt(N)
-    print("    isqrt(N):", Nr)
-    print(" N//isqrt(N):", N//Nr)
-    print("int(N^(2/3)):", introot(N**2, 3))
-    print(" log(log(N)):", log(log(N)))
+    if verbose: print("    isqrt(N):", Nr)
+    if verbose: print(" N//isqrt(N):", N//Nr)
+    if verbose: print("int(N^(2/3)):", introot(N**2, 3))
+    if verbose: print(" log(log(N)):", log(log(N)))
     a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
-    print("           a:", a)
+    if verbose: print("           a:", a)
     Mover = [0] * (N//Nr + 1)  # For large n. Mertens(n) will be stored as Mover[N//n].
     X, Y, Z = 0, 0, 0
     
@@ -1348,7 +1354,7 @@ def totientsum14(N):
     
     s = Nr
     Mkey1 = nextMkey = N // s
-    print(" Mover start:", nextMkey)
+    if verbose: print(" Mover start:", nextMkey)
     mert = 0
     Na1 = N // (a+1)
     
@@ -1421,8 +1427,9 @@ def totientsum14(N):
     
     # The X- and Z-formulas are now fully evaluated.
     
-    print("%f" % (time() - z))
-    z = time()
+    if verbose:
+        print("%f" % (time() - z))
+        z = time()
     
     # We now compute the rest of the needed Mertens values up to N with the formula
     # M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(i) * (j//i) + M(j//i), 2 <= i <= sqrt(j)).
@@ -1447,7 +1454,8 @@ def totientsum14(N):
         # Mover[t] is now Mertens(v).
         Y += t * Mover[t]
     
-    print("%f" % (time() - z))
+    if verbose:
+        print("%f" % (time() - z))
     
     if DEBUG:
         print(Mover)
@@ -1525,15 +1533,17 @@ def totientsum15(N):
     
     z = time()
     
-    print("           N:", N)
-    print("    log10(N):", log10(N))
+    if verbose: print("           N:", N)
+    if verbose: print("      log(N):", log(N))
+    if verbose: print("     log2(N):", log2(N))
+    if verbose: print("    log10(N):", log10(N))
     Nr = isqrt(N)
-    print("    isqrt(N):", Nr)
-    print(" N//isqrt(N):", N//Nr)
-    print("int(N^(2/3)):", introot(N**2, 3))
-    print(" log(log(N)):", log(log(N)))
+    if verbose: print("    isqrt(N):", Nr)
+    if verbose: print(" N//isqrt(N):", N//Nr)
+    if verbose: print("int(N^(2/3)):", introot(N**2, 3))
+    if verbose: print(" log(log(N)):", log(log(N)))
     a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
-    print("           a:", a)
+    if verbose: print("           a:", a)
     Mover = [0] * (N//Nr + 1)  # For large n. Mertens(n) will be stored as Mover[N//n].
     X, Y, Z = 0, 0, 0
     
@@ -1543,7 +1553,7 @@ def totientsum15(N):
     
     s = Nr
     Mkey1 = nextMkey = N // s
-    print(" Mover start:", nextMkey)
+    if verbose: print(" Mover start:", nextMkey)
     mert = 0
     Na1 = N // (a+1)
     
@@ -1603,6 +1613,41 @@ def totientsum15(N):
         if k == nextMkey:
             Mover[v] = mert
             Y += v * mert
+            
+            
+            
+            
+            """
+            We need to find all pairs (l,t) of integers such that
+            
+            (1):    k == N // (l*t)         (and therefore Mover[l*t] == Mertens(k) == mert)
+            (2):    1 <= t <= phase2start
+            (3):    v == N // t
+            (4):    vr == isqrt(v)
+            (5):    2 <= l <= vr
+            (6):    l*t > phase2start
+            (7):    v//l > Nr
+            
+            For each pair, we subtract Mover[l*t] from Mover[t].
+            
+            (1):    k <= N / (l*t) < k + 1
+            N / (t*(k+1)) < l <= N / (t*k)
+            N / (k+1) < l*t <= N/k
+            """
+            
+            for t in range(1, Na1+1):   # TODO: This loop breaks the clock.
+                for l in range(N // (t*(k+1)) + 1, N // (t*k) + 1):
+                    v = N // t
+                    vr = sqrtN[t]   # isqrt(v)
+                    if 2 <= l <= vr:
+                        if Na1 < l*t:
+                            if Nr < v // l:
+                                Mover[t] -= Mover[l*t]
+                                assert Mover[l*t] == mert
+            
+            
+            
+            
             s -= 1
             nextMkey = N // s
             # We can early-exit this loop once we have reached the greatest N//s-value <= a.
@@ -1616,12 +1661,14 @@ def totientsum15(N):
     
     # The X- and Z-formulas are now fully evaluated.
     
-    print("%f" % (time() - z))
-    z = time()
+    if verbose:
+        print("%f" % (time() - z))
+        z = time()
     
     # We now compute the rest of the needed Mertens values up to N with the formula
     # M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(i) * (j//i) + M(j//i), 2 <= i <= sqrt(j)).
     
+    """
     for t in range(phase2start, 0, -1): # TODO: Put this loop in phase 1.
         v = N // t
         vr = sqrtN[t] # isqrt(v)
@@ -1633,9 +1680,11 @@ def totientsum15(N):
                     Mv -= Mover[l*t]
         
         Mover[t] += Mv
+    #"""
     
-    print("%f" % (time() - z))
-    z = time()
+    if verbose:
+        print("%f" % (time() - z))
+        z = time()
     
     for t in range(phase2start, 0, -1):
         v = N // t
@@ -1651,7 +1700,8 @@ def totientsum15(N):
         # Mover[t] is now Mertens(v).
         Y += t * Mover[t]
     
-    print("%f" % (time() - z))
+    if verbose:
+        print("%f" % (time() - z))
     
     if DEBUG:
         print(Mover)
@@ -1682,25 +1732,51 @@ def totientsum15(N):
 
 
 
+methods = (#totientsum, \
+           #totientsum0, \
+           #totientsum1, \
+           #totientsum2, \
+           #totientsum3, \
+           #totientsum4, \
+           #totientsum5, \
+           #totientsum6, \
+           #totientsum7, \
+           #totientsum8, \
+           #totientsum9, \
+           #totientsum10, \
+           #totientsum11, \
+           #totientsum12, \
+           totientsum13, \
+           totientsum14, \
+           totientsum15, \
+          )
 
+if "testlow" in argv:
+    DEBUG = False
+    verbose = False
+    real_s = 0
+    for n in range(1, int(argv[2])):
+        t = totient(n)
+        real_s += t
+        if t < 5: continue
+        test_s = methods[-1](n)
+        print('\b'*42, n, real_s, test_s, end='', flush=True)
+        assert real_s == test_s
+    print()
+    exit()
 
-
-
-
-
-
-
-
+verbose = True
 
 if "DEBUG" in argv:
     args = [x for x in argv if x != "DEBUG"]
     DEBUG = True
+    
 else:
     args = argv
     DEBUG = False
 
-numbers = (2**30, 2**33, 2**34, 2**33 * 3, 10**10, 10**11)
-randos = [randrange(10**9, 10**11) for _ in range(5)]
+numbers = (2**30, 2**33, 2**34, 2**33 * 3, 10**10)#, 10**11)
+randos = [randrange(10**8, 10**10) for _ in range(5)]
 
 for n in chain(randos, numbers) if len(args) == 1 else [int(args[1])]:
     print()
@@ -1710,24 +1786,6 @@ for n in chain(randos, numbers) if len(args) == 1 else [int(args[1])]:
     print("N ==", n)
     print()
     print()
-    methods = (#totientsum, \
-               #totientsum0, \
-               #totientsum1, \
-               #totientsum2, \
-               #totientsum3, \
-               #totientsum4, \
-               #totientsum5, \
-               #totientsum6, \
-               #totientsum7, \
-               #totientsum8, \
-               #totientsum9, \
-               #totientsum10, \
-               #totientsum11, \
-               #totientsum12, \
-               totientsum13, \
-               totientsum14, \
-               totientsum15, \
-              )
     answers = []
     for m in methods:
         print(m.__name__)
