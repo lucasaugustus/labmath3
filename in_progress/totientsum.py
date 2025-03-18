@@ -1863,40 +1863,69 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
             s -= 1
             nextMkey = N // s
             
-            """
-            We need to find all pairs (l,t) of integers such that
+            if False:   # This is the one-mert-at-a-time option, and works, but it breaks the clock.
+                """
+                We need to find all pairs (l,t) of integers such that
+                
+                (1):    k == N // (l*t)         (and therefore Mover[l*t] == Mertens(k) == mert)
+                (2):    1 <= t <= phase2start
+                (3):    v == N // t
+                (4):    vr == isqrt(v)
+                (5):    2 <= l <= vr
+                (6):    l*t > phase2start
+                (7):    v//l > Nr
+                
+                For each pair, we subtract Mover[l*t] from Mover[t].
+                
+                (1):    k <= N / (l*t) < k + 1
+                N / (t*(k+1)) < l <= N / (t*k)
+                N / (k+1) < l*t <= N/k
+                """
+                
+                for t in range(1, Na1+1):                                                    # TODO: This loop breaks the clock.
+                    for l in range(N // (t*(k+1)) + 1, N // (t*k) + 1):
+                        v = N // t
+                        vr = sqrtN[t]   # isqrt(v)
+                        if 2 <= l <= vr:
+                            if Na1 < l*t:
+                                if Nr < v // l:
+                                    Mover[t] -= mert
             
-            (1):    k == N // (l*t)         (and therefore Mover[l*t] == Mertens(k) == mert)
-            (2):    1 <= t <= phase2start
-            (3):    v == N // t
-            (4):    vr == isqrt(v)
-            (5):    2 <= l <= vr
-            (6):    l*t > phase2start
-            (7):    v//l > Nr
-            
-            For each pair, we subtract Mover[l*t] from Mover[t].
-            
-            (1):    k <= N / (l*t) < k + 1
-            N / (t*(k+1)) < l <= N / (t*k)
-            N / (k+1) < l*t <= N/k
-            """
-            
-            #"""
-            for t in range(1, Na1+1):                                                        # TODO: This loop breaks the clock.
-                for l in range(N // (t*(k+1)) + 1, N // (t*k) + 1):
-                    v = N // t
-                    vr = sqrtN[t]   # isqrt(v)
-                    if 2 <= l <= vr:
-                        if Na1 < l*t:
-                            if Nr < v // l:
-                                Mover[t] -= mert
-            #"""
-            if len(MertensBlock) >= MertensBlockSize or nextMkey > a:
-                for r in range(MertensBlockStart, MertensBlockStart - len(MertensBlock), -1):
-                    assert MertensBlock[MertensBlockStart - r] == mertens(N//r)
-                    #MBidx   0           1               2               ...     
-                    #r       start       start-1         start-2         ...     
-                    #Realidx N//start    N//(start-1)    N//(start-2)    ...     
+            elif len(MertensBlock) >= MertensBlockSize or nextMkey > a: # This is the batching option.  It does not work.
+                A = MertensBlockStart
+                B = MertensBlockStart - len(MertensBlock)
+                
+                for r in range(A, B, -1): assert MertensBlock[A - r] == mertens(N//r)
+                
+                """
+                We need to find all pairs (l,t) of integers such that
+                (0):    B < j <= A
+                (1):    j == N // (l*t)         (and therefore Mover[l*t] == Mertens(j))
+                (2):    1 <= t <= Na1
+                (3):    v == N // t
+                (4):    vr = isqrt(v)
+                (5):    2 <= l <= vr
+                (6):    Na1 < l*t
+                (7):    Nr < v//l
+                
+                For each pair, we subtract Mover[l*t] from Mover[t]... except, Mover[l*t] is instead stored in MertensBlock.
+                Mover[l*t] == Mertens(N // (l*t))
+                MertensBlock[A - l*t] == mertens(N // (l*t))
+                
+                (1):    j <= N / (l*t) < j + 1
+                        B < N / (l*t) < A + 1
+                        1 / (A+1) < l*t / N < 1 / B
+                        N / (t*(A+1)) < l < N / (t*B)
+                """
+                
+                for t in range(1, Na1+1):
+                    for l in range(N // (t*(A+1)) + 1, N // (t*B)):
+                        v = N // t
+                        vr = sqrtN[t]   # isqrt(v)
+                        if 2 <= l <= vr:
+                            if Na1 < l*t:
+                                if Nr < v // l:
+                                    Mover[t] -= MertensBlock[A - l*t]
                 
                 # TODO: Batch-process MertensBlock here.
                 
