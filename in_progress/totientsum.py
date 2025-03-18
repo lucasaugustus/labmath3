@@ -1775,7 +1775,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
     
     The time  complexity is O(N^(2/3) * log(log(N))^(1/3)).
     The space compelxity is O(N^(1/2)), dominated by the arrays that store Mertens values.
-    """                                             # TODO: Can the space complexity be brought down without breaking the clock?
+    """
     
     z = time()
     
@@ -1838,10 +1838,6 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
             # TODO: Rewrite this bit to do less (re)allocation of MertensBlock.
             MertensBlock.append(mert)
             if len(MertensBlock) >= MertensBlockSize or k == Nr:
-                if k == Nr:
-                    #Mover[N//Nr] = mert
-                    Z = mert * (Nr * (Nr + 1) // 2)
-                
                 for t in range(1, Na1 + 1):
                     A = MertensBlockStart
                     B = MertensBlockStart + len(MertensBlock)
@@ -1855,12 +1851,17 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 MertensBlockStart += len(MertensBlock)
                 MertensBlock = []
                 
+                if k == Nr:
+                    #Mover[N//Nr] = mert
+                    Z = mert * (Nr * (Nr + 1) // 2)
+                    MertensBlockStart = s
         
         if k == nextMkey:
+            MertensBlock.append(mert)
+            #assert MertensBlock[-1] == mertens(N // s)
             Y += v * mert
-            
-            
-            
+            s -= 1
+            nextMkey = N // s
             
             """
             We need to find all pairs (l,t) of integers such that
@@ -1880,6 +1881,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
             N / (k+1) < l*t <= N/k
             """
             
+            #"""
             for t in range(1, Na1+1):                                                        # TODO: This loop breaks the clock.
                 for l in range(N // (t*(k+1)) + 1, N // (t*k) + 1):
                     v = N // t
@@ -1888,12 +1890,22 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                         if Na1 < l*t:
                             if Nr < v // l:
                                 Mover[t] -= mert
+            #"""
+            if len(MertensBlock) >= MertensBlockSize or nextMkey > a:
+                for r in range(MertensBlockStart, MertensBlockStart - len(MertensBlock), -1):
+                    assert MertensBlock[MertensBlockStart - r] == mertens(N//r)
+                    #MBidx   0           1               2               ...     
+                    #r       start       start-1         start-2         ...     
+                    #Realidx N//start    N//(start-1)    N//(start-2)    ...     
+                
+                # TODO: Batch-process MertensBlock here.
+                
+                MertensBlock = []
+                MertensBlockStart = s
+            #"""
             
             
             
-            
-            s -= 1
-            nextMkey = N // s
             # We can early-exit this loop once we have reached the greatest N//s-value <= a.
             if nextMkey > a:
                 phase2start = s
@@ -1916,7 +1928,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
         vr = sqrtN[t] # isqrt(v)
         Mv = 0
         
-        for l in range(2, vr+1):
+        for l in range(2, vr+1):                # TODO: Optimize this loop.
             if l*t <= phase2start:
                 if v//l > Nr:
                     Mv -= Mover[l*t]
