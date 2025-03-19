@@ -1904,7 +1904,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 
                 """
                 We need to find all pairs (l,t) of integers such that
-                (0):    B < j <= A
+                (0):    B < l*t <= A
                 (1):    j == N // (l*t)         (and therefore Mover[l*t] == Mertens(j))
                 (2):    1 <= t <= Na1
                 (3):    v == N // t
@@ -1917,24 +1917,36 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 Mover[l*t] == Mertens(N // (l*t))
                 MertensBlock[A - l*t] == mertens(N // (l*t))
                 
-                (1):    j <= N / (l*t) < j + 1
-                        B < N / (l*t) < A + 1
-                        1 / (A+1) < l*t / N < 1 / B
-                        N / (t*(A+1)) < l < N / (t*B)
+                B < l*t <= A
+                B/t < l <= A/t
+                
+                2 <= l <= vr
+                
+                Na1 < l*t
+                Na1/t < l
+                
+                Nr < v // l
+                If v / l is an integer, then Nr <= v / l - 1, so l <= v / (Nr + 1).
+                If not, then Nr < v / l - 1, so l < v / (Nr + 1).
                 """
                 
                 for t in range(1, Na1+1):
                     v = N // t
                     vr = sqrtN[t]   # isqrt(v)
-                    #for l in range(N // (t*(A+1)) - 1, N // (t*B) + 1):
-                    for l in range(2, vr+1):
-                        j = N // (l*t)
-                        if B < j <= A:
-                            if 2 <= l <= vr:
-                                if Na1 < l*t:
-                                    if Nr < v // l:
-                                        #assert MertensBlock[A - l*t] == mertens(N // (l*t))
-                                        Mover[t] -= MertensBlock[A - l*t]
+                    #for l in range(2, vr+1):
+                    #    if B < l*t <= A:
+                    #        if 2 <= l <= vr:
+                    #            if Na1 < l*t:
+                    #                if Nr < v // l:
+                    #                    #assert MertensBlock[A - l*t] == mertens(N // (l*t))
+                    #                    Mover[t] -= MertensBlock[A - l*t]
+                    
+                    lmin = max(B//t + 1, 2, Na1//t + 1)
+                    lmax = min(A//t, vr)
+                    for l in range(lmin, lmax+1):
+                        if Nr >= v // l: break
+                        Mover[t] -= MertensBlock[A - l*t]
+                    
                 
                 # TODO: Batch-process MertensBlock here.
                 
@@ -2010,7 +2022,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
 
 
 
-methods = (totientsum, \
+methods = (#totientsum, \
            #totientsum0, \
            #totientsum1, \
            #totientsum2, \
@@ -2080,4 +2092,3 @@ for n in chain(randos, numbers) if len(args) == 1 else [int(args[1])]:
 
     for a in answers: print(a)
     assert len(set(answers)) == 1
-
