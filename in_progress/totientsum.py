@@ -2010,6 +2010,237 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
 
 
 
+def totientsum17(N):    # Huzzah!
+    """
+    Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
+    
+    By using the Dirichlet hyperbola method on phi = Id * mu, we obtain
+        totientsum(N) == X + Y - Z,
+    where
+        X == sum(mu(x) * binomial(N//x + 1, 2), 1 <= x <= Nr)
+        Y == sum(y * Mertens(N//y), 1 <= y <= Nr)
+        Z == Mertens(Nr) * binomial(Nr + 1, 2)
+        Nr == isqrt(N)
+    This calls for an efficient way to compute all those Mertens values.
+    
+    Mertens(n) gets computed for n in three intervals: 1 <= n <= Nr, Nr < n < a, and a <= n <= N.
+    We call these the low-argument, medium-argument, and high-argument intervals, respectively.
+    
+    Note that we need only O(sqrt(n)) Mertens values: we need Mertens(i) and Mertens(N/i) for 1 <= i <= Nr.
+    
+    To compute the low-argument values, we sieve the Mobius function and accumulate the results into an array M.
+    To compute the medium-argument values, we continue the sieve, but only store those Mertens values whose arguments are of
+    the form N/i for some integer i.
+    For the high-argument values, we use the formula
+        M(j) == 1 - j + isqrt(j) * M(sqrt(j)) - sum(mu(i) * (j//i) + M(j//i), 2 <= i <= sqrt(j))
+    The medium- and high-argument Mertens values get stored in an array Mover, in which Mertens(n) is stored as Mover[N//n].
+    
+    The basic way to proceed is to  initialize at the start three arrays: one for Mobius values (which are only needed up to
+    argument Nr), one for low-argument Mertens values, and one for medium- and high-argument Mertens values.  Each array stores
+    about sqrt(N) integers.  Once all the Mertens values are computed, we can then evaluate the X-, Y-, and Z-formulas.
+    
+    The first modification to this procedure is to evaluate X while we sieve: we initialize X = 0 at the start of the procedure,
+    and then as soon as mu(x) is computed, we add mu(x) * binomial(N//x + 1, 2) to X until all terms of the formula are done.
+    
+    The second modification is to evaluate Z once the sieve reaches index Nr.
+    
+    At this point, we still need to store the Mobius values for use in evaluating Y: for each j, the formula for Mertens(j)
+    requires mu(i) for all 2 <= i <= sqrt(j).  This can be handled during the low-argument sieving phase by, once the sieve has
+    produced mu(i), subtracting mu(i) * ((N//i)//t) from Mover[t] for each high-argument t.
+    
+    At this point, we no longer need to store the array of Mobius values.  We still have both of the arrays of Mertens values.
+    
+    We can also get away with not storing the low-argument Mertens values by handling them during the low-argument sieving phase
+    as well: as soon as a low-argument Mertens value is computed by the sieve, we apply it to all high-argument Mertens values
+    that require it.  For the "1 - j + isqrt(j) * M(sqrt(j))" part, this is trivial.  The "sum(M(j//i))" part requires some
+    additional care; doing it naively breaks the clock by slowing the algorithm down to O(N^(5/6)), but assembling a batch of
+    O(N^(1/3)) contiguous Mertens values and then processing them all at once fixes this.
+    
+    We have now brought the memory requirements for the low-argument phase down to O(N^(1/3)).
+    The medium-argument phase can be handled similarly.
+    The high-argument phase has now been reduced to a transformation on Mover, with the last terms of the Y-formula accumulated
+    along the way.
+    
+    The time  complexity is now O(N^(2/3))-ish.
+    The space complexity is now O(N^(1/3))-ish.  This is dominated by the array that stores the high-argument Mertens values.
+    the array that stores blocks of low- and medium-argument Mertens values, and the arrays internal to the Mobius siever.
+    All of these are O(N^(1/3))-ish.
+    """                                                         # TODO: Better explanation and more precise complexity analysis.
+    
+    checkpoint = time()
+    
+    if verbose: print("           N:", N)
+    if verbose: print("      log(N):", log(N))
+    if verbose: print("     log2(N):", log2(N))
+    if verbose: print("    log10(N):", log10(N))
+    Nr = isqrt(N)
+    if verbose: print("    isqrt(N):", Nr)
+    if verbose: print(" N//isqrt(N):", N//Nr)
+    if verbose: print("int(N^(2/3)):", introot(N**2, 3))
+    if verbose: print(" log(log(N)):", log(log(N)))
+    a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
+    if verbose: print("           a:", a)
+    if verbose: print("        N//a:", N//a)
+    X, Y, Z = 0, 0, 0
+    
+    # We need to fill M and Mover with a bunch of Mertens values.
+    # First, we sieve the Mobius function up to a.
+    # Along the way, we compute the corresponding Mertens values and store those that go in M and Mover.
+    
+    s = Nr
+    nextMkey = N // s
+    mert = 0
+    Na1 = N // (a+1)
+    if verbose: print("    N//(a+1):", Na1)
+    Mover = [0] * (Na1 + 1)  # For large n. Mertens(n) will be stored as Mover[N//n].
+    
+    MertensBlock = []
+    MertensBlockStart = 1
+    MertensBlockSize = Na1  # TODO: Optimize.
+    
+    for (k, mu) in enumerate(mobiussieve(a+1), start=1):
+        mert += mu
+        v = N // k
+        
+        if k <= Nr:
+            
+            X += mu * (v * (v+1) // 2)
+            
+            # This bit morally belongs in phase 2, but doing it here lets us avoid storing an array of Mobius values.
+            if k > 1:
+                for t in range(1, min(v//k, Na1) + 1):
+                    Mover[t] -= mu * (v//t)
+            
+            # This bit also morally belongs in phase 2, but doing it here
+            # helps us avoid storing the array of low-argument Mertens values.
+            for t in range(N//(k+1)**2 + 1, min(Na1, N//k**2) + 1):
+                Mover[t] += 1 - (N//t) + mert * k
+            
+            # This bit also morally belongs in phase 2, but doing it here
+            # does the rest of the work to avoid storing the array of low-argument Mertens values.
+            # This is the "sum(M(j//i), 2 <= i <= sqrt(j))" part of the formula for M(j), for j//i <= Nr.
+            # For each 1 <= k <= Nr, we need to find all pairs (t,l) such that
+            # 1 <= t <= Na1    and    2 <= l <= isqrt(N//t)    and    k == N // (t*l).
+            # Doing this one k at a time takes O(N^(1/3)) time per k, which makes the whole algorithm O(N^(5/6))-ish.
+            # To avoid breaking the clock, we accumulate a block of consecutive Mertens values and process them all at once.
+            # To avoid breaking the target memory usage of O(N^(1/3))-ish, we use blocks of that size.
+            # TODO: Rewrite this bit to do less (re)allocation of MertensBlock.
+            MertensBlock.append(mert)
+            if len(MertensBlock) >= MertensBlockSize or k == Nr:
+                for t in range(1, Na1 + 1):
+                    A = MertensBlockStart
+                    B = MertensBlockStart + len(MertensBlock)
+                    lmin = max(1, N // (B*t))
+                    lmax = min(isqrt(N//t), N // (A*t))
+                    for l in range(lmin+1, lmax+1):
+                        Ntl = N // (t*l)
+                        if A <= Ntl < B:
+                            Mover[t] -= MertensBlock[Ntl - A]
+                MertensBlockStart += len(MertensBlock)
+                MertensBlock = []
+                
+                if k == Nr:
+                    Z = mert * (Nr * (Nr + 1) // 2)
+                    MertensBlockStart = s
+                    
+                    if verbose:
+                        print("%f" % (time() - checkpoint))
+                        checkpoint = time()
+        
+        if k == nextMkey:
+            MertensBlock.append(mert)
+            #assert MertensBlock[-1] == mertens(N // s)
+            Y += v * mert
+            s -= 1
+            nextMkey = N // s
+            
+            if len(MertensBlock) >= MertensBlockSize or nextMkey > a:
+                A = MertensBlockStart
+                B = MertensBlockStart - len(MertensBlock)
+                
+                #for r in range(A, B, -1): assert MertensBlock[A - r] == mertens(N//r)
+                
+                """
+                We need to find all pairs (l,t) of integers such that
+                (0):    B < l*t <= A
+                (1):    j == N // (l*t)         (and therefore Mover[l*t] == Mertens(j))
+                (2):    1 <= t <= Na1
+                (3):    v == N // t
+                (4):    vr = isqrt(v)
+                (5):    2 <= l <= vr
+                (6):    phase2start < l*t
+                (7):    Nr < v // l
+                
+                For each pair, we subtract Mover[l*t] from Mover[t]... except, Mover[l*t] is instead stored in MertensBlock.
+                Mover[l*t] == Mertens(N // (l*t))
+                MertensBlock[A - l*t] == mertens(N // (l*t))
+                """
+                
+                for t in range(1, Na1+1):
+                    v = N // t
+                    lmin = max(B//t + 1, 2, Na1//t + 1)
+                    lmax = min(A//t, isqrt(v))
+                    for l in range(lmin, lmax+1):
+                        if Nr >= v // l: break
+                        Mover[t] -= MertensBlock[A - l*t]
+                
+                MertensBlock = []
+                MertensBlockStart = s
+            
+            
+            # We can early-exit this loop once we have reached the greatest N//s-value <= a.
+            if nextMkey > a:
+                phase2start = s
+                break
+    
+    if DEBUG:
+        print(Mover)
+    
+    # phase2start is the greatest integer s such that a < N // s.
+    assert N // (phase2start + 1) <= a < N // phase2start
+    assert phase2start == Na1
+    
+    # The X- and Z-formulas are now fully evaluated.
+    # The Mertens values up to a are fully evaluated.
+    # The remaining Mertens values have been partially evaluated.
+    
+    if verbose:
+        print("%f" % (time() - checkpoint))
+        checkpoint = time()
+    
+    for t in range(phase2start, 0, -1):
+        v = N // t
+        Mv = 0
+        
+        for l in range(2, isqrt(v)+1):                # TODO: Optimize this loop.
+            if l*t <= phase2start:
+                if v//l > Nr:
+                    Mv -= Mover[l*t]
+        
+        Mover[t] += Mv
+        # Mover[t] is now Mertens(v).
+        Y += t * Mover[t]
+    
+    if verbose:
+        print("%f" % (time() - checkpoint))
+    
+    if DEBUG:
+        print(Mover)
+        print([0] + [mertens(N//k) for k in range(1, Na1+1)])
+    
+    return X + Y - Z
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2039,7 +2270,8 @@ methods = (#totientsum, \
            #totientsum13, \
            #totientsum14, \
            #totientsum15, \
-           totientsum16, \
+           #totientsum16, \
+           totientsum17, \
           )
 
 if "testlow" in argv:
