@@ -2010,7 +2010,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
 
 
 
-def totientsum17(N):    # Huzzah!
+def totientsum17(N):                                                                                                   # Huzzah!
     """
     Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
     and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
@@ -2293,12 +2293,11 @@ verbose = True
 if "DEBUG" in argv:
     args = [x for x in argv if x != "DEBUG"]
     DEBUG = True
-    
 else:
     args = argv
     DEBUG = False
 
-numbers = (2**30, 2**33, 2**34, 2**33 * 3, 10**10)#, 10**11)
+numbers = (2**30, 2**33, 2**34, 2**33 * 3, 10**10, 10**11)
 randos = [randrange(10**8, 10**10) for _ in range(5)]
 
 for n in chain(randos, numbers) if len(args) == 1 else [int(args[1])]:
