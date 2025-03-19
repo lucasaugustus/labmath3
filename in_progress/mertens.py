@@ -138,4 +138,6 @@ def test_mertens():
         assert M == A084236[n], (n, M, A084236[n])
 
 #test_mertens()
-from sys import argv; print(mertens(int(argv[1])))
+if __name__ == "__main__":
+    from sys import argv
+    print(mertens(int(argv[1])))
