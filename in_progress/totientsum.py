@@ -1867,7 +1867,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
             s -= 1
             nextMkey = N // s
             
-            if True:   # This is the one-mert-at-a-time option, and works, but it breaks the clock.
+            if False:   # This is the one-mert-at-a-time option, and works, but it breaks the clock.
                 """
                 We need to find all pairs (l,t) of integers such that
                 
@@ -1893,6 +1893,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                         if 2 <= l <= vr:
                             if Na1 < l*t:
                                 if Nr < v // l:
+                                    #assert mert == mertens(N // (l*t))
                                     Mover[t] -= mert
             
             elif len(MertensBlock) >= MertensBlockSize or nextMkey > a: # This is the batching option.  It does not work.
@@ -1932,6 +1933,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                             if 2 <= l <= vr:
                                 if Na1 < l*t:
                                     if Nr < v // l:
+                                        #assert MertensBlock[A - l*t] == mertens(N // (l*t))
                                         Mover[t] -= MertensBlock[A - l*t]
                 
                 # TODO: Batch-process MertensBlock here.
