@@ -1777,7 +1777,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
     The space compelxity is O(N^(1/2)), dominated by the arrays that store Mertens values.
     """
     
-    z = time()
+    checkpoint = time()
     
     if verbose: print("           N:", N)
     if verbose: print("      log(N):", log(N))
@@ -1847,7 +1847,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                     for l in range(lmin+1, lmax+1):
                         Ntl = N // (t*l)
                         if A <= Ntl < B:
-                            Mover[t] -= MertensBlock[Ntl - MertensBlockStart]
+                            Mover[t] -= MertensBlock[Ntl - A]
                 MertensBlockStart += len(MertensBlock)
                 MertensBlock = []
                 
@@ -1855,6 +1855,10 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                     #Mover[N//Nr] = mert
                     Z = mert * (Nr * (Nr + 1) // 2)
                     MertensBlockStart = s
+                    
+                    if verbose:
+                        print("%f" % (time() - checkpoint))
+                        checkpoint = time()
         
         if k == nextMkey:
             MertensBlock.append(mert)
@@ -1863,7 +1867,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
             s -= 1
             nextMkey = N // s
             
-            if False:   # This is the one-mert-at-a-time option, and works, but it breaks the clock.
+            if True:   # This is the one-mert-at-a-time option, and works, but it breaks the clock.
                 """
                 We need to find all pairs (l,t) of integers such that
                 
@@ -1872,8 +1876,8 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 (3):    v == N // t
                 (4):    vr == isqrt(v)
                 (5):    2 <= l <= vr
-                (6):    l*t > phase2start
-                (7):    v//l > Nr
+                (6):    phase2start < l*t
+                (7):    Nr < v // l
                 
                 For each pair, we subtract Mover[l*t] from Mover[t].
                 
@@ -1883,9 +1887,9 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 """
                 
                 for t in range(1, Na1+1):                                                    # TODO: This loop breaks the clock.
+                    v = N // t
+                    vr = sqrtN[t]   # isqrt(v)
                     for l in range(N // (t*(k+1)) + 1, N // (t*k) + 1):
-                        v = N // t
-                        vr = sqrtN[t]   # isqrt(v)
                         if 2 <= l <= vr:
                             if Na1 < l*t:
                                 if Nr < v // l:
@@ -1895,7 +1899,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 A = MertensBlockStart
                 B = MertensBlockStart - len(MertensBlock)
                 
-                for r in range(A, B, -1): assert MertensBlock[A - r] == mertens(N//r)
+                #for r in range(A, B, -1): assert MertensBlock[A - r] == mertens(N//r)
                 
                 """
                 We need to find all pairs (l,t) of integers such that
@@ -1905,8 +1909,8 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 (3):    v == N // t
                 (4):    vr = isqrt(v)
                 (5):    2 <= l <= vr
-                (6):    Na1 < l*t
-                (7):    Nr < v//l
+                (6):    phase2start < l*t
+                (7):    Nr < v // l
                 
                 For each pair, we subtract Mover[l*t] from Mover[t]... except, Mover[l*t] is instead stored in MertensBlock.
                 Mover[l*t] == Mertens(N // (l*t))
@@ -1919,13 +1923,16 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 """
                 
                 for t in range(1, Na1+1):
-                    for l in range(N // (t*(A+1)) + 1, N // (t*B)):
-                        v = N // t
-                        vr = sqrtN[t]   # isqrt(v)
-                        if 2 <= l <= vr:
-                            if Na1 < l*t:
-                                if Nr < v // l:
-                                    Mover[t] -= MertensBlock[A - l*t]
+                    v = N // t
+                    vr = sqrtN[t]   # isqrt(v)
+                    #for l in range(N // (t*(A+1)) - 1, N // (t*B) + 1):
+                    for l in range(2, vr+1):
+                        j = N // (l*t)
+                        if B < j <= A:
+                            if 2 <= l <= vr:
+                                if Na1 < l*t:
+                                    if Nr < v // l:
+                                        Mover[t] -= MertensBlock[A - l*t]
                 
                 # TODO: Batch-process MertensBlock here.
                 
@@ -1940,6 +1947,9 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
                 phase2start = s
                 break
     
+    if DEBUG:
+        print(Mover)
+    
     # phase2start is the greatest integer s such that a < N // s.
     assert N // (phase2start + 1) <= a < N // phase2start
     assert phase2start == Na1
@@ -1949,8 +1959,8 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
     # The remaining Mertens values have been partially evaluated.
     
     if verbose:
-        print("%f" % (time() - z))
-        z = time()
+        print("%f" % (time() - checkpoint))
+        checkpoint = time()
     
     for t in range(phase2start, 0, -1):
         v = N // t
@@ -1967,11 +1977,11 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
         Y += t * Mover[t]
     
     if verbose:
-        print("%f" % (time() - z))
+        print("%f" % (time() - checkpoint))
     
     if DEBUG:
         print(Mover)
-        print([0] + [mertens(N//k) for k in range(1, N//Nr+1)])
+        print([0] + [mertens(N//k) for k in range(1, Na1+1)])
     
     return X + Y - Z
 
