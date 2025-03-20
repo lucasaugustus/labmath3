@@ -2104,24 +2104,21 @@ def totientsum17(N):                                                            
             
             X += mu * (v * (v+1) // 2)
             
-            # This bit morally belongs in phase 2, but doing it here lets us avoid storing an array of Mobius values.
             if k > 1:
-                for t in range(1, min(v//k, Na1) + 1):
+                for t in range(1, min(Na1, v//k) + 1):
                     Mover[t] -= mu * (v//t)
             
-            # This bit also morally belongs in phase 2, but doing it here
-            # helps us avoid storing the array of low-argument Mertens values.
-            for t in range(N//(k+1)**2 + 1, min(Na1, N//k**2) + 1):
+            for t in range(N//(k+1)**2 + 1, min(Na1, v//k) + 1):
                 Mover[t] += 1 - (N//t) + mert * k
             
-            # This bit also morally belongs in phase 2, but doing it here
-            # does the rest of the work to avoid storing the array of low-argument Mertens values.
-            # This is the "sum(M(j//i), 2 <= i <= sqrt(j))" part of the formula for M(j), for j//i <= Nr.
-            # For each 1 <= k <= Nr, we need to find all pairs (t,l) such that
-            # 1 <= t <= Na1    and    2 <= l <= isqrt(N//t)    and    k == N // (t*l).
-            # Doing this one k at a time takes O(N^(1/3)) time per k, which makes the whole algorithm O(N^(5/6))-ish.
-            # To avoid breaking the clock, we accumulate a block of consecutive Mertens values and process them all at once.
-            # To avoid breaking the target memory usage of O(N^(1/3))-ish, we use blocks of that size.
+            """
+            This is the "sum(M(j//i), 2 <= i <= sqrt(j))" part of the formula for M(j), for j//i <= Nr.
+            For each 1 <= k <= Nr, we need to find all pairs (t,l) such that
+            1 <= t <= Na1    and    2 <= l <= isqrt(N//t)    and    k == N // (t*l).
+            Doing this one k at a time takes O(N^(1/3)) time per k, which makes the whole algorithm O(N^(5/6))-ish.
+            To avoid breaking the clock, we accumulate a block of consecutive Mertens values and process them all at once.
+            To avoid breaking the target memory usage of O(N^(1/3))-ish, we use blocks of that size.
+            """
             # TODO: Rewrite this bit to do less (re)allocation of MertensBlock.
             MertensBlock.append(mert)
             if len(MertensBlock) >= MertensBlockSize or k == Nr:
@@ -2162,18 +2159,8 @@ def totientsum17(N):                                                            
                 
                 """
                 We need to find all pairs (l,t) of integers such that
-                (0):    B < l*t <= A
-                (1):    j == N // (l*t)         (and therefore Mover[l*t] == Mertens(j))
-                (2):    1 <= t <= Na1
-                (3):    w == N // t
-                (4):    wr = isqrt(w)
-                (5):    2 <= l <= wr
-                (6):    phase2start < l*t
-                (7):    Nr < w // l
-                
-                For each pair, we subtract Mover[l*t] from Mover[t]... except, Mover[l*t] is instead stored in MertensBlock.
-                Mover[l*t] == Mertens(N // (l*t))
-                MertensBlock[A - l*t] == mertens(N // (l*t))
+                B < l*t <= A   and   1 <= t <= Na1   and   2 <= l <= isqrt(N//t)   and   Na1 < l*t   and   Nr < N // (l*t).
+                For each pair, we subtract Mertens(N // (l*t)), stored as MertensBlock[A - l*t], from Mover[t].
                 """
                 
                 for t in range(1, Na1+1):
@@ -2262,7 +2249,7 @@ methods = (#totientsum, \
            #totientsum13, \
            #totientsum14, \
            #totientsum15, \
-           #totientsum16, \
+           totientsum16, \
            totientsum17, \
           )
 
