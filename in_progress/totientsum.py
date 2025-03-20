@@ -2013,9 +2013,6 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
 def totientsum17(N):                                                                                                   # Huzzah!
     if N < 10: return 0 if N < 0 else (0,1,2,4,6,10,12,18,22,28,32)[N]
     """
-    Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
-    and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
-    
     By using the Dirichlet hyperbola method on phi = Id * mu, we obtain
         totientsum(N) == X + Y - Z,
     where
@@ -2040,6 +2037,10 @@ def totientsum17(N):                                                            
     The basic way to proceed is to  initialize at the start three arrays: one for Mobius values (which are only needed up to
     argument Nr), one for low-argument Mertens values, and one for medium- and high-argument Mertens values.  Each array stores
     about sqrt(N) integers.  Once all the Mertens values are computed, we can then evaluate the X-, Y-, and Z-formulas.
+    
+    The algorithm described thus far is essentially that of https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
+    and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.  With some modifications by me, the memory usage
+    can be reduced from O(N^(1/2))-ish to O(N^(1/3))-ish.
     
     The first modification to this procedure is to evaluate X while we sieve: we initialize X = 0 at the start of the procedure,
     and then as soon as mu(x) is computed, we add mu(x) * binomial(N//x + 1, 2) to X until all terms of the formula are done.
