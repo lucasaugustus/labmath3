@@ -2069,36 +2069,32 @@ def totientsum17(N):                                                            
     All of these are O(N^(1/3))-ish.
     """                                                         # TODO: Better explanation and more precise complexity analysis.
     
-    checkpoint = time()
+    if verbose: checkpoint = time()
     
-    if verbose: print("           N:", N)
-    if verbose: print("      log(N):", log(N))
-    if verbose: print("     log2(N):", log2(N))
-    if verbose: print("    log10(N):", log10(N))
     Nr = isqrt(N)
-    if verbose: print("    isqrt(N):", Nr)
-    if verbose: print(" N//isqrt(N):", N//Nr)
-    if verbose: print("int(N^(2/3)):", introot(N**2, 3))
-    if verbose: print(" log(log(N)):", log(log(N)))
     a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
-    if verbose: print("           a:", a)
-    if verbose: print("        N//a:", N//a)
-    X, Y, Z = 0, 0, 0
-    
-    # We need to fill M and Mover with a bunch of Mertens values.
-    # First, we sieve the Mobius function up to a.
-    # Along the way, we compute the corresponding Mertens values and store those that go in M and Mover.
-    
+    Na1 = N // (a+1)
     s = Nr
     nextMkey = N // s
     mert = 0
-    Na1 = N // (a+1)
-    if verbose: print("    N//(a+1):", Na1)
     Mover = [0] * (Na1 + 1)  # For large n. Mertens(n) will be stored as Mover[N//n].
-    
     MertensBlock = []
     MertensBlockStart = 1
-    MertensBlockSize = Na1  # TODO: Optimize.
+    MertensBlockSize = Na1                                                                                     # TODO: Optimize.
+    X, Y, Z = 0, 0, 0
+    
+    if verbose:
+        print("           N:", N)
+        print("      log(N):", log(N))
+        print("     log2(N):", log2(N))
+        print("    log10(N):", log10(N))
+        print("    isqrt(N):", Nr)
+        print(" N//isqrt(N):", N//Nr)
+        print("int(N^(2/3)):", introot(N**2, 3))
+        print(" log(log(N)):", log(log(N)))
+        print("           a:", a)
+        print("        N//a:", N//a)
+        print("    N//(a+1):", Na1)
     
     for (k, mu) in enumerate(mobiussieve(a+1), start=1):
         mert += mu
@@ -2146,6 +2142,8 @@ def totientsum17(N):                                                            
                     MertensBlockStart = s
                     
                     if verbose:
+                        print("           X:", X)
+                        print("           Z:", Z)
                         print("%f" % (time() - checkpoint))
                         checkpoint = time()
         
@@ -2195,9 +2193,6 @@ def totientsum17(N):                                                            
                 phase2start = s
                 break
     
-    if DEBUG:
-        print(Mover)
-    
     # phase2start is the greatest integer s such that a < N // s.
     assert N // (phase2start + 1) <= a < N // phase2start
     assert phase2start == Na1
@@ -2223,11 +2218,8 @@ def totientsum17(N):                                                            
         Y += t * Mover[t]
     
     if verbose:
+        print("           Y:", Y)
         print("%f" % (time() - checkpoint))
-    
-    if DEBUG:
-        print(Mover)
-        print([0] + [mertens(N//k) for k in range(1, Na1+1)])
     
     return X + Y - Z
 
