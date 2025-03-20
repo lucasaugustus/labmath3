@@ -2165,11 +2165,11 @@ def totientsum17(N):                                                            
                 (0):    B < l*t <= A
                 (1):    j == N // (l*t)         (and therefore Mover[l*t] == Mertens(j))
                 (2):    1 <= t <= Na1
-                (3):    v == N // t
-                (4):    vr = isqrt(v)
-                (5):    2 <= l <= vr
+                (3):    w == N // t
+                (4):    wr = isqrt(w)
+                (5):    2 <= l <= wr
                 (6):    phase2start < l*t
-                (7):    Nr < v // l
+                (7):    Nr < w // l
                 
                 For each pair, we subtract Mover[l*t] from Mover[t]... except, Mover[l*t] is instead stored in MertensBlock.
                 Mover[l*t] == Mertens(N // (l*t))
@@ -2177,11 +2177,11 @@ def totientsum17(N):                                                            
                 """
                 
                 for t in range(1, Na1+1):
-                    v = N // t
+                    w = N // t
                     lmin = max(B//t + 1, 2, Na1//t + 1)
-                    lmax = min(A//t, isqrt(v))
+                    lmax = min(A//t, isqrt(w))
                     for l in range(lmin, lmax+1):
-                        if Nr >= v // l: break
+                        if Nr >= w // l: break
                         Mover[t] -= MertensBlock[A - l*t]
                 
                 MertensBlock = []
