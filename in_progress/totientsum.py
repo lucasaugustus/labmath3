@@ -2011,6 +2011,7 @@ def totientsum16(N):    # The space complexity is now O(N^(1/3)), but we broke t
 
 
 def totientsum17(N):                                                                                                   # Huzzah!
+    if N < 10: return 0 if N < 0 else (0,1,2,4,6,10,12,18,22,28,32)[N]
     """
     Derived from https://gbroxey.github.io/blog/2023/04/30/mult-sum-1.html
     and https://github.com/gbroxey/blog/blob/main/code/utils/fiarrays.nim.
@@ -2213,10 +2214,9 @@ def totientsum17(N):                                                            
         v = N // t
         Mv = 0
         
-        for l in range(2, isqrt(v)+1):                # TODO: Optimize this loop.
-            if l*t <= phase2start:
-                if v//l > Nr:
-                    Mv -= Mover[l*t]
+        for l in range(2, min(isqrt(v), Na1//t) + 1):
+            if Nr >= v // l: break
+            Mv -= Mover[l*t]
         
         Mover[t] += Mv
         # Mover[t] is now Mertens(v).
@@ -2270,7 +2270,7 @@ methods = (#totientsum, \
            #totientsum13, \
            #totientsum14, \
            #totientsum15, \
-           #totientsum16, \
+           totientsum16, \
            totientsum17, \
           )
 
@@ -2281,7 +2281,6 @@ if "testlow" in argv:
     for n in range(1, int(argv[2])):
         t = totient(n)
         real_s += t
-        if t < 5: continue
         test_s = methods[-1](n)
         print('\b'*42, n, real_s, test_s, end='', flush=True)
         assert real_s == test_s
@@ -2320,6 +2319,6 @@ for n in chain(randos, numbers) if len(args) == 1 else [int(args[1])]:
         answers.append(A)
         print()
         print()
-
+    
     for a in answers: print(a)
     assert len(set(answers)) == 1
