@@ -2165,9 +2165,9 @@ def totientsum17(N):                                                            
                 
                 for t in range(1, Na1+1):
                     w = N // t
-                    lmin = max(B//t + 1, 2, Na1//t + 1)
+                    lmin = max(B//t, 1, Na1//t)
                     lmax = min(A//t, isqrt(w))
-                    for l in range(lmin, lmax+1):
+                    for l in range(lmin+1, lmax+1):
                         if Nr >= w // l: break
                         Mover[t] -= MertensBlock[A - l*t]
                 
@@ -2209,10 +2209,6 @@ def totientsum17(N):                                                            
         print("%f" % (time() - checkpoint))
     
     return X + Y - Z
-
-
-
-
 
 
 
