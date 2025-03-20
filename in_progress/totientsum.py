@@ -2025,7 +2025,7 @@ def totientsum17(N):                                                            
         Nr == isqrt(N)
     This calls for an efficient way to compute all those Mertens values.
     
-    Mertens(n) gets computed for n in three intervals: 1 <= n <= Nr, Nr < n < a, and a <= n <= N.
+    Mertens(n) gets computed for n in three intervals: 1 <= n <= Nr, Nr < n <= a, and a < n <= N.
     We call these the low-argument, medium-argument, and high-argument intervals, respectively.
     
     Note that we need only O(sqrt(n)) Mertens values: we need Mertens(i) and Mertens(N/i) for 1 <= i <= Nr.
@@ -2048,23 +2048,22 @@ def totientsum17(N):                                                            
     
     At this point, we still need to store the Mobius values for use in evaluating Y: for each j, the formula for Mertens(j)
     requires mu(i) for all 2 <= i <= sqrt(j).  This can be handled during the low-argument sieving phase by, once the sieve has
-    produced mu(i), subtracting mu(i) * ((N//i)//t) from Mover[t] for each high-argument t.
+    produced mu(i), subtracting mu(i) * ((N//i)//t) from Mover[t] for each of the relevant t.
     
     At this point, we no longer need to store the array of Mobius values.  We still have both of the arrays of Mertens values.
     
-    We can also get away with not storing the low-argument Mertens values by handling them during the low-argument sieving phase
-    as well: as soon as a low-argument Mertens value is computed by the sieve, we apply it to all high-argument Mertens values
-    that require it.  For the "1 - j + isqrt(j) * M(sqrt(j))" part, this is trivial.  The "sum(M(j//i))" part requires some
-    additional care; doing it naively breaks the clock by slowing the algorithm down to O(N^(5/6)), but assembling a batch of
-    O(N^(1/3)) contiguous Mertens values and then processing them all at once fixes this.
+    We can get away with not storing the low-argument Mertens values by handling them during the low-argument sieving phase:
+    as soon as a low-argument Mertens value is computed by the sieve, we apply it to all high-argument Mertens values that
+    require it.  For the "1 - j + isqrt(j) * M(sqrt(j))" part, this is trivial.  The "sum(M(j//i))" part requires some
+    additional care; doing it naively slows the algorithm down to O(N^(5/6)), but assembling a batch of O(N^(1/3)) contiguous
+    Mertens values and then processing them all at once fixes this.
     
-    We have now brought the memory requirements for the low-argument phase down to O(N^(1/3)).
-    The medium-argument phase can be handled similarly.
-    The high-argument phase has now been reduced to a transformation on Mover, with the last terms of the Y-formula accumulated
-    along the way.
+    We have now brought the memory requirements for the low-argument phase down to O(N^(1/3)).  The medium-argument phase can be
+    handled similarly.  The high-argument phase has now been reduced to a transformation on Mover, with the last terms of the
+    Y-formula accumulated along the way.
     
     The time  complexity is now O(N^(2/3))-ish.
-    The space complexity is now O(N^(1/3))-ish.  This is dominated by the array that stores the high-argument Mertens values.
+    The space complexity is now O(N^(1/3))-ish.  This is dominated by the array that stores the high-argument Mertens values,
     the array that stores blocks of low- and medium-argument Mertens values, and the arrays internal to the Mobius siever.
     All of these are O(N^(1/3))-ish.
     """                                                         # TODO: Better explanation and more precise complexity analysis.
