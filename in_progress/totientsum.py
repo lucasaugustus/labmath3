@@ -2262,7 +2262,7 @@ methods = (#totientsum, \
            #totientsum13, \
            #totientsum14, \
            #totientsum15, \
-           totientsum16, \
+           #totientsum16, \
            totientsum17, \
           )
 
