@@ -2287,9 +2287,10 @@ def totientsum18(N):                                                            
     a = introot(int((N / log(log(N)))**2), 3)                                                                  # TODO: Optimize.
     Na1 = N // (a+1)
     s = Nr
-    nextMkey = N // s
+    key = N // s
     mert = 0
     Mover = [0] * (Na1 + 1)  # For large n. Mertens(n) will be stored as Mover[N//n].
+    sqrtN = [0] + [isqrt(N//t) for t in range(1, Na1 + 1)]
     MertensBlock = []
     MertensBlockStart = 1
     MertensBlockSize = Na1                                                                                     # TODO: Optimize.
@@ -2310,9 +2311,9 @@ def totientsum18(N):                                                            
     
     for (k, mu) in enumerate(mobiussieve(a+1), start=1):
         mert += mu
-        v = N // k
         
         if k <= Nr:
+            v = N // k
             
             X += mu * (v * (v+1) // 2)
             
@@ -2339,7 +2340,7 @@ def totientsum18(N):                                                            
                 for t in range(1, Na1 + 1):
                     lmin = max(1, N // (t*B))
                     assert lmin == N // (t*B)
-                    lmax = min(isqrt(N//t), N // (t*A))
+                    lmax = min(sqrtN[t], N // (t*A))
                     for l in range(lmin+1, lmax+1):
                         Ntl = N // (t*l)
                         if A <= Ntl < B:                        # TODO: Integrate this into lmin and lmax.
@@ -2357,13 +2358,13 @@ def totientsum18(N):                                                            
                         print("%f" % (time() - checkpoint))
                         checkpoint = time()
         
-        if k == nextMkey:
+        if k == key:
             MertensBlock.append(mert)
-            Y += v * mert
+            Y += (N//k) * mert
             s -= 1
-            nextMkey = N // s
+            key = N // s
             
-            if len(MertensBlock) >= MertensBlockSize or nextMkey > a:
+            if len(MertensBlock) >= MertensBlockSize or key > a:
                 A = MertensBlockStart
                 B = MertensBlockStart - len(MertensBlock)
                 assert B == s
@@ -2381,15 +2382,16 @@ def totientsum18(N):                                                            
                 """
                 
                 for t in range(1, Na1+1):
-                    for l in range(B//t + 1, min(A // t, N // (t*(Nr+1))) + 1):
-                        Mover[t] -= MertensBlock[A - l*t]
+                    lmin, lmax = B//t + 1, min(A // t, N // (t*(Nr+1)))
+                    for Alt in range(A - lmax*t, A - lmin*t + 1,  t):
+                        Mover[t] -= MertensBlock[Alt]
                 
                 MertensBlock = []
                 MertensBlockStart = s
             
             
             # We can early-exit this loop once we have reached the greatest N//s-value <= a.
-            if nextMkey > a:
+            if key > a:
                 phase2start = s
                 break
     
@@ -2409,7 +2411,7 @@ def totientsum18(N):                                                            
         v = N // t
         Mv = 0
         
-        for l in range(2, min(isqrt(v), Na1//t) + 1):
+        for l in range(2, min(sqrtN[t], Na1//t) + 1):
             if Nr >= v // l: break
             Mv -= Mover[l*t]
         
