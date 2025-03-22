@@ -2122,9 +2122,9 @@ def totientsum17(N):                                                            
             # TODO: Rewrite this bit to do less (re)allocation of MertensBlock.
             MertensBlock.append(mert)
             if len(MertensBlock) >= MertensBlockSize or k == Nr:
+                A = MertensBlockStart
+                B = MertensBlockStart + len(MertensBlock)
                 for t in range(1, Na1 + 1):
-                    A = MertensBlockStart
-                    B = MertensBlockStart + len(MertensBlock)
                     lmin = max(1, N // (B*t))
                     lmax = min(isqrt(N//t), N // (A*t))
                     for l in range(lmin+1, lmax+1):
