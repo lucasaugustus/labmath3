@@ -4,6 +4,24 @@ from time import time, process_time
 from labmath3 import *
 
 def totientsum(n):
+    """
+    Computes sum(totient(k) for k in range(1, n+1)).
+    The  time complexity is O(n^(2/3) * (ln(ln(n)))^(1/3)).
+    The space complexity is O(n^(1/3) * (ln(ln(n)))^(2/3)).
+    For further details, see https://arxiv.org/abs/2506.07386.
+    
+    Input: An integer.
+    
+    Output: An integer.
+    
+    Examples:
+    
+    >>> list(map(totientsum, range(11)))
+    [0, 1, 2, 4, 6, 10, 12, 18, 22, 28, 32]
+    
+    >>> totientsum(10**6)
+    303963552392
+    """
     if n <= 10: return 0 if n < 0 else (0,1,2,4,6,10,12,18,22,28,32)[n]
     
     a = int((n / log(log(n)))**(2/3))
@@ -32,7 +50,6 @@ def totientsum(n):
     xp = isqrt(n//d)
     
     for (x, mu) in enumerate(mobiussieve(a+1), start=1):
-        #if x == 100: exit()
         v = int(str(n // x))    # The int(str( ... )) pushes us back down into the 64-bit data types, when applicable.
         mert += mu
         X += mu * (v * (v+1) // 2)
